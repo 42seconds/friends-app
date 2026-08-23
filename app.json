@@ -20,6 +20,16 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "3e28e595-008b-4c98-93ce-bb5fe55f9506"
+      }
+    },
+    "owner": "wamboxs-team"
   }
 }
