@@ -1,40 +1,23 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { Link } from 'expo-router';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, StatusBar } from 'react-native';
+import { useRouter } from 'expo-router';
 import { loginUser } from '../../src/services/authService';
+import { cardShadow, colors } from '../../src/styles/shared';
 
 export default function LoginScreen() {
-  // Local state for the two form fields. This is UI-only state —
-  // it doesn't need to live in AuthContext because nothing outside
-  // this screen cares about what's currently typed in the boxes.
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  // Tracks whether a login request is currently in flight,
-  // so we can disable the button and show feedback instead of
-  // letting the user tap it five times.
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleLogin = async () => {
-    // Basic guard — don't even attempt Firebase if fields are empty.
-    if (!email || !password) {
-      Alert.alert('Missing info', 'Please enter both email and password.');
-      return;
-    }
-
     setLoading(true);
+    setError('');
     try {
-      // This is the only line that actually talks to Firebase.
-      // Everything else here is just UI plumbing around it.
       await loginUser(email, password);
-      // No need to navigate manually on success — remember, _layout.tsx's
-      // RedirectGate is watching auth state and will redirect to
-      // /(tabs)/home automatically once Firebase confirms the login.
-    } catch (error: any) {
-      // Firebase throws descriptive error codes (e.g. auth/wrong-password).
-      // For the demo, a generic message is fine — you can make this
-      // more specific later by switching on error.code.
-      Alert.alert('Login failed', 'Please check your email and password.');
+    } catch (err) {
+      setError('Invalid email or password.');
     } finally {
       setLoading(false);
     }
@@ -42,57 +25,168 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>&FRIENDS</Text>
+      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
+      <Text style={styles.eyebrow}>&FRIENDS COMMUNITY</Text>
+      <Text style={styles.headline}>Welcome{'\n'}Back</Text>
+      <Text style={styles.subtext}>
+        Step back into a vibrantly creative community connecting the pulse of Johannesburg with the world.
+      </Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
+      <View style={[styles.card, cardShadow(4)]}>
+        <Text style={styles.cardTitle}>Log In</Text>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? 'Logging in...' : 'Log In'}</Text>
-      </TouchableOpacity>
+        <Text style={styles.label}>Email Address</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="jane.doe@example.com"
+          placeholderTextColor="#999"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
 
-      {/* Link is Expo Router's version of a navigation link —
-          tapping this pushes the user to app/(auth)/register.tsx */}
-      <Link href="/(auth)/register" style={styles.link}>
-        Don't have an account? Register
-      </Link>
+        <View style={styles.passwordRow}>
+          <Text style={styles.label}>Password</Text>
+          <TouchableOpacity>
+            <Text style={styles.forgotLink}>FORGOT?</Text>
+          </TouchableOpacity>
+        </View>
+        <TextInput
+          style={styles.input}
+          placeholder="••••••••"
+          placeholderTextColor="#999"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+
+        {!!error && <Text style={styles.errorText}>{error}</Text>}
+
+        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>LOG IN TO SPACE</Text>}
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push('/(auth)/register')} style={styles.signupRow}>
+          <Text style={styles.signupText}>
+            Don't have an account? <Text style={styles.signupBold}>Sign up</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+            <View style={styles.footer}>
+        <Text style={styles.footerWordmark}>&FRIENDS</Text>
+      </View>
     </View>
   );
 }
-// Styles updated: white background, black text, terracotta stays as the
-// one accent color for the button and link (per design tokens).
+
+
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: '#FFFFFF' },
-  title: { fontSize: 32, fontWeight: 'bold', textAlign: 'center', marginBottom: 32, color: '#000000' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    color: '#000000',        // typed text is black
-    backgroundColor: '#FFFFFF',
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight! + 24 : 60,
+    paddingHorizontal: 24,
   },
-  button: {
-    backgroundColor: '#C1502E',
-    padding: 14,
-    borderRadius: 8,
+  eyebrow: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 12,
+    letterSpacing: 1.5,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  headline: {
+  fontFamily: 'BebasNeue',
+  fontSize: 44,
+  lineHeight: 42,
+  letterSpacing: 0.4,
+  color: colors.textPrimary,
+  marginBottom: 16,
+},
+card: {
+  backgroundColor: colors.card,
+  borderRadius: 24,
+  padding: 24,
+},
+button: {
+  backgroundColor: colors.ctaBlack,
+  borderRadius: 12,
+  paddingVertical: 16,
+  alignItems: 'center',
+  marginTop: 20,
+},
+footer: {
+  alignItems: 'center',
+  marginTop: 32,
+},
+footerWordmark: {
+  fontFamily: 'BebasNeue',
+  fontSize: 13,
+  letterSpacing: 2,
+  color: '#A1A1AA',
+  textTransform: 'uppercase',
+},
+
+  subtext: {
+    fontFamily: 'Inter',
+    fontSize: 13,
+    lineHeight: 20,
+    color: colors.textMuted,
+    marginBottom: 28,
+  },
+
+  cardTitle: {
+    fontFamily: 'BebasNeue',
+    fontSize: 24,
+    color: colors.textPrimary,
+    marginBottom: 20,
+  },
+  label: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 12,
+    letterSpacing: 1,
+    color: colors.textMuted,
+    textTransform: 'uppercase',
+    marginBottom: 8,
+  },
+  passwordRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 16,
   },
-  buttonText: { color: '#fff', fontWeight: '600' },
-  link: { marginTop: 20, textAlign: 'center', color: '#C1502E' },
+  forgotLink: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 12,
+    color: colors.textMuted,
+    textDecorationLine: 'underline',
+  },
+  input: {
+    backgroundColor: '#EDEDED',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontFamily: 'Inter',
+    fontSize: 15,
+    color: colors.textPrimary,
+    marginBottom: 8,
+  },
+  errorText: {
+    fontFamily: 'Inter',
+    fontSize: 13,
+    color: '#B23A2E',
+    marginTop: 8,
+  },
+
+  buttonText: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 14,
+    letterSpacing: 1,
+    color: '#fff',
+  },
+  signupRow: { marginTop: 20, alignItems: 'center' },
+  signupText: { fontFamily: 'Inter-Bold', fontSize: 14, color: colors.textMuted },
+  signupBold: { fontFamily: 'Inter-Bold', color: colors.textPrimary, textDecorationLine: 'underline' },
 });

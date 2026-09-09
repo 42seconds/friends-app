@@ -10,21 +10,25 @@ import { UserProfile } from '../types';
 // Called from the Register screen.
 // Takes the form data, creates the Firebase Auth account,
 // then creates the matching Firestore user document.
-export async function registerUser(
-  name: string,
-  email: string,
-  password: string,
-  phone: string,
-  dob: string
-) {
+interface RegisterUserInput {
+  name: string;
+  email: string;
+  phone: string;
+  dob: string;
+  password: string;
+}
+
+// Called from the Register screen.
+// Takes the form data as a single object, creates the Firebase Auth
+// account, then creates the matching Firestore user document.
+export async function registerUser(input: RegisterUserInput) {
+  const { name, email, phone, dob, password } = input;
+
   // Step 1: create the actual login credential in Firebase Auth.
-  // This returns a "userCredential" object containing the new user's uid.
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   const uid = userCredential.user.uid;
 
-  // Step 2: build the profile document that matches your REAL schema exactly.
-  // Note: role is hardcoded to "resident" — matches what's already in Firestore,
-  // mobile users are never anything else.
+  // Step 2: build the profile document matching the real Firestore schema.
   const profile: UserProfile = {
     name,
     email,
@@ -35,9 +39,6 @@ export async function registerUser(
   };
 
   // Step 3: write that profile to Firestore at users/{uid}.
-  // setDoc with a specific ID (uid) means "create this document
-  // with THIS exact ID" — not an auto-generated one — which is required
-  // so it lines up with the Auth UID for future lookups.
   await setDoc(doc(db, 'users', uid), profile);
 
   return uid;

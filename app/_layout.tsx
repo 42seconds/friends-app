@@ -1,44 +1,68 @@
-import { Slot, useRouter, useSegments } from 'expo-router';
-import { useEffect } from 'react';
-import { AuthProvider, useAuth } from '../src/context/AuthContext';
-import { OnboardingProvider, useOnboarding } from '../src/context/OnboardingContext';
 import { Tabs } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUserRole } from '../src/hooks/useUserRole';
 
-function RedirectGate() {
-  const { user, loading: authLoading } = useAuth();
-  const { hasSeenOnboarding } = useOnboarding();
-  const segments = useSegments();
-  const router = useRouter();
+export default function TabsLayout() {
+  const { isAdmin } = useUserRole();
+  const insets = useSafeAreaInsets();
 
-  useEffect(() => {
-    if (authLoading || hasSeenOnboarding === null) return;
-
-    const inOnboardingGroup = segments[0] === '(onboarding)';
-    const inAuthGroup = segments[0] === '(auth)';
-
-    if (!hasSeenOnboarding && !inOnboardingGroup) {
-      router.replace('/(onboarding)/welcome');
-    } else if (!user && !inAuthGroup && !inOnboardingGroup) {
-      router.replace('/(auth)/login');
-    } else if (user && (inAuthGroup || inOnboardingGroup)) {
-      router.replace('/(tabs)/home');
-    }
-  }, [user, authLoading, hasSeenOnboarding, segments]);
-
-  return <Slot />;
-}
-
-export default function RootLayout() {
   return (
-    <AuthProvider>
-      <OnboardingProvider>
-        <RedirectGate />
-      </OnboardingProvider>
-    </AuthProvider>
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarInactiveTintColor: '#8A8A8A',
+        tabBarStyle: {
+          backgroundColor: '#1A1A1A',
+          borderTopWidth: 0,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
+          paddingTop: 10,
+        },
+        tabBarLabelStyle: {
+          fontFamily: 'Inter-SemiBold',
+          fontSize: 11,
+        },
+      }}
+    >
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="tickets"
+        options={{
+          title: 'Tickets',
+          tabBarIcon: ({ color, size }) => <Ionicons name="ticket" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="scan"
+        options={{
+          title: 'Scan',
+          tabBarIcon: ({ color, size }) => <Ionicons name="scan" size={size} color={color} />,
+          href: isAdmin ? undefined : null,
+        }}
+      />
+      <Tabs.Screen
+        name="approvals"
+        options={{
+          title: 'Approve',
+          tabBarIcon: ({ color, size }) => <Ionicons name="checkmark-circle" size={size} color={color} />,
+          href: isAdmin ? undefined : null,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
+        }}
+      />
+    </Tabs>
   );
 }
-
-
-
-

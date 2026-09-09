@@ -1,128 +1,234 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
-import { Link } from 'expo-router';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, ScrollView, Platform, StatusBar } from 'react-native';
+import { useRouter } from 'expo-router';
 import { registerUser } from '../../src/services/authService';
+import { cardShadow, colors } from '../../src/styles/shared';
 
 export default function RegisterScreen() {
-  // One state variable per field. Matches exactly what registerUser()
-  // in authService.ts expects — name, email, password, phone, dob.
-  const [name, setName] = useState('');
+  const router = useRouter();
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [phone, setPhone] = useState('');
-  const [dob, setDob] = useState(''); // plain text for now, format YYYY-MM-DD
-
+  const [dob, setDob] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleRegister = async () => {
-    // Guard clauses — catch obvious problems before ever calling Firebase.
-    // Doing this client-side saves a wasted network round trip on bad input.
-    if (!name || !email || !password || !phone || !dob) {
-      Alert.alert('Missing info', 'Please fill in all fields.');
-      return;
-    }
     if (password !== confirmPassword) {
-      Alert.alert('Password mismatch', 'Passwords do not match.');
+      setError('Passwords do not match.');
       return;
     }
-    if (password.length < 6) {
-      // Firebase's own minimum is 6 characters — checking here gives
-      // a clearer error than letting Firebase reject it.
-      Alert.alert('Weak password', 'Password must be at least 6 characters.');
-      return;
-    }
-
     setLoading(true);
+    setError('');
     try {
-      // This one call does both steps: creates the Firebase Auth account
-      // AND writes the matching Firestore users/{uid} document.
-      await registerUser(name, email, password, phone, dob);
-      // Same as login — no manual navigation needed. Once registerUser
-      // succeeds, Firebase Auth's state changes, AuthContext's listener
-      // fires, and _layout.tsx's RedirectGate sends the user to /(tabs)/home.
-    } catch (error: any) {
-      // Common Firebase error: auth/email-already-in-use.
-      // Generic message for now, can be refined with error.code later.
-      Alert.alert('Registration failed', error.message ?? 'Please try again.');
+     await registerUser({
+  name: `${firstName} ${lastName}`.trim(),
+  email,
+  phone,
+  dob,
+  password,
+});
+    } catch (err) {
+      setError('Could not create account. Try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    // ScrollView instead of View — this form has more fields than login,
-    // so it needs to scroll on smaller screens / when the keyboard is open.
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Create Account</Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.headline}>Join{'\n'}&FRIENDS</Text>
+      <Text style={styles.subtext}>
+        Step into a vibrantly creative community rooted in African modernism. We are authoritative yet accessible, connecting the pulse of Johannesburg with the world.
+      </Text>
 
-      <TextInput style={styles.input} placeholder="Full Name" value={name} onChangeText={setName} />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Phone Number"
-        value={phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Date of Birth (YYYY-MM-DD)"
-        value={dob}
-        onChangeText={setDob}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-      />
+      <View style={[styles.card, cardShadow(4)]}>
+        <Text style={styles.cardTitle}>Create Account</Text>
+        <Text style={styles.cardSubtitle}>Become part of the movement.</Text>
 
-      <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? 'Creating account...' : 'Register'}</Text>
-      </TouchableOpacity>
+        <View style={styles.row}>
+          <View style={styles.halfField}>
+            <Text style={styles.label}>First Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Jane"
+              placeholderTextColor="#999"
+              value={firstName}
+              onChangeText={setFirstName}
+            />
+          </View>
+          <View style={styles.halfField}>
+            <Text style={styles.label}>Last Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Doe"
+              placeholderTextColor="#999"
+              value={lastName}
+              onChangeText={setLastName}
+            />
+          </View>
+        </View>
 
-      <Link href="/(auth)/login" style={styles.link}>
-        Already have an account? Log In
-      </Link>
+        <Text style={styles.label}>Email</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="hello@example.com"
+          placeholderTextColor="#999"
+          value={email}
+          onChangeText={setEmail}
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
+
+        <Text style={styles.label}>Phone</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="+27 00 000 0000"
+          placeholderTextColor="#999"
+          value={phone}
+          onChangeText={setPhone}
+          keyboardType="phone-pad"
+        />
+
+        <Text style={styles.label}>Date of Birth</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="DD/MM/YYYY"
+          placeholderTextColor="#999"
+          value={dob}
+          onChangeText={setDob}
+          keyboardType="numbers-and-punctuation"
+        />
+
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="••••••••"
+          placeholderTextColor="#999"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+        />
+
+        <Text style={styles.label}>Confirm Password</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="••••••••"
+          placeholderTextColor="#999"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          secureTextEntry
+        />
+
+        {!!error && <Text style={styles.errorText}>{error}</Text>}
+
+        <TouchableOpacity style={styles.button} onPress={handleRegister} disabled={loading}>
+          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>JOIN THE COMMUNITY  →</Text>}
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={() => router.push('/(auth)/login')} style={styles.loginRow}>
+          <Text style={styles.loginText}>
+            Already a member? <Text style={styles.loginBold}>Login</Text>
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerWordmark}>&FRIENDS</Text>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 24, backgroundColor: '#FFFFFF' },
-  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 24, color: '#000000' },
+  container: { flex: 1, backgroundColor: colors.background },
+  content: {
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight! + 24 : 60,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+  headline: {
+    fontFamily: 'BebasNeue',
+    fontSize: 44,
+    lineHeight: 42,
+    letterSpacing: 0.4,
+    color: colors.textPrimary,
+    marginBottom: 16,
+  },
+  subtext: {
+    fontFamily: 'Inter',
+    fontSize: 15,
+    lineHeight: 22,
+    color: colors.textMuted,
+    marginBottom: 28,
+  },
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: 24,
+    padding: 24,
+  },
+  cardTitle: {
+    fontFamily: 'BebasNeue',
+    fontSize: 28,
+    color: colors.textPrimary,
+  },
+  cardSubtitle: {
+    fontFamily: 'Inter',
+    fontSize: 14,
+    color: colors.textMuted,
+    marginBottom: 20,
+  },
+  row: { flexDirection: 'row', gap: 12 },
+  halfField: { flex: 1 },
+  label: {
+    fontFamily: 'Inter-SemiBold',
+    fontSize: 11,
+    letterSpacing: 1,
+    color: colors.labelMuted,
+    textTransform: 'uppercase',
+    marginBottom: 6,
+    marginTop: 14,
+  },
   input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 14,
-    color: '#000000',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#ECECEC',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontFamily: 'Inter',
+    fontSize: 15,
+    color: colors.textPrimary,
+  },
+  errorText: {
+    fontFamily: 'Inter',
+    fontSize: 13,
+    color: '#B23A2E',
+    marginTop: 10,
   },
   button: {
-    backgroundColor: '#C1502E',
-    padding: 14,
-    borderRadius: 8,
+    backgroundColor: colors.ctaBlack,
+    borderRadius: 12,
+    paddingVertical: 16,
     alignItems: 'center',
-    marginTop: 8,
+    marginTop: 22,
   },
-  buttonText: { color: '#fff', fontWeight: '600' },
-  link: { marginTop: 20, textAlign: 'center', color: '#C1502E' },
+  buttonText: {
+    fontFamily: 'Inter-Bold',
+    fontSize: 13,
+    letterSpacing: 1,
+    color: '#fff',
+  },
+  loginRow: { marginTop: 18, alignItems: 'center' },
+  loginText: { fontFamily: 'Inter', fontSize: 14, color: colors.textMuted },
+  loginBold: { fontFamily: 'Inter-Bold', color: colors.textPrimary, textDecorationLine: 'underline' },
+  footer: { alignItems: 'center', marginTop: 32 },
+  footerWordmark: {
+    fontFamily: 'BebasNeue',
+    fontSize: 13,
+    letterSpacing: 2,
+    color: '#A1A1AA',
+    textTransform: 'uppercase',
+  },
 });
