@@ -1,22 +1,18 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useBookings } from '../../src/hooks/useBookings';
 import { getEventById } from '../../src/services/eventService';
 import QRCodeCard from '../../src/components/QRCodeCard';
-import { PurchasedTicket } from '../../src/types';
+import TicketCardSkeleton from '../../src/components/TicketCardSkeleton';
 
 export default function TicketsScreen() {
   const { tickets, loading } = useBookings();
+  const router = useRouter();
 
-  // Tickets only store eventId, not the event's title — so we need to
-  // separately fetch each event's details to display alongside the ticket.
-  // This is a small cache: { eventId: title } so we don't refetch the
-  // same event repeatedly if someone bought multiple tickets to it.
   const [eventTitles, setEventTitles] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    // For every ticket we don't already have a title cached for,
-    // fetch that event and store its title.
     tickets.forEach(async (ticket) => {
       if (!eventTitles[ticket.eventId]) {
         const event = await getEventById(ticket.eventId);
@@ -28,12 +24,17 @@ export default function TicketsScreen() {
   }, [tickets]);
 
   if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#C1502E" />
+  return (
+    <View style={styles.container}>
+      <Text style={styles.header}>My Tickets</Text>
+      <View style={styles.list}>
+        <TicketCardSkeleton />
+        <TicketCardSkeleton />
+        <TicketCardSkeleton />
       </View>
-    );
-  }
+    </View>
+  );
+}
 
   if (tickets.length === 0) {
     return (
@@ -50,10 +51,15 @@ export default function TicketsScreen() {
         data={tickets}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <QRCodeCard
-            ticket={item}
-            eventTitle={eventTitles[item.eventId] ?? 'Loading event...'}
-          />
+          // Tapping any ticket card now navigates into the full Ticket
+          // Pass detail screen (app/ticket/[id].tsx) instead of only
+          // ever showing the compact inline card.
+          <TouchableOpacity activeOpacity={0.85} onPress={() => router.push(`/ticket/${item.id}`)}>
+            <QRCodeCard
+              ticket={item}
+              eventTitle={eventTitles[item.eventId] ?? 'Loading event...'}
+            />
+          </TouchableOpacity>
         )}
         contentContainerStyle={styles.list}
       />

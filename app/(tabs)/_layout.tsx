@@ -1,30 +1,50 @@
 import { Tabs } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUserRole } from '../../src/hooks/useUserRole';
-
-// This defines the bottom tab bar shell. Expo Router automatically
-// matches each <Tabs.Screen name="X"> to a file called X.tsx in this
-// same (tabs) folder.
 
 export default function TabsLayout() {
   const { isAdmin } = useUserRole();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#C1502E',
         headerShown: false,
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarInactiveTintColor: '#8A8A8A',
+        tabBarStyle: {
+          backgroundColor: '#1A1A1A',
+          borderTopWidth: 0,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom > 0 ? insets.bottom : 10,
+          paddingTop: 10,
+        },
+        tabBarLabelStyle: {
+          fontFamily: 'Inter-SemiBold',
+          fontSize: 11,
+        },
       }}
     >
-      <Tabs.Screen name="home" options={{ title: 'Events' }} />
-      <Tabs.Screen name="tickets" options={{ title: 'My Tickets' }} />
+      <Tabs.Screen
+        name="home"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="tickets"
+        options={{
+          title: 'Tickets',
+          tabBarIcon: ({ color, size }) => <Ionicons name="ticket" size={size} color={color} />,
+        }}
+      />
       <Tabs.Screen
         name="scan"
         options={{
           title: 'Scan',
-          // href: null hides this tab from the bottom bar for non-admins
-          // while keeping the route technically registered. scan.tsx
-          // also re-checks isAdmin itself, so even a direct deep link
-          // can't bypass the gate — two layers, not one.
+          tabBarIcon: ({ color, size }) => <Ionicons name="scan" size={size} color={color} />,
           href: isAdmin ? undefined : null,
         }}
       />
@@ -32,10 +52,17 @@ export default function TabsLayout() {
         name="approvals"
         options={{
           title: 'Approve',
+          tabBarIcon: ({ color, size }) => <Ionicons name="checkmark-circle" size={size} color={color} />,
           href: isAdmin ? undefined : null,
         }}
       />
-      <Tabs.Screen name="profile" options={{ title: 'Profile' }} />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
+        }}
+      />
     </Tabs>
   );
 }

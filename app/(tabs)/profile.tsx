@@ -1,202 +1,134 @@
 import { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  ActivityIndicator,
-  ScrollView,
-  Alert,
-} from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import { getUserProfile, updateUserProfile } from '../../src/services/userService';
 import { logoutUser } from '../../src/services/authService';
-import { UserProfile } from '../../src/types';
+import SaveButton from '../../src/components/SaveButton';
+import TimedUndoRow from '../../src/components/TimedUndoRow';
+import { colors } from '../../src/styles/shared';
+
+function SettingsRow({ label, value, editing, onChangeText, onPressEdit }: any) {
+  return (
+    <TouchableOpacity style={styles.row} activeOpacity={editing ? 1 : 0.6} onPress={!editing ? onPressEdit : undefined}>
+      <Text style={styles.rowLabel}>{label}</Text>
+      {editing ? (
+        <TextInput style={styles.rowInput} value={value} onChangeText={onChangeText} autoFocus />
+      ) : (
+        <Text style={styles.rowValue}>{value}</Text>
+      )}
+    </TouchableOpacity>
+  );
+}
 
 export default function ProfileScreen() {
   const { user } = useAuth();
-
-  // Holds the live-loaded profile fields from Firestore.
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const router = useRouter();
+  const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [editingField, setEditingField] = useState<string | null>(null);
+  const [draft, setDraft] = useState<any>({});
 
-  // Separate editable copies so typing doesn't mutate `profile`
-  // directly — only committed to Firestore (and to `profile`) on Save.
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [dob, setDob] = useState('');
-  const [editing, setEditing] = useState(false);
-  const [saving, setSaving] = useState(false);
-
-  // Load the profile once we know who's logged in.
   useEffect(() => {
     if (!user) return;
-    (async () => {
-      const data = await getUserProfile(user.uid);
-      if (data) {
-        setProfile(data);
-        setName(data.name);
-        setPhone(data.phone);
-        setDob(data.dob);
-      }
+    getUserProfile(user.uid).then((data) => {
+      setProfile(data);
+      setDraft(data ?? {});
       setLoading(false);
-    })();
+    });
   }, [user]);
 
-  // Writes the edited fields back to Firestore, then updates local
-  // state so the screen reflects the change without needing a refetch.
   const handleSave = async () => {
     if (!user) return;
-    setSaving(true);
-    try {
-      await updateUserProfile(user.uid, { name, phone, dob });
-      setProfile((prev) => (prev ? { ...prev, name, phone, dob } : prev));
-      setEditing(false);
-    } catch (err) {
-      Alert.alert('Update failed', 'Could not save your changes. Try again.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Cancel just reverts the input fields back to the last saved values,
-  // discarding whatever was typed.
-  const handleCancel = () => {
-    if (profile) {
-      setName(profile.name);
-      setPhone(profile.phone);
-      setDob(profile.dob);
-    }
-    setEditing(false);
+    await updateUserProfile(user.uid, {
+      name: draft.name,
+      phone: draft.phone,
+      dob: draft.dob,
+    });
+    setProfile(draft);
+    setEditingField(null);
   };
 
   if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#C1502E" />
-      </View>
-    );
+    return <View style={styles.centered}><ActivityIndicator size="large" color="#1A1A1A" /></View>;
   }
 
+  const hasChanges = JSON.stringify(profile) !== JSON.stringify(draft);
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.header}>Profile</Text>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
+      <Text style={styles.headline}>Profile</Text>
 
-      {/* Email shown but never editable — it's tied to the Auth account. */}
-      <View style={styles.field}>
-        <Text style={styles.label}>Email</Text>
-        <Text style={styles.readOnlyValue}>{user?.email}</Text>
-      </View>
-
-      <View style={styles.field}>
-        <Text style={styles.label}>Full Name</Text>
-        {editing ? (
-          <TextInput style={styles.input} value={name} onChangeText={setName} />
-        ) : (
-          <Text style={styles.value}>{profile?.name}</Text>
-        )}
-      </View>
-
-      <View style={styles.field}>
-        <Text style={styles.label}>Phone Number</Text>
-        {editing ? (
-          <TextInput
-            style={styles.input}
-            value={phone}
-            onChangeText={setPhone}
-            keyboardType="phone-pad"
-          />
-        ) : (
-          <Text style={styles.value}>{profile?.phone}</Text>
-        )}
-      </View>
-
-      <View style={styles.field}>
-        <Text style={styles.label}>Date of Birth</Text>
-        {editing ? (
-          <TextInput
-            style={styles.input}
-            value={dob}
-            onChangeText={setDob}
-            placeholder="YYYY-MM-DD"
-          />
-        ) : (
-          <Text style={styles.value}>{profile?.dob}</Text>
-        )}
-      </View>
-
-      {/* Role shown for transparency, never editable — always "resident"
-          for mobile-registered users, per the app's scope. */}
-      <View style={styles.field}>
-        <Text style={styles.label}>Account Type</Text>
-        <Text style={styles.readOnlyValue}>{profile?.role}</Text>
-      </View>
-
-      {editing ? (
-        <View style={styles.editRow}>
-          <TouchableOpacity
-            style={[styles.button, styles.cancelButton]}
-            onPress={handleCancel}
-            disabled={saving}
-          >
-            <Text style={styles.cancelButtonText}>Cancel</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.button, styles.saveButton]}
-            onPress={handleSave}
-            disabled={saving}
-          >
-            {saving ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Save</Text>
-            )}
-          </TouchableOpacity>
+      <Text style={styles.sectionLabel}>ACCOUNT</Text>
+      <View style={styles.card}>
+        <View style={styles.rowStatic}>
+          <Text style={styles.rowLabel}>Email</Text>
+          <Text style={styles.rowValueMuted}>{user?.email}</Text>
         </View>
-      ) : (
-        <TouchableOpacity style={styles.button} onPress={() => setEditing(true)}>
-          <Text style={styles.buttonText}>Edit Profile</Text>
-        </TouchableOpacity>
+        <View style={styles.divider} />
+        <SettingsRow
+          label="Full Name"
+          value={draft.name}
+          editing={editingField === 'name'}
+          onChangeText={(t: string) => setDraft({ ...draft, name: t })}
+          onPressEdit={() => setEditingField('name')}
+        />
+        <View style={styles.divider} />
+        <SettingsRow
+          label="Phone"
+          value={draft.phone}
+          editing={editingField === 'phone'}
+          onChangeText={(t: string) => setDraft({ ...draft, phone: t })}
+          onPressEdit={() => setEditingField('phone')}
+        />
+        <View style={styles.divider} />
+        <SettingsRow
+          label="Date of Birth"
+          value={draft.dob}
+          editing={editingField === 'dob'}
+          onChangeText={(t: string) => setDraft({ ...draft, dob: t })}
+          onPressEdit={() => setEditingField('dob')}
+        />
+        <View style={styles.divider} />
+        <View style={styles.rowStatic}>
+          <Text style={styles.rowLabel}>Account Type</Text>
+          <Text style={styles.rowValueMuted}>{profile?.role}</Text>
+        </View>
+      </View>
+
+      {hasChanges && (
+        <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+          <SaveButton onSave={handleSave} />
+        </View>
       )}
 
-      <TouchableOpacity style={styles.signOutButton} onPress={logoutUser}>
-        <Text style={styles.signOutText}>Sign Out</Text>
-      </TouchableOpacity>
+      <Text style={styles.sectionLabel}>SESSION</Text>
+      <View style={styles.card}>
+        <TimedUndoRow
+          label="Sign Out"
+          countingLabel={(s) => `Signing out in ${s}s...`}
+          seconds={5}
+          onConfirm={logoutUser}
+        />
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
-  content: { padding: 24, paddingBottom: 48 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' },
-  header: { fontSize: 28, fontWeight: 'bold', color: '#000000', marginBottom: 24 },
-  field: { marginBottom: 18 },
-  label: { fontSize: 13, color: '#888888', marginBottom: 4, textTransform: 'uppercase' },
-  value: { fontSize: 16, color: '#000000' },
-  readOnlyValue: { fontSize: 16, color: '#555555' },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 16,
-    color: '#000000',
-    backgroundColor: '#FFFFFF',
+  container: { flex: 1, backgroundColor: colors.background },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  headline: { fontFamily: 'BebasNeue', fontSize: 36, color: colors.textPrimary, paddingHorizontal: 16, paddingTop: 60, marginBottom: 16 },
+  sectionLabel: {
+    fontFamily: 'Inter-SemiBold', fontSize: 12, letterSpacing: 1,
+    color: colors.textMuted, marginHorizontal: 16, marginTop: 20, marginBottom: 8,
   },
-  button: {
-    backgroundColor: '#C1502E',
-    padding: 14,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  buttonText: { color: '#fff', fontWeight: '600', fontSize: 15 },
-  editRow: { flexDirection: 'row', gap: 12, marginTop: 12 },
-  saveButton: { flex: 1, marginTop: 0 },
-  cancelButton: { flex: 1, marginTop: 0, backgroundColor: '#eee' },
-  cancelButtonText: { color: '#000000', fontWeight: '600', fontSize: 15 },
-  signOutButton: { marginTop: 32, alignItems: 'center' },
-  signOutText: { color: '#B23A2E', fontWeight: '600', fontSize: 15 },
+  card: { backgroundColor: '#fff', borderRadius: 16, marginHorizontal: 16, overflow: 'hidden' },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16 },
+  rowStatic: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16 },
+  rowLabel: { fontFamily: 'Inter', fontSize: 15, color: colors.textPrimary },
+  rowValue: { fontFamily: 'Inter-SemiBold', fontSize: 15, color: colors.textMuted },
+  rowValueMuted: { fontFamily: 'Inter', fontSize: 14, color: colors.textMuted },
+  rowInput: { fontFamily: 'Inter-SemiBold', fontSize: 15, color: colors.textPrimary, textAlign: 'right', flex: 1, marginLeft: 20 },
+  divider: { height: 1, backgroundColor: '#F0F0F0', marginLeft: 16 },
 });
