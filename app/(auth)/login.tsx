@@ -1,192 +1,105 @@
 import { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Platform, StatusBar } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { loginUser } from '../../src/services/authService';
-import { cardShadow, colors } from '../../src/styles/shared';
+import { Ionicons } from '@expo/vector-icons';
+import { T, H1, Amp, TopBar, Field, PrimaryButton, TextLink, Screen } from '../../src/components/night';
+import { loginUser, resetPassword, authErrorMessage } from '../../src/services/authService';
+import { useAuth } from '../../src/context/AuthContext';
+import { night } from '../../src/theme/night';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const { setBrowsing } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const emailOk = /\S+@\S+\.\S+/.test(email.trim());
+
+  // AuthContext picks up the login and the RedirectGate sends the user
+  // on to Explore — nothing to navigate here.
   const handleLogin = async () => {
-    setLoading(true);
     setError('');
+    if (!emailOk || !password) {
+      setError('Enter your email and password.');
+      return;
+    }
+    setLoading(true);
     try {
-      await loginUser(email, password);
-    } catch (err) {
-      setError('Invalid email or password.');
+      await loginUser(email.trim(), password);
+    } catch (e) {
+      setError(authErrorMessage(e));
     } finally {
       setLoading(false);
     }
   };
 
+  const handleForgot = async () => {
+    if (!emailOk) {
+      setError('Type your email first, then tap Forgot.');
+      return;
+    }
+    try {
+      await resetPassword(email.trim());
+      Alert.alert('Check your inbox', `We sent a reset link to ${email.trim()}.`);
+    } catch (e) {
+      setError(authErrorMessage(e));
+    }
+  };
+
+  const browse = () => {
+    setBrowsing(true);
+    router.replace('/(tabs)/home');
+  };
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor={colors.background} />
-
-      <Text style={styles.eyebrow}>&FRIENDS COMMUNITY</Text>
-      <Text style={styles.headline}>Welcome{'\n'}Back</Text>
-      <Text style={styles.subtext}>
-        Step back into a vibrantly creative community connecting the pulse of Johannesburg with the world.
-      </Text>
-
-      <View style={[styles.card, cardShadow(4)]}>
-        <Text style={styles.cardTitle}>Log In</Text>
-
-        <Text style={styles.label}>Email Address</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="jane.doe@example.com"
-          placeholderTextColor="#999"
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-
-        <View style={styles.passwordRow}>
-          <Text style={styles.label}>Password</Text>
-          <TouchableOpacity>
-            <Text style={styles.forgotLink}>FORGOT?</Text>
-          </TouchableOpacity>
+    <Screen
+      bg={night.ink}
+      dark
+      padTop={false}
+      fill
+      contentStyle={{ backgroundColor: night.paper, borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingTop: 26, gap: 14 }}
+      hero={
+        <View style={{ paddingHorizontal: 20, paddingBottom: 30, overflow: 'hidden' }}>
+          <Amp size={360} color={night.orange} style={{ right: -40, top: 30 }} />
+          <View style={{ paddingTop: 60, gap: 18 }}>
+            <TopBar dark onBack={() => (router.canGoBack() ? router.back() : router.replace('/(onboarding)/how'))} />
+            <H1 size={80} color={night.paper}>Welcome{'\n'}back</H1>
+            <T size={15} lh={1.5} color={night.inkMuted} style={{ maxWidth: 240 }}>Your tickets, saves and plans are right where you left them.</T>
+          </View>
         </View>
-        <TextInput
-          style={styles.input}
-          placeholder="••••••••"
-          placeholderTextColor="#999"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-
-        {!!error && <Text style={styles.errorText}>{error}</Text>}
-
-        <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={loading}>
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>LOG IN TO SPACE</Text>}
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={() => router.push('/(auth)/register')} style={styles.signupRow}>
-          <Text style={styles.signupText}>
-            Don't have an account? <Text style={styles.signupBold}>Sign up</Text>
-          </Text>
-        </TouchableOpacity>
+      }
+    >
+      <Field label="EMAIL" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholder="you@example.com" right={emailOk ? <Ionicons name="checkmark-circle" size={20} color={night.success} /> : undefined} />
+      <Field
+        label="PASSWORD"
+        value={password}
+        onChangeText={setPassword}
+        secure={!show}
+        autoCapitalize="none"
+        onSubmitEditing={handleLogin}
+        labelRight={
+          <Pressable onPress={handleForgot} hitSlop={8}>
+            <T size={13} weight="600" style={{ textDecorationLine: 'underline' }}>Forgot?</T>
+          </Pressable>
+        }
+        right={
+          <Pressable accessibilityLabel={show ? 'Hide password' : 'Show password'} onPress={() => setShow((s) => !s)} hitSlop={8}>
+            <Ionicons name={show ? 'eye-off-outline' : 'eye-outline'} size={20} color={night.muted} />
+          </Pressable>
+        }
+        error={error}
+      />
+      <PrimaryButton label="Log in" onPress={handleLogin} loading={loading} style={{ marginTop: 6 }} />
+      <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
+        <T size={15} color={night.muted}>New here?</T>
+        <TextLink label="Create an account" size={15} onPress={() => router.push('/(auth)/register')} />
       </View>
-            <View style={styles.footer}>
-        <Text style={styles.footerWordmark}>&FRIENDS</Text>
+      <View style={{ marginTop: 'auto', paddingTop: 20 }}>
+        <TextLink label="Just browsing for now" muted onPress={browse} />
       </View>
-    </View>
+    </Screen>
   );
 }
-
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight! + 24 : 60,
-    paddingHorizontal: 24,
-  },
-  eyebrow: {
-    fontFamily: 'Inter-Bold',
-    fontSize: 12,
-    letterSpacing: 1.5,
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-  },
-  headline: {
-  fontFamily: 'BebasNeue',
-  fontSize: 44,
-  lineHeight: 42,
-  letterSpacing: 0.4,
-  color: colors.textPrimary,
-  marginBottom: 16,
-},
-card: {
-  backgroundColor: colors.card,
-  borderRadius: 24,
-  padding: 24,
-},
-button: {
-  backgroundColor: colors.ctaBlack,
-  borderRadius: 12,
-  paddingVertical: 16,
-  alignItems: 'center',
-  marginTop: 20,
-},
-footer: {
-  alignItems: 'center',
-  marginTop: 32,
-},
-footerWordmark: {
-  fontFamily: 'BebasNeue',
-  fontSize: 13,
-  letterSpacing: 2,
-  color: '#A1A1AA',
-  textTransform: 'uppercase',
-},
-
-  subtext: {
-    fontFamily: 'Inter',
-    fontSize: 13,
-    lineHeight: 20,
-    color: colors.textMuted,
-    marginBottom: 28,
-  },
-
-  cardTitle: {
-    fontFamily: 'BebasNeue',
-    fontSize: 24,
-    color: colors.textPrimary,
-    marginBottom: 20,
-  },
-  label: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 12,
-    letterSpacing: 1,
-    color: colors.textMuted,
-    textTransform: 'uppercase',
-    marginBottom: 8,
-  },
-  passwordRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  forgotLink: {
-    fontFamily: 'Inter-SemiBold',
-    fontSize: 12,
-    color: colors.textMuted,
-    textDecorationLine: 'underline',
-  },
-  input: {
-    backgroundColor: '#EDEDED',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontFamily: 'Inter',
-    fontSize: 15,
-    color: colors.textPrimary,
-    marginBottom: 8,
-  },
-  errorText: {
-    fontFamily: 'Inter',
-    fontSize: 13,
-    color: '#B23A2E',
-    marginTop: 8,
-  },
-
-  buttonText: {
-    fontFamily: 'Inter-Bold',
-    fontSize: 14,
-    letterSpacing: 1,
-    color: '#fff',
-  },
-  signupRow: { marginTop: 20, alignItems: 'center' },
-  signupText: { fontFamily: 'Inter-Bold', fontSize: 14, color: colors.textMuted },
-  signupBold: { fontFamily: 'Inter-Bold', color: colors.textPrimary, textDecorationLine: 'underline' },
-});
