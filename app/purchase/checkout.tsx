@@ -1,47 +1,47 @@
 import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { getEventById } from '../../src/services/eventService';
-import { getUserProfile } from '../../src/services/userService';
-import { createTicket } from '../../src/services/ticketService';
+import { Ionicons } from '@expo/vector-icons';
+import { T, H1, Screen, TopBar, StepProgress, Avatar, Card, KV, Note, PrimaryButton, SectionLabel, EventThumb } from '../../src/components/night';
+import { useEvent } from '../../src/hooks/useEvents';
 import { useAuth } from '../../src/context/AuthContext';
-import { colors, cardShadow } from '../../src/styles/shared';
+import { useProfile } from '../../src/hooks/useProfile';
+import { createTicket } from '../../src/services/ticketService';
+import { promoStore } from '../../src/store';
+import { findTier, quote } from '../../src/lib/booking';
+import { rand } from '../../src/lib/pricing';
+import { shortDate } from '../../src/lib/dates';
+import { HOLD_HOURS, SERVICE_FEE_RATE, VAT_RATE } from '../../src/config/pricing';
+import { night } from '../../src/theme/night';
 
-export default function CheckoutScreen() {
-  const { eventId } = useLocalSearchParams<{ eventId: string }>();
+// Step 2 of 4: Review booking. Tapping Reserve creates the booking and
+// starts the EFT hold.
+export default function ReviewBookingScreen() {
+  const params = useLocalSearchParams<{ eventId: string; tier: string; qty: string }>();
   const router = useRouter();
   const { user } = useAuth();
-
-  const [event, setEvent] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [selectedTier, setSelectedTier] = useState<any>(null);
-  const [quantity, setQuantity] = useState(1);
+  const { profile } = useProfile();
+  const { event } = useEvent(params.eventId);
+  const promo = promoStore.useStore();
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
+  // A code only applies to the event it was entered for.
   useEffect(() => {
-    if (!eventId) return;
-    getEventById(eventId).then((data) => {
-      setEvent(data);
-      if (data?.tickets?.length) setSelectedTier(data.tickets[0]);
-      setLoading(false);
-    });
-  }, [eventId]);
+    if (promo.eventId && promo.eventId !== params.eventId) promoStore.set({ eventId: null, code: '', percentOff: 0 });
+  }, [params.eventId]);
 
-  if (loading) {
-    return <View style={styles.centered}><ActivityIndicator size="large" color="#1A1A1A" /></View>;
-  }
+  const qty = Math.max(1, Number(params.qty ?? 1));
+  const tier = findTier(event, params.tier);
+  const percentOff = promo.eventId === params.eventId ? promo.percentOff : 0;
+  const q = quote(tier, qty, percentOff);
+  const name = profile?.name ?? user?.email ?? 'You';
 
-  if (!event) {
-    return <View style={styles.centered}><Text style={styles.notFound}>Event not found.</Text></View>;
-  }
-
-  const total = selectedTier ? selectedTier.price * quantity : 0;
-
-  const handleContinue = async () => {
-    if (!selectedTier || !user || !event) return;
+  const reserve = async () => {
+    if (!user || !event || !tier) return;
     setSubmitting(true);
+    setError('');
     try {
-      const profile = await getUserProfile(user.uid);
       const ticketId = await createTicket({
         userId: user.uid,
         userName: profile?.name ?? 'Unknown',
@@ -51,129 +51,92 @@ export default function CheckoutScreen() {
         eventDate: event.date,
         eventTime: event.time,
         eventLocation: event.location,
-        eventImage: event.image,
+        eventImage: event.image ?? '',
         tag: event.tag,
-        tier: selectedTier.tier,
-        price: selectedTier.price,
-        quantity,
-        totalPrice: total,
+        tier: tier.tier,
+        price: tier.price,
+        quantity: qty,
+        subtotal: q.subtotal,
+        serviceFee: q.serviceFee,
+        vat: q.vat,
+        discount: q.discount,
+        promoCode: percentOff ? promo.code : undefined,
+        totalPrice: q.total,
       });
-      router.push(`/purchase/upload-pop?ticketId=${ticketId}`);
-    } catch (err) {
-      console.error('Failed to create ticket:', err);
+      promoStore.set({ eventId: null, code: '', percentOff: 0 });
+      router.replace(`/purchase/pay?ticketId=${ticketId}`);
+    } catch (e) {
+      console.error('Failed to create ticket:', e);
+      setError("We couldn't reserve your tickets. Check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.tag}>
-        <Text style={styles.tagText}>REVIEW BOOKING</Text>
-      </View>
+    <Screen footer={<PrimaryButton label="Reserve and pay by EFT" onPress={reserve} loading={submitting} disabled={!tier} />}>
+      <TopBar />
+      <StepProgress step={2} />
+      <H1 size={56}>Review{'\n'}booking</H1>
 
-      <Text style={styles.eventTitle}>{event.title}</Text>
-      <Text style={styles.eventMeta}>
-        {event.date}  •  {event.location}
-      </Text>
-
-      <View style={styles.divider} />
-
-      <Text style={styles.sectionLabel}>SELECT A TICKET TIER</Text>
-
-      {event.tickets?.map((tier: any) => {
-        const isSelected = selectedTier?.tier === tier.tier;
-        return (
-          <TouchableOpacity
-            key={tier.tier}
-            style={[styles.tierRow, isSelected && styles.tierRowSelected]}
-            onPress={() => setSelectedTier(tier)}
-          >
-            <Text style={[styles.tierName, isSelected && styles.tierNameSelected]}>{tier.tier}</Text>
-            <Text style={[styles.tierPrice, isSelected && styles.tierNameSelected]}>R{tier.price}</Text>
-          </TouchableOpacity>
-        );
-      })}
-
-      <View style={[styles.quantityCard, cardShadow(2)]}>
-        <Text style={styles.quantityLabel}>Quantity</Text>
-        <View style={styles.stepperRow}>
-          <TouchableOpacity
-            style={styles.stepperButton}
-            onPress={() => setQuantity((q) => Math.max(1, q - 1))}
-          >
-            <Text style={styles.stepperText}>−</Text>
-          </TouchableOpacity>
-          <Text style={styles.quantityValue}>{quantity}</Text>
-          <TouchableOpacity
-            style={styles.stepperButton}
-            onPress={() => setQuantity((q) => q + 1)}
-          >
-            <Text style={styles.stepperText}>+</Text>
-          </TouchableOpacity>
+      {event && (
+        <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center', padding: 12, borderRadius: 20, backgroundColor: night.ink }}>
+          <EventThumb image={event.image} tag={event.tag} size={64} />
+          <View style={{ flex: 1, gap: 2 }}>
+            <T display size={24} color={night.paper}>{event.title}</T>
+            <T size={13} color={night.inkMuted}>{[shortDate(event.date, event.time), event.time && `Doors ${event.time}`].filter(Boolean).join(' · ')}</T>
+            <T size={13} color={night.inkMuted}>{event.location}</T>
+          </View>
         </View>
-      </View>
+      )}
 
-      <View style={[styles.summaryCard, cardShadow(3)]}>
-        <Text style={styles.summaryLabel}>ORDER SUMMARY</Text>
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryText}>Subtotal</Text>
-          <Text style={styles.summaryValue}>R{total.toFixed(2)}</Text>
-        </View>
-        <View style={styles.totalDivider} />
-        <View style={styles.summaryRow}>
-          <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>R{total.toFixed(2)}</Text>
-        </View>
-
-        <TouchableOpacity style={styles.button} onPress={handleContinue} disabled={submitting}>
-          {submitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>CONTINUE TO PAYMENT</Text>
+      <View style={{ gap: 8 }}>
+        <SectionLabel>WHO'S GOING?</SectionLabel>
+        <Card pad={14}>
+          <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+            <Avatar name={name} size={38} ring={night.card} />
+            <View>
+              <T size={15} weight="600">You · {name}</T>
+              <T size={13} color={night.muted}>Ticket 1 · {params.tier}</T>
+            </View>
+          </View>
+          {qty > 1 && (
+            <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+              <View style={{ width: 38, height: 38, borderRadius: 99, borderWidth: 1.5, borderStyle: 'dashed', borderColor: night.handle, alignItems: 'center', justifyContent: 'center' }}>
+                <T size={18} color={night.muted}>+{qty - 1}</T>
+              </View>
+              <View style={{ flex: 1 }}>
+                <T size={15} weight="600">{qty === 2 ? `Ticket 2 · ${params.tier}` : `Tickets 2–${qty} · ${params.tier}`}</T>
+                <T size={13} color={night.muted}>Bring friends along on your QR, or send one on once it's confirmed</T>
+              </View>
+            </View>
           )}
-        </TouchableOpacity>
-        <Text style={styles.footnote}>Manual EFT — you'll upload proof of payment next.</Text>
+        </Card>
       </View>
-    </ScrollView>
+
+      <Card>
+        <KV k={`${qty} × ${params.tier} (face value)`} v={rand(q.subtotal)} />
+        {q.discount > 0 && <KV k={`Code ${promo.code}`} v={`−${rand(q.discount)}`} />}
+        <KV k={`Service fee (${Math.round(SERVICE_FEE_RATE * 100)}%)`} v={rand(q.serviceFee)} />
+        <KV k={`VAT (${Math.round(VAT_RATE * 100)}%)`} v={rand(q.vat)} />
+        <View style={{ borderTopWidth: 1.5, borderStyle: 'dashed', borderColor: night.border, paddingTop: 10 }}>
+          <KV k="Total" v={rand(q.total)} strong />
+        </View>
+        <T size={12} color={night.muted}>Same total you saw on the event page. No surprises.</T>
+      </Card>
+
+      <Pressable accessibilityRole="button" onPress={() => router.push(`/purchase/promo?eventId=${params.eventId}&total=${q.total}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: night.card, borderWidth: 1.5, borderColor: night.line }}>
+        <Ionicons name="pricetag-outline" size={20} color={night.ink} />
+        <T size={15} weight="600" style={{ flex: 1 }}>{percentOff ? `Code ${promo.code} applied` : 'Add promo or access code'}</T>
+        <Ionicons name="chevron-forward" size={18} color={night.muted} />
+      </Pressable>
+
+      <Note icon="time-outline">
+        <T size={14} lh={1.5} color={night.paper}>
+          Next you'll pay by EFT. <T size={14} weight="700" color={night.paper}>We hold your tickets for {HOLD_HOURS} hours</T> from the moment you tap Reserve.
+        </T>
+      </Note>
+      {!!error && <T size={14} weight="600" color={night.danger}>{error}</T>}
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  content: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 40 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  notFound: { fontFamily: 'Inter', color: colors.textMuted },
-  tag: { backgroundColor: '#ECECEC', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, alignSelf: 'flex-start', marginBottom: 12 },
-  tagText: { fontFamily: 'Inter-SemiBold', fontSize: 11, letterSpacing: 1, color: colors.textMuted },
-  eventTitle: { fontFamily: 'BebasNeue', fontSize: 34, color: colors.textPrimary },
-  eventMeta: { fontFamily: 'Inter', fontSize: 13, color: colors.textMuted, marginTop: 6 },
-  divider: { height: 1, backgroundColor: '#E5E5E5', marginVertical: 20 },
-  sectionLabel: { fontFamily: 'Inter-SemiBold', fontSize: 12, letterSpacing: 1, color: colors.textMuted, marginBottom: 10 },
-  tierRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 10,
-    borderWidth: 1, borderColor: '#E5E5E5',
-  },
-  tierRowSelected: { backgroundColor: '#1A1A1A', borderColor: '#1A1A1A' },
-  tierName: { fontFamily: 'Inter-SemiBold', fontSize: 15, color: colors.textPrimary },
-  tierNameSelected: { color: '#fff' },
-  tierPrice: { fontFamily: 'Inter-Bold', fontSize: 15, color: colors.textPrimary },
-  quantityCard: { backgroundColor: '#fff', borderRadius: 16, padding: 16, marginTop: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  quantityLabel: { fontFamily: 'Inter-SemiBold', fontSize: 15, color: colors.textPrimary },
-  stepperRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  stepperButton: { width: 32, height: 32, borderRadius: 16, borderWidth: 1, borderColor: '#D5D5D5', justifyContent: 'center', alignItems: 'center' },
-  stepperText: { fontSize: 18, color: colors.textPrimary },
-  quantityValue: { fontFamily: 'Inter-Bold', fontSize: 16, color: colors.textPrimary, minWidth: 20, textAlign: 'center' },
-  summaryCard: { backgroundColor: '#fff', borderRadius: 20, padding: 20, marginTop: 20 },
-  summaryLabel: { fontFamily: 'Inter-SemiBold', fontSize: 12, letterSpacing: 1, color: colors.textMuted, marginBottom: 14 },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  summaryText: { fontFamily: 'Inter', fontSize: 14, color: colors.textMuted },
-  summaryValue: { fontFamily: 'Inter-SemiBold', fontSize: 14, color: colors.textPrimary },
-  totalDivider: { height: 1, backgroundColor: '#EFEFEF', marginVertical: 10 },
-  totalLabel: { fontFamily: 'Inter-Bold', fontSize: 17, color: colors.textPrimary },
-  totalValue: { fontFamily: 'BebasNeue', fontSize: 24, color: colors.textPrimary },
-  button: { backgroundColor: colors.ctaBlack, borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 18 },
-  buttonText: { fontFamily: 'Inter-Bold', fontSize: 13, letterSpacing: 1, color: '#fff' },
-  footnote: { fontFamily: 'Inter', fontSize: 12, color: colors.textMuted, textAlign: 'center', marginTop: 10 },
-});

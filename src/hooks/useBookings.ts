@@ -4,26 +4,26 @@ import { PurchasedTicket } from '../types';
 import { useAuth } from '../context/AuthContext';
 
 // Wraps the ticket listener, automatically scoped to whoever is
-// currently logged in. Screens just call useBookings() — no need
-// to pass a userId manually or know anything about Firestore.
+// currently logged in. Newest bookings first.
 export function useBookings() {
   const { user } = useAuth();
   const [tickets, setTickets] = useState<PurchasedTicket[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Guard: don't attempt to listen if there's no logged-in user yet
-    // (e.g. during the brief moment AuthContext is still resolving).
     if (!user) {
+      setTickets([]);
       setLoading(false);
       return;
     }
-
-    const unsubscribe = listenToUserTickets(user.uid, (data) => {
-      setTickets(data);
-      setLoading(false);
-    });
-
+    const unsubscribe = listenToUserTickets(
+      user.uid,
+      (data) => {
+        setTickets([...data].sort((a, b) => b.createdAt.localeCompare(a.createdAt)));
+        setLoading(false);
+      },
+      () => setLoading(false)
+    );
     return () => unsubscribe();
   }, [user]);
 
