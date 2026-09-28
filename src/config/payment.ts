@@ -4,11 +4,17 @@ export const bankDetails = {
   bank: 'FNB',
   accountName: '&FRIENDS',
   accountNumber: '0000000000',
-  branchCode: '250655',
+  branchCode: '000000',
 };
 
-// Support contacts used by Help, Status and Rejected screens.
+// Support contacts and public links. PLACEHOLDERS: replace before launch.
 export const support = {
   whatsapp: '27000000000', // international format, no +
-  email: 'hello@andfriends.co.za',
+  email: 'hello@example.com',
+  instagram: 'https://instagram.com/',
+  whatsappChannel: 'https://whatsapp.com/channel/',
+  policyUrl: 'https://example.com/privacy',
 };
+
+// Web page a friend opens to accept a sent ticket (not part of this app).
+export const claimUrl = (ticketId: string) => `https://example.com/claim/${ticketId}`;

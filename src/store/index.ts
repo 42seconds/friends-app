@@ -53,7 +53,7 @@ export const prefsStore = createPersistedStore<Prefs>('nightPrefs', {
 });
 
 export type WhenFilter = 'any' | 'tonight' | 'weekend' | 'week';
-export type SortBy = 'soonest' | 'price' | 'friends';
+export type SortBy = 'soonest' | 'price';
 
 export interface Filters {
   when: WhenFilter;

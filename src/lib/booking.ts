@@ -1,5 +1,6 @@
 import { Linking } from 'react-native';
-import { Event, TicketTier } from '../types';
+import { Event, PurchasedTicket, TicketTier } from '../types';
+import { effectiveStatus } from '../services/ticketService';
 import { breakdown } from './pricing';
 import { parseEventDate } from './dates';
 
@@ -47,3 +48,20 @@ export function whatsappLink(text: string, phone?: string) {
   const digits = (phone ?? '').replace(/\D/g, '').replace(/^0/, '27');
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
+
+// Where a booking row should take the user, by state.
+export function bookingHref(t: PurchasedTicket) {
+  switch (effectiveStatus(t)) {
+    case 'pending_payment':
+      return `/purchase/pay?ticketId=${t.id}`;
+    case 'pending_verification':
+      return `/purchase/awaiting?ticketId=${t.id}`;
+    case 'rejected':
+      return `/purchase/rejected?ticketId=${t.id}`;
+    case 'expired':
+      return `/purchase/expired?ticketId=${t.id}`;
+    default:
+      return `/ticket/${t.id}`;
+  }
+}
+
