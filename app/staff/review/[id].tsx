@@ -64,7 +64,7 @@ export default function ProofReviewScreen() {
 
   return (
     <StaffGate>
-      <Screen
+      <Screen header={<TopBar dark onBack={() => router.replace('/staff/approvals')} center={<T mono weight="700" size={11} color={night.inkMuted}>{idx >= 0 ? `${idx + 1} OF ${queue.length} TO REVIEW` : t.status.replace('_', ' ').toUpperCase()}</T>} />} headerBg={night.ink}
         padTop={false}
         footer={
           reviewable ? (
@@ -76,7 +76,6 @@ export default function ProofReviewScreen() {
         }
         hero={
           <Hero bg={night.ink} gap={12}>
-            <TopBar dark onBack={() => router.replace('/staff/approvals')} center={<T mono weight="700" size={11} color={night.inkMuted}>{idx >= 0 ? `${idx + 1} OF ${queue.length} TO REVIEW` : t.status.replace('_', ' ').toUpperCase()}</T>} />
             <H1 size={40} color={night.paper}>{t.userName ?? 'Guest'}</H1>
             <T size={14} color={night.inkMuted}>{t.eventTitle} · {t.quantity} × {t.tier} · uploaded {ago(t.proofUploadedAt ?? t.createdAt)} ago</T>
           </Hero>

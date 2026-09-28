@@ -71,8 +71,7 @@ export default function InboxScreen() {
   );
 
   return (
-    <Screen>
-      <TopBar />
+    <Screen header={<TopBar />}>
       <H1 size={56}>Notifications</H1>
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <Chip label="All" active={filter === 'all'} onPress={() => setFilter('all')} />

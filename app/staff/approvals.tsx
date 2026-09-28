@@ -31,12 +31,11 @@ export default function ApprovalsScreen() {
 
   return (
     <StaffGate>
-      <Screen
+      <Screen header={<TopBar dark onBack={() => (router.canGoBack() ? router.back() : router.replace('/staff'))} center={<StaffPill />} />} headerBg={night.ink}
         padTop={false}
         footer={tab === 'pending_verification' && review.length ? <PrimaryButton label={`Start reviewing · ${review.length}`} onPress={() => router.push(`/staff/review/${review[0].id}`)} /> : undefined}
         hero={
           <Hero bg={night.ink} gap={14}>
-              <TopBar dark onBack={() => (router.canGoBack() ? router.back() : router.replace('/staff'))} center={<StaffPill />} />
               <H1 size={52} color={night.paper}>Approvals</H1>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
                 {TABS.map((t) => (

@@ -9,7 +9,7 @@ export default function CameraPermissionScreen() {
   const { ticketId, source } = useLocalSearchParams<{ ticketId?: string; source?: string }>();
   const router = useRouter();
   return (
-    <Screen
+    <Screen header={<TopBar />}
       fill
       footer={
         <>
@@ -19,7 +19,6 @@ export default function CameraPermissionScreen() {
         </>
       }
     >
-      <TopBar />
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, paddingTop: 40 }}>
         <View style={{ width: 170, height: 170 }}>
           <View style={{ flex: 1, borderRadius: 36, backgroundColor: night.ink, alignItems: 'center', justifyContent: 'center' }}>

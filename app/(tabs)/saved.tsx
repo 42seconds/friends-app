@@ -41,22 +41,30 @@ export default function SavedScreen() {
   const list = tab === 'upcoming' ? upcoming : ended;
 
   return (
-    <Screen tabBar>
-      <H1 size={60}>Saved</H1>
+    <Screen
+      tabBar
+      header={
+        <>
+          <H1 size={52}>Saved</H1>
+          {saved.length > 0 && (
+            <Segmented
+              value={tab}
+              onChange={setTab}
+              options={[
+                { key: 'upcoming', label: `Upcoming · ${upcoming.length}` },
+                { key: 'ended', label: `Ended · ${ended.length}` },
+              ]}
+            />
+          )}
+        </>
+      }
+    >
       {saved.length === 0 ? (
         <EmptyState icon="heart-outline" iconColor={night.orange} title="Nothing saved" body="Tap the heart on any event to keep it here.">
           <PrimaryButton label="Browse events" onPress={() => router.push('/(tabs)/home')} />
         </EmptyState>
       ) : (
         <>
-          <Segmented
-            value={tab}
-            onChange={setTab}
-            options={[
-              { key: 'upcoming', label: `Upcoming · ${upcoming.length}` },
-              { key: 'ended', label: `Ended · ${ended.length}` },
-            ]}
-          />
           <Note icon="heart-outline">Saved events stay on this phone. Book early, popular nights sell out.</Note>
           <View style={{ gap: 10 }}>
             {list.map((e) => (

@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T, H2, Screen, IconButton, MapArt, PrimaryButton, TextLink, IconName } from '../../src/components/night';
 import { useEvent } from '../../src/hooks/useEvents';
 import { openDirections, TravelMode } from '../../src/lib/booking';
@@ -18,7 +17,6 @@ const MODES: { key: TravelMode; icon: IconName; label: string }[] = [
 export default function DirectionsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { event } = useEvent(id);
   const [mode, setMode] = useState<TravelMode>('walking');
   const dest = event?.address ?? `${event?.location ?? ''}, Braamfontein, Johannesburg`;
@@ -26,11 +24,12 @@ export default function DirectionsScreen() {
   return (
     <Screen
       padTop={false}
+      headerBg={night.sand}
+      header={<IconButton icon="arrow-back" label="Back" onPress={() => router.back()} />}
       hero={
         <View>
           <MapArt height={400} route />
-          <View style={{ position: 'absolute', top: insets.top + 12, left: 20, right: 20, gap: 10 }}>
-            <IconButton icon="arrow-back" label="Back" onPress={() => router.back()} />
+          <View style={{ position: 'absolute', top: 12, left: 20, right: 20, gap: 10 }}>
             <View style={{ padding: 12, borderRadius: 18, backgroundColor: night.card, gap: 8 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
                 <View style={{ width: 10, height: 10, borderRadius: 99, backgroundColor: night.blue }} />

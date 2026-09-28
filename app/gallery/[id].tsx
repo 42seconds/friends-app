@@ -19,7 +19,7 @@ export default function GalleryScreen() {
   const cell = (width - 40 - 8) / 3;
 
   return (
-    <Screen
+    <Screen header={<TopBar dark />}
       bg={night.ink}
       dark
       footer={
@@ -30,7 +30,6 @@ export default function GalleryScreen() {
       }
       footerDark
     >
-      <TopBar dark />
       <T mono weight="700" size={11} color={night.inkMuted}>{`${shortDate(event?.date, event?.time)} · ${event?.location ?? ''}`.toUpperCase()}</T>
       <H1 size={52} color={night.paper}>{event?.title ?? 'Gallery'}</H1>
       {!photos.length ? (

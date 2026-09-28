@@ -32,8 +32,7 @@ export default function DeleteAccountScreen() {
   };
 
   return (
-    <Screen>
-      <TopBar />
+    <Screen header={<TopBar />}>
       <H1 size={56}>Delete your{'\n'}account</H1>
       <T size={15} color={night.body}>This can't be undone. Here's what happens first.</T>
       {upcoming > 0 && (

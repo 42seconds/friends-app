@@ -46,13 +46,12 @@ export default function HostScreen() {
   };
 
   return (
-    <Screen
+    <Screen header={<TopBar />} headerBg={night.lime}
       padTop={false}
       footer={<PrimaryButton label="Send enquiry" disabled={!name.trim() || !vibe.trim()} loading={sending} onPress={send} />}
       hero={
         <Hero bg={night.lime}>
           <Amp size={320} color={night.limeDeep} style={{ right: -40, top: 0 }} />
-          <TopBar />
           <View style={{ marginTop: 30 }}>
             <H1 size={68}>Host at{'\n'}&amp;Friends</H1>
           </View>

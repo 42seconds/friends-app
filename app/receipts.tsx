@@ -38,8 +38,7 @@ export default function PurchasesScreen() {
   const earlier = tickets.filter((t) => t !== latest);
 
   return (
-    <Screen>
-      <TopBar />
+    <Screen header={<TopBar />}>
       <H1 size={56}>Purchases</H1>
       {loading ? (
         <ActivityIndicator color={night.ink} />

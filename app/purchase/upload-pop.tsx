@@ -58,7 +58,15 @@ export default function UploadProofScreen() {
   };
 
   return (
-    <Screen
+    <Screen header={<TopBar
+        dark
+        center={
+          <View style={{ alignItems: 'center' }}>
+            <T size={15} weight="600" color={night.paper}>Proof of payment</T>
+            <T mono weight="700" size={11} color={night.inkMuted}>STEP 3 OF 4</T>
+          </View>
+        }
+      />}
       bg={night.ink}
       dark
       footer={
@@ -69,15 +77,6 @@ export default function UploadProofScreen() {
       }
       footerDark
     >
-      <TopBar
-        dark
-        center={
-          <View style={{ alignItems: 'center' }}>
-            <T size={15} weight="600" color={night.paper}>Proof of payment</T>
-            <T mono weight="700" size={11} color={night.inkMuted}>STEP 3 OF 4</T>
-          </View>
-        }
-      />
       <Segmented
         dark
         value={source}

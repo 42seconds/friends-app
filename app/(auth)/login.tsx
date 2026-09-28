@@ -55,7 +55,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <Screen
+    <Screen header={<TopBar dark onBack={() => (router.canGoBack() ? router.back() : router.replace('/(onboarding)/how'))} />}
       bg={night.ink}
       dark
       padTop={false}
@@ -64,8 +64,7 @@ export default function LoginScreen() {
       hero={
         <View style={{ paddingHorizontal: 20, paddingBottom: 30, overflow: 'hidden' }}>
           <Amp size={360} color={night.orange} style={{ right: -40, top: 30 }} />
-          <View style={{ paddingTop: 60, gap: 18 }}>
-            <TopBar dark onBack={() => (router.canGoBack() ? router.back() : router.replace('/(onboarding)/how'))} />
+          <View style={{ paddingTop: 20, gap: 18 }}>
             <H1 size={80} color={night.paper}>Welcome{'\n'}back</H1>
             <T size={15} lh={1.5} color={night.inkMuted} style={{ maxWidth: 240 }}>Your tickets, saves and plans are right where you left them.</T>
           </View>

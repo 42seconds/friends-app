@@ -22,8 +22,7 @@ export default function OfflineSyncScreen() {
 
   return (
     <StaffGate>
-      <Screen bg={night.ink} dark footerDark footer={<PrimaryButton tone="paper" label="Try to sync now" loading={syncing} disabled={!scans.length} arrow={false} center onPress={sync} />}>
-        <TopBar dark center={<StaffPill />} />
+      <Screen header={<TopBar dark center={<StaffPill />} />} bg={night.ink} dark footerDark footer={<PrimaryButton tone="paper" label="Try to sync now" loading={syncing} disabled={!scans.length} arrow={false} center onPress={sync} />}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999, backgroundColor: scans.length ? night.warnDark : night.ink2 }}>
           <Ionicons name={scans.length ? 'cloud-offline-outline' : 'cloud-done-outline'} size={16} color={scans.length ? night.yellow : night.lime} />
           <T mono weight="700" size={11} color={night.paper}>{scans.length ? 'WAITING FOR SIGNAL' : 'ALL SYNCED'}</T>

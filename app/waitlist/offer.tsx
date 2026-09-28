@@ -32,7 +32,7 @@ export default function WaitlistOfferScreen() {
   const qty = entry?.quantity ?? 1;
 
   return (
-    <Screen
+    <Screen header={<TopBar dark />}
       bg={night.ink}
       dark
       footerDark
@@ -50,7 +50,6 @@ export default function WaitlistOfferScreen() {
         </>
       }
     >
-      <TopBar dark />
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         <View style={{ width: 8, height: 8, borderRadius: 99, backgroundColor: night.lime }} />
         <T mono weight="700" size={11} color={night.lime}>YOUR TURN</T>

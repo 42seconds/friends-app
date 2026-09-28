@@ -1,7 +1,6 @@
 import { Share, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as Clipboard from 'expo-clipboard';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { T, H2, Screen, IconButton, MapArt, PrimaryButton, OutlineButton } from '../../src/components/night';
 import { useEvent } from '../../src/hooks/useEvents';
 import { openMap } from '../../src/lib/booking';
@@ -12,22 +11,20 @@ import { night } from '../../src/theme/night';
 export default function EventMapScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { event } = useEvent(id);
   const address = event?.address ?? `${event?.location ?? ''}, Braamfontein, Johannesburg`;
 
   return (
     <Screen
       padTop={false}
-      hero={
-        <View>
-          <MapArt height={380} />
-          <View style={{ position: 'absolute', top: insets.top + 12, left: 20, right: 20, flexDirection: 'row', justifyContent: 'space-between' }}>
-            <IconButton icon="arrow-back" label="Back" onPress={() => router.back()} />
-            <IconButton icon="open-outline" label="Open in Maps" onPress={() => openMap(address)} />
-          </View>
+      headerBg={night.sand}
+      header={
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <IconButton icon="arrow-back" label="Back" onPress={() => router.back()} />
+          <IconButton icon="open-outline" label="Open in Maps" onPress={() => openMap(address)} />
         </View>
       }
+      hero={<MapArt height={320} />}
       contentStyle={{ marginTop: -24, backgroundColor: night.paper, borderTopLeftRadius: 28, borderTopRightRadius: 28 }}
     >
       <T mono weight="700" size={11} color={night.muted}>{`${event?.title ?? ''} · ${shortDate(event?.date, event?.time)} ${event?.time ?? ''}`.toUpperCase()}</T>

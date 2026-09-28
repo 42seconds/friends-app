@@ -21,11 +21,10 @@ export default function VenueScreen() {
   const address = [...here, ...before].find((e) => e.address)?.address;
 
   return (
-    <Screen
+    <Screen header={<TopBar dark right={<IconButton icon="share-outline" label="Share" tone="dark" onPress={() => Share.share({ message: `${name}: ${here.length} upcoming on &FRIENDS` })} />} />} headerBg={night.ink}
       padTop={false}
       hero={
         <Hero bg={night.ink} gap={14}>
-          <TopBar dark right={<IconButton icon="share-outline" label="Share" tone="dark" onPress={() => Share.share({ message: `${name}: ${here.length} upcoming on &FRIENDS` })} />} />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 30 }}>
             <View style={{ width: 56, height: 56, borderRadius: 16, backgroundColor: night.orange, alignItems: 'center', justifyContent: 'center' }}>
               <T display size={38}>&amp;</T>

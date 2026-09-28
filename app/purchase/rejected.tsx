@@ -37,12 +37,11 @@ export default function RejectedScreen() {
   const reason = r?.reason ?? 'Payment not verified';
 
   return (
-    <Screen
+    <Screen header={<TopBar onColor onBack={() => router.replace('/(tabs)/tickets')} right={<T mono weight="700" size={11} color={night.paper}>REF {ticket.id}</T>} />} headerBg={night.danger}
       padTop={false}
       footer={<PrimaryButton label="Upload a new proof" onPress={() => router.push(`/purchase/upload-pop?ticketId=${ticket.id}&source=photos`)} />}
       hero={
         <Hero bg={night.danger} gap={14}>
-          <TopBar onColor onBack={() => router.replace('/(tabs)/tickets')} right={<T mono weight="700" size={11} color={night.paper}>REF {ticket.id}</T>} />
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 20 }}>
             <View style={{ width: 8, height: 8, borderRadius: 99, backgroundColor: night.paper }} />
             <T mono weight="700" size={11} color={night.paper}>ACTION NEEDED</T>

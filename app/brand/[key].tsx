@@ -23,12 +23,11 @@ export default function SubBrandScreen() {
   const [first, ...rest] = mine;
 
   return (
-    <Screen
+    <Screen header={<TopBar dark right={<IconButton icon="share-outline" label="Share" tone="dark" onPress={() => Share.share({ message: `${brand.name} at &FRIENDS: ${brand.blurb}` })} />} />} headerBg={brand.color}
       padTop={false}
       hero={
         <Hero bg={brand.color} gap={14}>
           <Amp size={420} color={brand.deep} style={{ right: -80, top: -20 }} />
-          <TopBar dark right={<IconButton icon="share-outline" label="Share" tone="dark" onPress={() => Share.share({ message: `${brand.name} at &FRIENDS: ${brand.blurb}` })} />} />
           <View style={{ marginTop: 50 }}>
             <H1 size={96}>{brand.name}</H1>
           </View>

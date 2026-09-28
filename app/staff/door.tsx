@@ -20,8 +20,7 @@ export default function DoorPickerScreen() {
 
   return (
     <StaffGate>
-      <Screen bg={night.ink} dark footerDark footer={<PrimaryButton tone="orange" label={`Start at ${setup.door}`} disabled={!selected} onPress={() => { staffStore.set({ eventId: selected }); router.replace('/staff/scanner'); }} />}>
-        <TopBar dark center={<StaffPill />} />
+      <Screen header={<TopBar dark center={<StaffPill />} />} bg={night.ink} dark footerDark footer={<PrimaryButton tone="orange" label={`Start at ${setup.door}`} disabled={!selected} onPress={() => { staffStore.set({ eventId: selected }); router.replace('/staff/scanner'); }} />}>
         <H1 size={52} color={night.paper}>Where are{'\n'}you scanning?</H1>
         <SectionLabel dark>EVENT</SectionLabel>
         <View style={{ gap: 8 }}>

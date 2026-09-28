@@ -48,12 +48,15 @@ export default function ProfileScreen() {
     <Screen
       tabBar
       padTop={false}
+      headerBg={night.ink}
+      header={
+        <View style={{ alignItems: 'flex-end' }}>
+          <IconButton icon="settings-outline" label="Settings" tone="dark" onPress={() => router.push('/settings')} />
+        </View>
+      }
       hero={
         <Hero bg={night.ink} gap={16}>
           <Amp size={300} color={night.ink2} style={{ right: -40, top: 20 }} />
-          <View style={{ alignItems: 'flex-end' }}>
-            <IconButton icon="settings-outline" label="Settings" tone="dark" onPress={() => router.push('/settings')} />
-          </View>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
             <Avatar name={profile?.name} size={64} color={night.blue} />
             <View style={{ flex: 1 }}>

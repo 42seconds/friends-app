@@ -27,8 +27,7 @@ export default function PaymentStatusScreen() {
   if (loading) return <View style={{ flex: 1, justifyContent: 'center', backgroundColor: night.paper }}><ActivityIndicator color={night.ink} /></View>;
   if (!ticket) {
     return (
-      <Screen>
-        <TopBar />
+      <Screen header={<TopBar />}>
         <H1>Booking not found</H1>
       </Screen>
     );
@@ -37,11 +36,10 @@ export default function PaymentStatusScreen() {
   const proofIn = ticket.status === 'pending_verification';
 
   return (
-    <Screen
+    <Screen header={<TopBar dark onBack={() => router.replace('/(tabs)/home')} />} headerBg={night.ink}
       padTop={false}
       hero={
         <Hero bg={night.ink} gap={16}>
-          <TopBar dark onBack={() => router.replace('/(tabs)/home')} />
           <StepProgress step={4} dark label={`STEP 4 OF 4 · REF ${ticket.id}`} />
           <View style={{ flexDirection: 'row' }}>
             <Pill label="IN PROGRESS" bg={night.yellow} mono />

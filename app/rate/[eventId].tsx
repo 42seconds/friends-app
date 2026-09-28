@@ -37,12 +37,11 @@ export default function RateScreen() {
   };
 
   return (
-    <Screen
+    <Screen header={<TopBar dark right={<IconButton label="Later" tone="onColor" onPress={() => router.back()}><T size={14} weight="600">Later</T></IconButton>} />} headerBg={night.orange}
       padTop={false}
       hero={
         <Hero bg={night.orange} gap={12}>
           <Amp size={300} color={night.orangeDeep} style={{ right: -40, top: 0 }} />
-          <TopBar dark right={<IconButton label="Later" tone="onColor" onPress={() => router.back()}><T size={14} weight="600">Later</T></IconButton>} />
           <T mono weight="700" size={11} style={{ marginTop: 20 }}>{`${shortDate(event?.date, event?.time)} · ${event?.title ?? ''}`.toUpperCase()}</T>
           <H1 size={60}>How was{'\n'}your night?</H1>
         </Hero>

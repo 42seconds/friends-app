@@ -46,7 +46,7 @@ export default function HowScreen() {
   };
 
   return (
-    <Screen
+    <Screen header={<TopBar center={<PageDots index={2} dark={false} />} />}
       footer={
         <>
           <PrimaryButton label="Create my account" onPress={() => go('/(auth)/register')} />
@@ -57,7 +57,6 @@ export default function HowScreen() {
         </>
       }
     >
-      <TopBar center={<PageDots index={2} dark={false} />} />
       <H1 size={62}>Tap, pay,{'\n'}walk right in</H1>
       <View>
         <Step n={1} color={night.ink} fg={night.orange} title="Reserve" body={`Pick your tickets. We hold them for you for ${HOLD_HOURS} hours. The price you see already includes fees.`} />

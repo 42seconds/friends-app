@@ -14,8 +14,7 @@ const LANGS = [
 
 export default function LanguageScreen() {
   return (
-    <Screen>
-      <TopBar />
+    <Screen header={<TopBar />}>
       <H1 size={56}>Language</H1>
       <ListGroup>
         {LANGS.map(([en, native], i) => (

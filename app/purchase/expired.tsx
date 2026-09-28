@@ -22,7 +22,7 @@ export default function HoldExpiredScreen() {
   const stillAvailable = !!tier?.available && !event?.soldOut;
 
   return (
-    <Screen
+    <Screen header={<TopBar onBack={() => router.replace('/(tabs)/tickets')} />}
       footer={
         <>
           {stillAvailable && <PrimaryButton label="Reserve again" onPress={() => router.replace(`/purchase/tickets?${selectionParams(ticket.eventId, { tier: ticket.tier, qty: ticket.quantity })}`)} />}
@@ -30,7 +30,6 @@ export default function HoldExpiredScreen() {
         </>
       }
     >
-      <TopBar onBack={() => router.replace('/(tabs)/tickets')} />
       <View style={{ height: 180, borderRadius: 24, backgroundColor: brand.color, padding: 18, overflow: 'hidden', justifyContent: 'space-between', transform: [{ rotate: '-2deg' }], opacity: 0.8 }}>
         <Amp size={260} color={brand.deep} style={{ right: -20, top: -30 }} />
         <T display size={46} lh={0.86}>{ticket.eventTitle}</T>
