@@ -1,0 +1,115 @@
+rules_version = '2';
+
+// &FRIENDS Firestore security rules (draft for review).
+//
+// Admins are users whose users/{uid}.role is "admin". They can do
+// everything the admin website and Staff mode need. Everyone else can
+// only touch their own data, and only in the ways the app does.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function onlyChanges(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    // ---- Events: public when published, managed by admins ----------------
+    match /events/{eventId} {
+      allow read: if resource.data.status == 'published' || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ---- User profiles --------------------------------------------------
+    match /users/{uid} {
+      allow read: if (signedIn() && request.auth.uid == uid) || isAdmin();
+      // New accounts are always residents.
+      allow create: if signedIn() && request.auth.uid == uid
+        && request.resource.data.role == 'resident';
+      // People can edit their own profile but never their role.
+      allow update: if (signedIn() && request.auth.uid == uid
+          && request.resource.data.role == resource.data.role)
+        || isAdmin();
+      allow delete: if (signedIn() && request.auth.uid == uid) || isAdmin();
+    }
+
+    // ---- Bookings ---------------------------------------------------------
+    match /tickets/{ticketId} {
+      allow read: if (signedIn() && resource.data.userId == request.auth.uid) || isAdmin();
+
+      // A booking always starts as an unpaid hold owned by its creator.
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.status == 'pending_payment';
+
+      // Owners may: upload proof (moves it to "checking"), send it to a
+      // friend, release it to the waitlist or ask for a refund. They can
+      // never approve, check in, or change prices.
+      allow update: if isAdmin() || (
+        signedIn() && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == resource.data.userId
+        && (
+          (
+            onlyChanges(['proofOfPayment', 'proofUploadedAt', 'status'])
+            && resource.data.status in ['pending_payment', 'rejected']
+            && request.resource.data.status == 'pending_verification'
+          )
+          || onlyChanges(['transfer'])
+          || onlyChanges(['releasedToWaitlist', 'releasedAt'])
+          || onlyChanges(['refundRequested', 'refundRequestedAt'])
+        )
+      );
+
+      allow delete: if isAdmin();
+    }
+
+    // ---- Waitlist: one entry per person per event ----------------------
+    // Doc id is "{eventId}_{uid}". Signed-in users can read entries so
+    // the app can work out their place in line.
+    match /waitlist/{entryId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && entryId == request.resource.data.eventId + '_' + request.auth.uid
+        && !('offerExpiresAt' in request.resource.data);
+      // Owners can only toggle WhatsApp alerts; offers are set by admins.
+      allow update: if isAdmin()
+        || (signedIn() && resource.data.userId == request.auth.uid && onlyChanges(['whatsappAlerts']));
+      allow delete: if isAdmin() || (signedIn() && resource.data.userId == request.auth.uid);
+    }
+
+    // ---- Host enquiries and ratings: write-only for guests ---------------
+    match /enquiries/{id} {
+      allow create: if signedIn();
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /ratings/{id} {
+      allow create: if signedIn()
+        && request.resource.data.stars is int
+        && request.resource.data.stars >= 1 && request.resource.data.stars <= 5;
+      allow read, update, delete: if isAdmin();
+    }
+
+    // ---- Promo codes: looked up by exact code, managed by admins ---------
+    match /promoCodes/{code} {
+      allow get: if signedIn();
+      allow list, write: if isAdmin();
+    }
+
+    // ---- App config (e.g. config/app.minVersion) ---------------------------
+    match /config/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}
