@@ -14,6 +14,7 @@ export const support = {
   instagram: 'https://instagram.com/',
   whatsappChannel: 'https://whatsapp.com/channel/',
   policyUrl: 'https://example.com/privacy',
+  appStoreUrl: 'https://example.com/app', // App Store / Play Store listing
 };
 
 // Web page a friend opens to accept a sent ticket (not part of this app).
