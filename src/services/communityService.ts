@@ -12,6 +12,8 @@ export interface WaitlistEntry {
   quantity: number;
   whatsappAlerts: boolean;
   joinedAt: string;
+  // Set by staff/backend when a released ticket is offered to this person.
+  offerExpiresAt?: string;
 }
 
 export async function joinWaitlist(entry: Omit<WaitlistEntry, 'joinedAt'>) {
