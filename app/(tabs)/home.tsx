@@ -24,7 +24,7 @@ export default function ExploreScreen() {
   if (error && !upcoming.length) {
     return (
       <Screen bg={night.ink} dark tabBar fill contentStyle={{ justifyContent: 'center' }}>
-        <EmptyState icon="cloud-offline-outline" tileBg={night.ink2} iconColor={night.orange} dark title="You're offline" body="We couldn't load new events. Your tickets still work, they're saved on this phone.">
+        <EmptyState icon="cloud-offline-outline" tileBg={night.ink2} iconColor={night.orange} dark title="You're offline" body="We couldn't load new events. Check your connection and try again.">
           <PrimaryButton tone="lime" label="Open my tickets" onPress={() => router.push('/(tabs)/tickets')} />
           <OutlineButton dark label="Try again" onPress={retryEvents} />
         </EmptyState>
