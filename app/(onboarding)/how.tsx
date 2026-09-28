@@ -74,7 +74,7 @@ export default function HowScreen() {
           n={3}
           color={night.orange}
           title="Show your QR"
-          body="Once we've checked your payment, your ticket unlocks. It works offline at the door."
+          body="Once we've checked your payment, your ticket unlocks. Show it at the door."
           last
           side={
             <View style={{ width: 70, height: 70, borderRadius: 12, backgroundColor: night.ink, padding: 8, flexDirection: 'row', flexWrap: 'wrap', gap: 2, transform: [{ rotate: '6deg' }] }}>
