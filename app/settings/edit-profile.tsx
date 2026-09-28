@@ -40,8 +40,7 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <Screen footer={<PrimaryButton label="Save changes" loading={saving} disabled={!first.trim()} onPress={save} />}>
-      <TopBar />
+    <Screen header={<TopBar />} footer={<PrimaryButton label="Save changes" loading={saving} disabled={!first.trim()} onPress={save} />}>
       <H1 size={56}>Edit profile</H1>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <Avatar name={`${first} ${last}`} size={72} color={night.blue} />

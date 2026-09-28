@@ -12,12 +12,10 @@ import { addToCalendar, quote, selectionParams } from '../../src/lib/booking';
 import { shortDate } from '../../src/lib/dates';
 import { HOLD_HOURS, MAX_TICKETS_PER_PERSON } from '../../src/config/pricing';
 import { night } from '../../src/theme/night';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { event, loading } = useEvent(id);
   const saved = savedStore.useStore().ids.includes(id ?? '');
@@ -66,18 +64,21 @@ export default function EventDetailScreen() {
     <Screen
       padTop={false}
       footer={footer}
+      headerBg={brand.color}
+      header={
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <IconButton icon="arrow-back" label="Back" tone="ink" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/home'))} />
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <IconButton icon={saved ? 'heart' : 'heart-outline'} label={saved ? 'Unsave' : 'Save'} tone="ink" onPress={() => toggleSaved(event.id)} />
+            <IconButton icon="share-outline" label="Share" tone="ink" onPress={() => Share.share({ message: `${event.title} · ${shortDate(event.date, event.time)} · ${event.location}` })} />
+          </View>
+        </View>
+      }
       hero={
-        <View style={{ backgroundColor: brand.color, paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: 22, minHeight: 330, overflow: 'hidden', justifyContent: 'space-between' }}>
+        <View style={{ backgroundColor: brand.color, paddingTop: 12, paddingHorizontal: 20, paddingBottom: 22, minHeight: 250, overflow: 'hidden', justifyContent: 'space-between' }}>
           {event.image ? <Image source={{ uri: event.image }} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} /> : <Amp size={380} color={brand.deep} style={{ right: -50, top: 10 }} />}
           {!!event.image && <View style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '60%', backgroundColor: 'rgba(21,19,15,0.5)' }} />}
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <IconButton icon="arrow-back" label="Back" tone="ink" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/home'))} />
-            <View style={{ flexDirection: 'row', gap: 8 }}>
-              <IconButton icon={saved ? 'heart' : 'heart-outline'} label={saved ? 'Unsave' : 'Save'} tone="ink" onPress={() => toggleSaved(event.id)} />
-              <IconButton icon="share-outline" label="Share" tone="ink" onPress={() => Share.share({ message: `${event.title} · ${shortDate(event.date, event.time)} · ${event.location}` })} />
-            </View>
-          </View>
-          <View style={{ gap: 10, marginTop: 60 }}>
+          <View style={{ gap: 10, marginTop: 40 }}>
             <View style={{ alignSelf: 'flex-start', backgroundColor: night.ink, paddingHorizontal: 10, paddingTop: 5, paddingBottom: 3, borderRadius: 8 }}>
               <T display size={16} color={brand.color}>{brand.name}</T>
             </View>

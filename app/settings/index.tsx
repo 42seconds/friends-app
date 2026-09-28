@@ -18,8 +18,7 @@ export default function SettingsScreen() {
     ]);
 
   return (
-    <Screen>
-      <TopBar />
+    <Screen header={<TopBar />}>
       <H1 size={56}>Settings</H1>
       <SectionLabel>ACCOUNT</SectionLabel>
       <ListGroup>

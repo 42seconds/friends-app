@@ -40,8 +40,7 @@ export default function GuestListScreen() {
 
   return (
     <StaffGate>
-      <Screen bg={night.ink} dark>
-        <TopBar dark right={<T mono weight="700" size={11} color={night.inkMuted}>{door.toUpperCase()}</T>} />
+      <Screen header={<TopBar dark right={<T mono weight="700" size={11} color={night.inkMuted}>{door.toUpperCase()}</T>} />} bg={night.ink} dark>
         <H1 size={52} color={night.paper}>Guest list</H1>
         <View style={{ height: 52, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, borderRadius: 14, backgroundColor: night.ink3 }}>
           <Ionicons name="search" size={18} color={night.inkMuted} />

@@ -61,8 +61,7 @@ export default function RefundBankScreen() {
   };
 
   return (
-    <Screen footer={<PrimaryButton label="Save bank details" disabled={!valid} loading={saving} onPress={save} />}>
-      <TopBar />
+    <Screen header={<TopBar />} footer={<PrimaryButton label="Save bank details" disabled={!valid} loading={saving} onPress={save} />}>
       <H1 size={52}>Refund{'\n'}bank details</H1>
       <Note icon="shield-checkmark-outline">
         <T size={14} lh={1.5} color={night.paper}>

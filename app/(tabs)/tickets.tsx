@@ -92,20 +92,26 @@ export default function TicketsScreen() {
   const list = groups[tab];
 
   return (
-    <Screen tabBar>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-        <H1 size={60}>Tickets</H1>
-        <TextLink label="Purchases" onPress={() => router.push('/receipts')} />
-      </View>
-      <Segmented
-        value={tab}
-        onChange={setTab}
-        options={[
-          { key: 'upcoming', label: `Upcoming · ${groups.upcoming.length}` },
-          { key: 'pending', label: `Pending · ${groups.pending.length}` },
-          { key: 'past', label: `Past · ${groups.past.length}` },
-        ]}
-      />
+    <Screen
+      tabBar
+      header={
+        <>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <H1 size={52}>Tickets</H1>
+            <TextLink label="Purchases" onPress={() => router.push('/receipts')} />
+          </View>
+          <Segmented
+            value={tab}
+            onChange={setTab}
+            options={[
+              { key: 'upcoming', label: `Upcoming · ${groups.upcoming.length}` },
+              { key: 'pending', label: `Pending · ${groups.pending.length}` },
+              { key: 'past', label: `Past · ${groups.past.length}` },
+            ]}
+          />
+        </>
+      }
+    >
 
       {nudge && tab !== 'pending' && (
         <Pressable onPress={() => router.push(bookingHref(nudge) as any)} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, borderRadius: 18, backgroundColor: night.cream }}>

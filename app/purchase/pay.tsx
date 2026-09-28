@@ -29,7 +29,7 @@ export default function PayScreen() {
   const upload = (source: 'camera' | 'photos') => router.push(`/purchase/upload-pop?ticketId=${ticketId}&source=${source}`);
 
   return (
-    <Screen
+    <Screen header={<><TopBar onBack={() => router.replace('/(tabs)/tickets')} /><StepProgress step={3} /></>}
       footer={
         <>
           <PrimaryButton label="Upload proof of payment" icon="cloud-upload-outline" onPress={() => upload('photos')} />
@@ -37,8 +37,6 @@ export default function PayScreen() {
         </>
       }
     >
-      <TopBar onBack={() => router.replace('/(tabs)/tickets')} />
-      <StepProgress step={3} />
       <H1 size={56}>Pay by EFT</H1>
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderRadius: 20, backgroundColor: night.ink }}>

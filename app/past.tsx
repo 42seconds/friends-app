@@ -23,8 +23,7 @@ export default function PastEventsScreen() {
   }
 
   return (
-    <Screen>
-      <TopBar />
+    <Screen header={<TopBar />}>
       <H1 size={60}>Past{'\n'}events</H1>
       <T size={15} color={night.body}>Relive the nights. Find yourself in the photos.</T>
       {!groups.length && (

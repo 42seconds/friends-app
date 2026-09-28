@@ -20,8 +20,7 @@ export default function TransferPendingScreen() {
 
   if (!tr || tr.status !== 'pending') {
     return (
-      <Screen footer={<PrimaryButton label="Back to my ticket" onPress={() => router.replace(`/ticket/${ticket.id}`)} />}>
-        <TopBar />
+      <Screen header={<TopBar />} footer={<PrimaryButton label="Back to my ticket" onPress={() => router.replace(`/ticket/${ticket.id}`)} />}>
         <H1>{tr?.status === 'accepted' ? `${first} has it` : 'Transfer cancelled'}</H1>
         <T size={15} color={night.body}>{tr?.status === 'accepted' ? 'The ticket is now in their name.' : 'The ticket is back with you. The link no longer works.'}</T>
       </Screen>
@@ -31,8 +30,7 @@ export default function TransferPendingScreen() {
   const resend = () => Linking.openURL(whatsappLink(`Reminder: your ticket for ${ticket.eventTitle} is waiting. Accept it here: ${claimUrl(ticket.id)}`, tr.toPhone));
 
   return (
-    <Screen>
-      <TopBar onBack={() => router.replace(`/ticket/${ticket.id}`)} right={<Pill label="TRANSFER PENDING" bg={night.yellow} mono />} />
+    <Screen header={<TopBar onBack={() => router.replace(`/ticket/${ticket.id}`)} right={<Pill label="TRANSFER PENDING" bg={night.yellow} mono />} />}>
       <H1 size={56}>Waiting for{'\n'}{first} to accept</H1>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 16, borderRadius: 20, backgroundColor: night.ink, overflow: 'hidden' }}>
         <Amp size={140} color={night.ink2} style={{ right: -10, top: -20 }} />

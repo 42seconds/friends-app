@@ -49,8 +49,7 @@ export default function CantGoScreen() {
   const done = ticket.releasedToWaitlist || ticket.refundRequested;
 
   return (
-    <Screen>
-      <TopBar />
+    <Screen header={<TopBar />}>
       <H1 size={56}>Can't make it?</H1>
       <T size={15} lh={1.5} color={night.body}>No problem. Here's exactly what happens with each option, before you choose.</T>
       {done && <Pill label={ticket.releasedToWaitlist ? 'ALREADY RELEASED TO THE WAITLIST' : 'REFUND REQUESTED'} bg={night.cream} mono />}

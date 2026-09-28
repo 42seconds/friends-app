@@ -28,8 +28,7 @@ export default function GuestDetailScreen() {
 
   return (
     <StaffGate>
-      <Screen bg={night.ink} dark>
-        <TopBar dark />
+      <Screen header={<TopBar dark />} bg={night.ink} dark>
         <View style={{ alignItems: 'center', gap: 10 }}>
           <Avatar name={t.userName} size={84} ring={night.ink} />
           <H1 size={44} color={night.paper}>{t.userName ?? 'Guest'}</H1>

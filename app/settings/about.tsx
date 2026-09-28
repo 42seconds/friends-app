@@ -10,12 +10,11 @@ export default function AboutScreen() {
   const router = useRouter();
   const [music, talk, fun, food] = SUB_BRANDS;
   return (
-    <Screen
+    <Screen header={<TopBar dark />} headerBg={night.orange}
       padTop={false}
       hero={
         <Hero bg={night.orange}>
           <Amp size={420} color={night.orangeDeep} style={{ right: -60, top: 0 }} />
-          <TopBar dark />
           <View style={{ marginTop: 40 }}>
             <H1 size={80}>Made in{'\n'}Braam</H1>
           </View>

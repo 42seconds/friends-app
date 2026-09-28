@@ -74,9 +74,7 @@ export default function ReviewBookingScreen() {
   };
 
   return (
-    <Screen footer={<PrimaryButton label="Reserve and pay by EFT" onPress={reserve} loading={submitting} disabled={!tier} />}>
-      <TopBar />
-      <StepProgress step={2} />
+    <Screen header={<><TopBar /><StepProgress step={2} /></>} footer={<PrimaryButton label="Reserve and pay by EFT" onPress={reserve} loading={submitting} disabled={!tier} />}>
       <H1 size={56}>Review{'\n'}booking</H1>
 
       {event && (

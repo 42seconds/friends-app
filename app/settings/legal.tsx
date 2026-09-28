@@ -35,8 +35,7 @@ export default function LegalScreen() {
   const items = tab === 'privacy' ? PRIVACY : TERMS;
 
   return (
-    <Screen>
-      <TopBar />
+    <Screen header={<TopBar />}>
       <H1 size={56}>Terms &amp;{'\n'}privacy</H1>
       <Segmented value={tab} onChange={(t) => { setTab(t); setOpen(0); }} options={[{ key: 'privacy', label: 'Privacy' }, { key: 'terms', label: 'Terms' }]} />
       <View style={{ padding: 16, borderRadius: 20, backgroundColor: night.ink, gap: 6 }}>

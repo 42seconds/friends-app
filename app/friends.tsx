@@ -18,8 +18,7 @@ function Action({ icon, label, bg, onPress }: { icon: IconName; label: string; b
 export default function FriendsScreen() {
   const invite = 'Come find events in Braam with me on &FRIENDS.';
   return (
-    <Screen>
-      <TopBar />
+    <Screen header={<TopBar />}>
       <H1 size={60}>Friends</H1>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Action icon="logo-whatsapp" label="Invite on WhatsApp" bg={night.lime} onPress={() => Linking.openURL(whatsappLink(invite))} />

@@ -21,8 +21,7 @@ const ADDRESS = '[STREET ADDRESS], Braamfontein';
 
 export default function VenueInfoScreen() {
   return (
-    <Screen>
-      <TopBar />
+    <Screen header={<TopBar />}>
       <H1 size={60}>Visit{'\n'}&amp;Friends</H1>
       <Card>
         <T size={13} color={night.muted}>Hours vary on event nights</T>

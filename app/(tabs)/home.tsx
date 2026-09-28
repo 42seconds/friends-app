@@ -33,17 +33,21 @@ export default function ExploreScreen() {
   }
 
   return (
-    <Screen tabBar>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <Ionicons name="location" size={16} color={night.orange} />
-          <T size={14} weight="600">Braamfontein, JHB</T>
+    <Screen
+      tabBar
+      header={
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+            <Ionicons name="location" size={16} color={night.orange} />
+            <T size={14} weight="600">Braamfontein, JHB</T>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <IconButton icon="search" label="Search" onPress={() => router.push('/search')} />
+            {user && <IconButton icon="notifications-outline" label="Notifications" onPress={() => router.push('/inbox')} />}
+          </View>
         </View>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
-          <IconButton icon="search" label="Search" onPress={() => router.push('/search')} />
-          {user && <IconButton icon="notifications-outline" label="Notifications" onPress={() => router.push('/inbox')} />}
-        </View>
-      </View>
+      }
+    >
 
       <StatusBanner tickets={tickets} />
 

@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { createContext, ReactNode, useContext, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, RefreshControlProps, ScrollView, StyleProp, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -6,8 +6,14 @@ import { useRouter } from 'expo-router';
 import { night } from '../../theme/night';
 import { IconButton, IconName } from './Buttons';
 
+// True inside a Screen that has a pinned header: Hero then skips the
+// safe-area top padding because the header already covers it.
+const HeaderContext = createContext(false);
+
 interface ScreenProps {
   children: ReactNode;
+  header?: ReactNode; // pinned to the top, stays visible while content scrolls
+  headerBg?: string; // defaults to the screen background
   bg?: string;
   dark?: boolean; // light status bar text
   footer?: ReactNode; // pinned to the bottom (CTA bar)
@@ -38,22 +44,51 @@ export default function Screen({
   contentStyle,
   refreshControl,
   fill,
+  header,
+  headerBg,
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
+  const [scrolled, setScrolled] = useState(false);
+  const barBg = headerBg ?? bg;
+  const barDark = barBg === night.ink || barBg === night.inkDeep || barBg === night.danger;
   const bottomPad = tabBar ? 110 + insets.bottom : footer ? 24 : 40 + insets.bottom;
   const content = (
     <>
       {hero}
-      <View style={[{ flexGrow: fill ? 1 : undefined, paddingHorizontal: 20, paddingTop: padTop && !hero ? insets.top + 12 : hero ? 20 : 0, paddingBottom: bottomPad, gap }, contentStyle]}>
+      <View style={[{ flexGrow: fill ? 1 : undefined, paddingHorizontal: 20, paddingTop: header ? (hero ? 20 : 8) : padTop && !hero ? insets.top + 12 : hero ? 20 : 0, paddingBottom: bottomPad, gap }, contentStyle]}>
         {children}
       </View>
     </>
   );
   return (
+    <HeaderContext.Provider value={!!header}>
     <KeyboardAvoidingView style={{ flex: 1, backgroundColor: bg }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <StatusBar style={dark ? 'light' : 'dark'} />
+      <StatusBar style={(header ? barDark : dark) ? 'light' : 'dark'} />
+      {header && (
+        <View
+          style={{
+            paddingTop: insets.top + 8,
+            paddingHorizontal: 20,
+            paddingBottom: 10,
+            gap: 12,
+            backgroundColor: barBg,
+            borderBottomWidth: 1.5,
+            borderBottomColor: scrolled && barBg === bg ? (barDark ? night.ink2 : night.line) : 'transparent',
+            zIndex: 2,
+          }}
+        >
+          {header}
+        </View>
+      )}
       {scroll ? (
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} refreshControl={refreshControl} contentContainerStyle={fill ? { flexGrow: 1 } : undefined}>
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+          refreshControl={refreshControl}
+          contentContainerStyle={fill ? { flexGrow: 1 } : undefined}
+          scrollEventThrottle={32}
+          onScroll={header ? (e) => setScrolled(e.nativeEvent.contentOffset.y > 4) : undefined}
+        >
           {content}
         </ScrollView>
       ) : (
@@ -75,6 +110,7 @@ export default function Screen({
         </View>
       )}
     </KeyboardAvoidingView>
+    </HeaderContext.Provider>
   );
 }
 
@@ -94,8 +130,9 @@ export function TopBar({ dark, onColor, right, center, onBack, icon = 'arrow-bac
 // Coloured, full-bleed header block (orange/blue/ink) used by many screens.
 export function Hero({ bg, children, gap = 12, pb = 26 }: { bg: string; children: ReactNode; gap?: number; pb?: number }) {
   const insets = useSafeAreaInsets();
+  const pinned = useContext(HeaderContext);
   return (
-    <View style={{ backgroundColor: bg, paddingTop: insets.top + 12, paddingHorizontal: 20, paddingBottom: pb, overflow: 'hidden', gap }}>
+    <View style={{ backgroundColor: bg, paddingTop: pinned ? 4 : insets.top + 12, paddingHorizontal: 20, paddingBottom: pb, overflow: 'hidden', gap }}>
       {children}
     </View>
   );

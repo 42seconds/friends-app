@@ -36,12 +36,11 @@ export default function LineupScreen() {
   };
 
   return (
-    <Screen
+    <Screen header={<TopBar dark />} headerBg={brand.color}
       padTop={false}
       hero={
         <Hero bg={brand.color} gap={12}>
           <Amp size={300} color={brand.deep} style={{ right: -40, top: 0 }} />
-          <TopBar dark />
           <T mono weight="700" size={11} style={{ marginTop: 30 }}>{`${shortDate(event?.date, event?.time)} · ${event?.location ?? ''}`.toUpperCase()}</T>
           <H1 size={72}>Lineup</H1>
         </Hero>

@@ -36,37 +36,40 @@ export default function SearchScreen() {
   const active = activeFilterLabels(filters);
 
   return (
-    <Screen>
-      <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-        <IconButton icon="arrow-back" label="Back" onPress={() => router.back()} />
-        <View style={{ flex: 1, height: 48, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, borderRadius: 999, backgroundColor: night.card, borderWidth: 2, borderColor: night.ink }}>
-          <Ionicons name="search" size={18} color={night.ink} />
-          <TextInput
-            accessibilityLabel="Search events and venues"
-            autoFocus
-            value={q}
-            onChangeText={setQ}
-            onSubmitEditing={() => pushRecentSearch(q)}
-            returnKeyType="search"
-            placeholder="Events, venues, vibes"
-            placeholderTextColor={night.faint}
-            style={{ flex: 1, fontFamily: fonts.regular, fontSize: 16, color: night.ink }}
-          />
-          {!!q && (
-            <Pressable accessibilityLabel="Clear search" onPress={() => setQ('')} style={{ width: 26, height: 26, borderRadius: 99, backgroundColor: night.sand, alignItems: 'center', justifyContent: 'center' }}>
-              <Ionicons name="close" size={14} color={night.ink} />
-            </Pressable>
-          )}
-        </View>
-        <View>
-          <IconButton icon="options-outline" label="Filters" tone="ink" onPress={() => router.push('/filters')} />
-          {active.length > 0 && (
-            <View style={{ position: 'absolute', top: -4, right: -4, minWidth: 20, height: 20, borderRadius: 99, backgroundColor: night.orange, alignItems: 'center', justifyContent: 'center' }}>
-              <T size={11} weight="700">{active.length}</T>
+    <Screen
+      header={
+          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+            <IconButton icon="arrow-back" label="Back" onPress={() => router.back()} />
+            <View style={{ flex: 1, height: 48, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, borderRadius: 999, backgroundColor: night.card, borderWidth: 2, borderColor: night.ink }}>
+              <Ionicons name="search" size={18} color={night.ink} />
+              <TextInput
+                accessibilityLabel="Search events and venues"
+                autoFocus
+                value={q}
+                onChangeText={setQ}
+                onSubmitEditing={() => pushRecentSearch(q)}
+                returnKeyType="search"
+                placeholder="Events, venues, vibes"
+                placeholderTextColor={night.faint}
+                style={{ flex: 1, fontFamily: fonts.regular, fontSize: 16, color: night.ink }}
+              />
+              {!!q && (
+                <Pressable accessibilityLabel="Clear search" onPress={() => setQ('')} style={{ width: 26, height: 26, borderRadius: 99, backgroundColor: night.sand, alignItems: 'center', justifyContent: 'center' }}>
+                  <Ionicons name="close" size={14} color={night.ink} />
+                </Pressable>
+              )}
             </View>
-          )}
-        </View>
-      </View>
+            <View>
+              <IconButton icon="options-outline" label="Filters" tone="ink" onPress={() => router.push('/filters')} />
+              {active.length > 0 && (
+                <View style={{ position: 'absolute', top: -4, right: -4, minWidth: 20, height: 20, borderRadius: 99, backgroundColor: night.orange, alignItems: 'center', justifyContent: 'center' }}>
+                  <T size={11} weight="700">{active.length}</T>
+                </View>
+              )}
+            </View>
+          </View>
+      }
+    >
 
       {!query && terms.length > 0 && (
         <View style={{ gap: 8 }}>

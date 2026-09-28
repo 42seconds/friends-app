@@ -91,8 +91,7 @@ export default function ScannerScreen() {
 
   return (
     <StaffGate>
-      <Screen bg={night.inkDeep} dark>
-        <TopBar
+      <Screen header={<TopBar
           dark
           onBack={() => router.replace('/staff')}
           right={
@@ -100,7 +99,7 @@ export default function ScannerScreen() {
               <T size={13} weight="600" color={night.paper} numberOfLines={1}>{event ? `${event.title} · ${door}` : 'Pick an event'}</T>
             </Pressable>
           }
-        />
+        />} bg={night.inkDeep} dark>
         {offline && (
           <Pressable onPress={() => router.push('/staff/sync')} style={{ flexDirection: 'row', gap: 10, alignItems: 'center', padding: 12, borderRadius: 14, backgroundColor: night.warnDark }}>
             <Ionicons name="cloud-offline-outline" size={18} color={night.yellow} />

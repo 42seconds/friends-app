@@ -39,8 +39,7 @@ export default function StaffHomeScreen() {
 
   return (
     <StaffGate>
-      <Screen bg={night.ink} dark footerDark footer={event ? <PrimaryButton tone="orange" icon="scan" label="Start scanning" onPress={() => router.push('/staff/scanner')} /> : undefined}>
-        <TopBar
+      <Screen header={<TopBar
           dark
           icon="close"
           onBack={() => router.replace('/(tabs)/profile')}
@@ -51,7 +50,7 @@ export default function StaffHomeScreen() {
               <T size={13} weight="600" color={night.paper}>{scans.length ? `${scans.length} to sync` : 'Synced'}</T>
             </Pressable>
           }
-        />
+        />} bg={night.ink} dark footerDark footer={event ? <PrimaryButton tone="orange" icon="scan" label="Start scanning" onPress={() => router.push('/staff/scanner')} /> : undefined}>
         {!event ? (
           <EmptyState dark icon="calendar-outline" tileBg={night.ink2} iconColor={night.orange} title="No event tonight" body="There are no upcoming published events to work." />
         ) : (

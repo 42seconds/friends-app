@@ -10,8 +10,7 @@ export default function NotificationPrefsScreen() {
   const maskedPhone = profile?.phone ? profile.phone.replace(/(\d{2})\d{3}(\d{4})$/, '$1*** $2') : 'Add a number in Edit profile';
 
   return (
-    <Screen>
-      <TopBar />
+    <Screen header={<TopBar />}>
       <H1 size={52}>Notifications</H1>
       <SectionLabel>HOW WE REACH YOU</SectionLabel>
       <ListGroup>

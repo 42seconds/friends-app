@@ -33,8 +33,7 @@ export default function HelpScreen() {
   const shown = FAQ.filter((f) => (!topic || f.topic === topic) && (!query || (f.q + f.a).toLowerCase().includes(query)));
 
   return (
-    <Screen>
-      <TopBar />
+    <Screen header={<TopBar />}>
       <H1 size={60}>Help</H1>
       <Field value={q} onChangeText={setQ} placeholder="Search help" left={<Ionicons name="search" size={18} color={night.muted} />} />
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>

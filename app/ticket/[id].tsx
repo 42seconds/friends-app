@@ -38,8 +38,7 @@ export default function TicketDetailScreen() {
   if (loading) return <View style={{ flex: 1, justifyContent: 'center', backgroundColor: night.ink }}><ActivityIndicator color={night.paper} /></View>;
   if (!ticket) {
     return (
-      <Screen bg={night.ink} dark>
-        <TopBar dark />
+      <Screen header={<TopBar dark />} bg={night.ink} dark>
         <T size={16} color={night.paper}>Ticket not found.</T>
       </Screen>
     );
@@ -51,12 +50,11 @@ export default function TicketDetailScreen() {
   const transferPending = ticket.transfer?.status === 'pending';
 
   return (
-    <Screen bg={night.ink} dark>
-      <TopBar
+    <Screen header={<TopBar
         dark
         center={confirmed ? <Pill label="SHOW THIS AT THE DOOR" bg={night.ink2} color={night.paper} mono /> : undefined}
         right={<IconButton icon="share-outline" label="Share" tone="dark" onPress={() => Share.share({ message: `I'm going to ${ticket.eventTitle} · ${shortDate(ticket.eventDate, ticket.eventTime)} · ${ticket.eventLocation}` })} />}
-      />
+      />} bg={night.ink} dark>
 
       <View style={{ borderRadius: 26, overflow: 'hidden', backgroundColor: night.paper }}>
         <View style={{ backgroundColor: brand.color, padding: 18, gap: 16, overflow: 'hidden' }}>

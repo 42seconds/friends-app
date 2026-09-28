@@ -35,8 +35,7 @@ export default function PrivacyScreen() {
   };
 
   return (
-    <Screen>
-      <TopBar />
+    <Screen header={<TopBar />}>
       <H1 size={52}>Privacy &amp;{'\n'}security</H1>
       <SectionLabel>SECURITY</SectionLabel>
       <ListGroup>

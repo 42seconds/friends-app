@@ -36,7 +36,7 @@ export default function WaitlistScreen() {
     ]);
 
   return (
-    <Screen
+    <Screen header={<TopBar dark />} headerBg={brand.color}
       padTop={false}
       footer={
         loading ? undefined : offerLive ? (
@@ -48,7 +48,6 @@ export default function WaitlistScreen() {
       hero={
         <Hero bg={brand.color} gap={12}>
           <Amp size={320} color={brand.deep} style={{ right: -40, top: 0 }} />
-          <TopBar dark />
           <View style={{ flexDirection: 'row', marginTop: 30 }}>
             <Pill label={`${brand.name} · ${shortDate(event?.date, event?.time)}`} bg={night.ink} color={night.paper} />
           </View>

@@ -60,12 +60,11 @@ export default function RegisterScreen() {
   };
 
   return (
-    <Screen
+    <Screen header={<TopBar dark onBack={() => (router.canGoBack() ? router.back() : router.replace('/(auth)/login'))} />} headerBg={night.ink}
       padTop={false}
       hero={
         <Hero bg={night.ink} gap={14}>
           <Amp size={220} color={night.lime} style={{ right: -20, top: 40 }} />
-          <TopBar dark onBack={() => (router.canGoBack() ? router.back() : router.replace('/(auth)/login'))} />
           <View style={{ marginTop: 28 }}>
             <H1 size={66} color={night.paper}>Join{'\n'}&amp;Friends</H1>
           </View>
