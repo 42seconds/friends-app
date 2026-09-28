@@ -134,7 +134,7 @@ export default function ScannerScreen() {
           )}
 
           {look && result && (
-            <View style={{ ...StyleSheet.absoluteFillObject, backgroundColor: look.bg, padding: 18, justifyContent: 'space-between' }} accessibilityLiveRegion="assertive">
+            <View style={{ ...StyleSheet.absoluteFill, backgroundColor: look.bg, padding: 18, justifyContent: 'space-between' }} accessibilityLiveRegion="assertive">
               <View style={{ gap: 12 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <View style={{ width: 52, height: 52, borderRadius: 99, backgroundColor: look.fg === night.ink ? night.ink : night.paper, alignItems: 'center', justifyContent: 'center' }}>
