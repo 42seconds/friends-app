@@ -10,3 +10,4 @@ export { PageDots, NextPill, BrandTile } from './Onboard';
 export { default as StatusBanner } from './StatusBanner';
 export { FeaturedEventCard, EventListRow, priceLine, isFree, eventHref } from './EventCards';
 export { default as CopyRow } from './CopyRow';
+export { default as MapArt } from './MapArt';
