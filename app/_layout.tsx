@@ -13,6 +13,8 @@ import { JetBrainsMono_500Medium, JetBrainsMono_700Bold } from '@expo-google-fon
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { OnboardingProvider, useOnboarding } from '../src/context/OnboardingContext';
 import Splash from '../src/components/night/Splash';
+import UpdateRequired from '../src/components/night/UpdateRequired';
+import { useUpdateRequired } from '../src/hooks/useMinVersion';
 import { night } from '../src/theme/night';
 
 // Routes a logged-out visitor may open while "just browsing".
@@ -29,6 +31,7 @@ function RedirectGate() {
   const { hasSeenOnboarding } = useOnboarding();
   const segments = useSegments();
   const router = useRouter();
+  const updateRequired = useUpdateRequired();
 
   useEffect(() => {
     if (authLoading || hasSeenOnboarding === null) return;
@@ -48,6 +51,7 @@ function RedirectGate() {
   }, [user, authLoading, hasSeenOnboarding, segments, browsing]);
 
   if (authLoading || hasSeenOnboarding === null) return <Splash />;
+  if (updateRequired) return <UpdateRequired />;
 
   return (
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: night.paper }, animation: 'slide_from_right' }}>
