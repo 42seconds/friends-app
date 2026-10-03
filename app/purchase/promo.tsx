@@ -7,6 +7,7 @@ import { lookupPromo } from '../../src/services/communityService';
 import { promoStore } from '../../src/store';
 import { breakdown, rand } from '../../src/lib/pricing';
 import { night } from '../../src/theme/night';
+import { safeBack } from '../../src/lib/nav';
 
 // Sheet: promo or access code. Looks the code up and previews the saving.
 export default function PromoSheet() {
@@ -46,7 +47,7 @@ export default function PromoSheet() {
             label="Use this code"
             onPress={() => {
               promoStore.set({ eventId, code: found.code, percentOff: found.percentOff });
-              router.back();
+              safeBack(router);
             }}
           />
         ) : (

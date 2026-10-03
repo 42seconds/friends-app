@@ -5,6 +5,7 @@ import { T, H1, Screen, TopBar, Field, Segmented, Note, SectionLabel, PrimaryBut
 import { useProfile } from '../../src/hooks/useProfile';
 import { saveRefundBank, last4 } from '../../src/services/userService';
 import { night } from '../../src/theme/night';
+import { safeBack } from '../../src/lib/nav';
 
 // South African universal branch codes, filled in when the bank is typed.
 const BRANCHES: Record<string, string> = {
@@ -52,7 +53,7 @@ export default function RefundBankScreen() {
     setSaving(true);
     try {
       await saveRefundBank(user.uid, { holder: holder.trim(), bank: bank.trim(), accountType: type, accountNumber: digits, branchCode: branch.trim() });
-      router.back();
+      safeBack(router);
     } catch {
       Alert.alert("Couldn't save", 'Check your connection and try again.');
     } finally {

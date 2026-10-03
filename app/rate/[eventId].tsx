@@ -8,6 +8,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { sendRating } from '../../src/services/communityService';
 import { shortDate } from '../../src/lib/dates';
 import { night } from '../../src/theme/night';
+import { safeBack } from '../../src/lib/nav';
 
 const WORDS = ['', 'Not great', 'It was ok', 'Good', 'Really good', 'Unforgettable'];
 const HIGHLIGHTS = ['The music', 'The crowd', 'Venue', 'Sound', 'Door speed', 'Felt safe'];
@@ -28,7 +29,7 @@ export default function RateScreen() {
     try {
       await sendRating({ eventId, userId: anon ? null : user?.uid ?? null, stars, highlights: picked, fix: fix.trim(), anonymous: anon });
       Alert.alert('Thank you!', 'We read every one of these.');
-      router.back();
+      safeBack(router);
     } catch {
       Alert.alert("Couldn't send", 'Check your connection and try again.');
     } finally {
@@ -37,7 +38,7 @@ export default function RateScreen() {
   };
 
   return (
-    <Screen header={<TopBar dark right={<IconButton label="Later" tone="onColor" onPress={() => router.back()}><T size={14} weight="600">Later</T></IconButton>} />} headerBg={night.orange}
+    <Screen header={<TopBar dark right={<IconButton label="Later" tone="onColor" onPress={() => safeBack(router)}><T size={14} weight="600">Later</T></IconButton>} />} headerBg={night.orange}
       padTop={false}
       hero={
         <Hero bg={night.orange} gap={12}>

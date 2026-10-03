@@ -8,6 +8,7 @@ import { filtersStore, recentSearchStore, pushRecentSearch, DEFAULT_FILTERS } fr
 import { subBrandFor, SUB_BRANDS } from '../src/lib/subbrands';
 import { applyFilters, activeFilterLabels, minPrice } from '../src/lib/filters';
 import { fonts, night } from '../src/theme/night';
+import { safeBack } from '../src/lib/nav';
 
 // Highlights the matched part of a title.
 function Highlight({ text, q }: { text: string; q: string }) {
@@ -39,7 +40,7 @@ export default function SearchScreen() {
     <Screen
       header={
           <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-            <IconButton icon="arrow-back" label="Back" onPress={() => router.back()} />
+            <IconButton icon="arrow-back" label="Back" onPress={() => safeBack(router)} />
             <View style={{ flex: 1, height: 48, flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 14, borderRadius: 999, backgroundColor: night.card, borderWidth: 2, borderColor: night.ink }}>
               <Ionicons name="search" size={18} color={night.ink} />
               <TextInput

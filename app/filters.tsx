@@ -6,6 +6,7 @@ import { useEvents } from '../src/hooks/useEvents';
 import { filtersStore, DEFAULT_FILTERS, Filters, WhenFilter, SortBy } from '../src/store';
 import { applyFilters } from '../src/lib/filters';
 import { SUB_BRANDS } from '../src/lib/subbrands';
+import { safeBack } from '../src/lib/nav';
 
 const WHEN: { key: WhenFilter; label: string }[] = [
   { key: 'any', label: 'Any time' },
@@ -44,7 +45,7 @@ export default function FiltersSheet() {
             style={{ flex: 2 }}
             onPress={() => {
               filtersStore.set(f);
-              router.back();
+              safeBack(router);
             }}
           />
         </View>
@@ -52,7 +53,7 @@ export default function FiltersSheet() {
     >
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <H2 size={40}>Filters</H2>
-        <IconButton icon="close" label="Close" onPress={() => router.back()} />
+        <IconButton icon="close" label="Close" onPress={() => safeBack(router)} />
       </View>
       <SectionLabel>WHEN</SectionLabel>
       <ChipRow>

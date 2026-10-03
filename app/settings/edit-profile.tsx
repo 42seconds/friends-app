@@ -7,6 +7,7 @@ import { useProfile } from '../../src/hooks/useProfile';
 import { updateUserProfile } from '../../src/services/userService';
 import { SUB_BRANDS } from '../../src/lib/subbrands';
 import { night } from '../../src/theme/night';
+import { safeBack } from '../../src/lib/nav';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -31,7 +32,7 @@ export default function EditProfileScreen() {
     setSaving(true);
     try {
       await updateUserProfile(user.uid, { name: [first.trim(), last.trim()].filter(Boolean).join(' '), phone: phone.trim(), interests });
-      router.back();
+      safeBack(router);
     } catch {
       Alert.alert("Couldn't save", 'Check your connection and try again.');
     } finally {

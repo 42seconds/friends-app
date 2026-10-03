@@ -8,6 +8,7 @@ import { joinWaitlist } from '../../src/services/communityService';
 import { allIn, rand } from '../../src/lib/pricing';
 import { shortDate } from '../../src/lib/dates';
 import { night } from '../../src/theme/night';
+import { safeBack } from '../../src/lib/nav';
 
 const MAX = 2;
 
@@ -28,7 +29,7 @@ export default function JoinWaitlistSheet() {
     setSaving(true);
     try {
       await joinWaitlist({ eventId, userId: user.uid, userName: profile?.name ?? '', quantity: qty, whatsappAlerts: wa });
-      router.back();
+      safeBack(router);
     } catch {
       setError("Couldn't join right now. Try again.");
     } finally {
