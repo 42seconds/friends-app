@@ -18,7 +18,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
 
   useEffect(() => {
-    getHasSeenOnboarding().then(setHasSeenOnboarding);
+    getHasSeenOnboarding().then(setHasSeenOnboarding).catch(() => setHasSeenOnboarding(false));
   }, []);
 
   // Writes to AsyncStorage AND updates in-memory state together.

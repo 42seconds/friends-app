@@ -14,6 +14,15 @@ import { PurchasedTicket, TicketStatus } from '../types';
 import { HOLD_HOURS } from '../config/pricing';
 import { byDate, normalizeDates } from '../lib/firestoreData';
 
+// Listener errors (offline, or rules refusing access, e.g. right after
+// logging out) are reported quietly instead of as uncaught errors.
+function quiet(what: string, then?: () => void) {
+  return (e: Error) => {
+    console.warn(`Firestore ${what} listener stopped:`, e.message);
+    then?.();
+  };
+}
+
 // Every ticket read goes through here: dates become ISO strings, and
 // bookings without createdAt fall back to purchasedAt.
 function toTicket(id: string, raw: any): PurchasedTicket {
@@ -89,13 +98,17 @@ export function effectiveStatus(t: PurchasedTicket): TicketStatus {
 }
 
 export function listenToTicket(ticketId: string, callback: (ticket: PurchasedTicket | null) => void) {
-  return onSnapshot(doc(db, 'tickets', ticketId), (snapshot) => {
-    if (!snapshot.exists()) {
-      callback(null);
-      return;
-    }
-    callback(toTicket(snapshot.id, snapshot.data()));
-  });
+  return onSnapshot(
+    doc(db, 'tickets', ticketId),
+    (snapshot) => {
+      if (!snapshot.exists()) {
+        callback(null);
+        return;
+      }
+      callback(toTicket(snapshot.id, snapshot.data()));
+    },
+    quiet('ticket', () => callback(null))
+  );
 }
 
 export function listenToUserTickets(userId: string, callback: (tickets: PurchasedTicket[]) => void, onError?: (e: Error) => void) {
@@ -112,12 +125,16 @@ export function listenToUserTickets(userId: string, callback: (tickets: Purchase
 // Staff: every booking in one payment state (Approvals tabs).
 export function listenToTicketsByStatus(status: TicketStatus, callback: (tickets: PurchasedTicket[]) => void) {
   const q = query(collection(db, 'tickets'), where('status', '==', status));
-  return onSnapshot(q, (snapshot) => {
-    const tickets = snapshot.docs.map((d) => (toTicket(d.id, d.data())));
-    // Oldest first — guests wait on these.
-    tickets.sort((a, b) => byDate(a.proofUploadedAt ?? a.createdAt, b.proofUploadedAt ?? b.createdAt));
-    callback(tickets);
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const tickets = snapshot.docs.map((d) => toTicket(d.id, d.data()));
+      // Oldest first — guests wait on these.
+      tickets.sort((a, b) => byDate(a.proofUploadedAt ?? a.createdAt, b.proofUploadedAt ?? b.createdAt));
+      callback(tickets);
+    },
+    quiet('approvals', () => callback([]))
+  );
 }
 
 // Kept for older callers: the pending-verification queue.
@@ -128,9 +145,11 @@ export function listenToPendingTickets(callback: (tickets: PurchasedTicket[]) =>
 // Staff: every booking for one event (door dashboard + guest list).
 export function listenToEventTickets(eventId: string, callback: (tickets: PurchasedTicket[]) => void) {
   const q = query(collection(db, 'tickets'), where('eventId', '==', eventId));
-  return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map((d) => (toTicket(d.id, d.data()))));
-  });
+  return onSnapshot(
+    q,
+    (snapshot) => callback(snapshot.docs.map((d) => toTicket(d.id, d.data()))),
+    quiet('event tickets', () => callback([]))
+  );
 }
 
 // Payment approval — records WHO approved it for an audit trail.
