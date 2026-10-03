@@ -39,7 +39,7 @@ export default function GuestDetailScreen() {
           <KV dark k="Event" v={`${t.eventTitle ?? ''} · ${shortDate(t.eventDate, t.eventTime)}`} mono={false} />
           {t.checkedIn && <KV dark k="Checked in" v={[clock(t.checkedInAt), t.checkedInDoor, t.checkedInBy].filter(Boolean).join(' · ')} />}
           <KV dark k="Bought by" v={t.userName ?? ''} mono={false} />
-          <KV dark k="Payment" v={t.validatedAt ? `Verified ${stamp(t.validatedAt)}` : t.status.replace('_', ' ')} mono={false} />
+          <KV dark k="Payment" v={t.validatedAt ? `Verified ${stamp(t.validatedAt)}` : String(t.status ?? 'unknown').replace('_', ' ')} mono={false} />
         </View>
         <Field dark label="STAFF NOTE" value={note} onChangeText={setNote} multiline placeholder="E.g. stepped out to the car, back in 10" />
         {note !== (t.staffNote ?? '') && <OutlineButton dark label="Save note" onPress={() => saveStaffNote(t.id, note.trim())} />}

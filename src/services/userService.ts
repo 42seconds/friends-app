@@ -1,6 +1,7 @@
 import { deleteDoc, doc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 import { RefundBank, UserProfile } from '../types';
+import { normalizeDates } from '../lib/firestoreData';
 
 // Fetches the current user's profile document from Firestore.
 // AuthContext only gives us the Auth object (email + uid), not the
@@ -8,7 +9,7 @@ import { RefundBank, UserProfile } from '../types';
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const snap = await getDoc(doc(db, 'users', uid));
   if (!snap.exists()) return null;
-  return snap.data() as UserProfile;
+  return normalizeDates(snap.data()) as UserProfile;
 }
 
 // Updates editable profile fields. Email and role are intentionally

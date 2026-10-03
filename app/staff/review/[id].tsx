@@ -64,7 +64,7 @@ export default function ProofReviewScreen() {
 
   return (
     <StaffGate>
-      <Screen header={<TopBar dark onBack={() => router.replace('/staff/approvals')} center={<T mono weight="700" size={11} color={night.inkMuted}>{idx >= 0 ? `${idx + 1} OF ${queue.length} TO REVIEW` : t.status.replace('_', ' ').toUpperCase()}</T>} />} headerBg={night.ink}
+      <Screen header={<TopBar dark onBack={() => router.replace('/staff/approvals')} center={<T mono weight="700" size={11} color={night.inkMuted}>{idx >= 0 ? `${idx + 1} OF ${queue.length} TO REVIEW` : String(t.status ?? 'unknown').replace('_', ' ').toUpperCase()}</T>} />} headerBg={night.ink}
         padTop={false}
         footer={
           reviewable ? (

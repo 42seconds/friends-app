@@ -1,5 +1,6 @@
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, setDoc, where } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
+import { byDate, normalizeDates } from '../lib/firestoreData';
 
 // ---- Waitlist ------------------------------------------------------
 // One doc per (event, user): waitlist/{eventId}_{uid}. Position is how
@@ -31,7 +32,7 @@ export async function setWaitlistAlerts(eventId: string, userId: string, whatsap
 export function listenToWaitlist(eventId: string, userId: string, cb: (state: { entry: WaitlistEntry | null; position: number; total: number }) => void) {
   const q = query(collection(db, 'waitlist'), where('eventId', '==', eventId));
   return onSnapshot(q, (snap) => {
-    const all = snap.docs.map((d) => d.data() as WaitlistEntry).sort((a, b) => a.joinedAt.localeCompare(b.joinedAt));
+    const all = snap.docs.map((d) => normalizeDates(d.data()) as WaitlistEntry).sort((a, b) => byDate(a.joinedAt, b.joinedAt));
     const idx = all.findIndex((e) => e.userId === userId);
     cb({ entry: idx >= 0 ? all[idx] : null, position: idx + 1, total: all.length });
   });

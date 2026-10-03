@@ -12,6 +12,14 @@ import {
 } from 'firebase/firestore';
 import { PurchasedTicket, TicketStatus } from '../types';
 import { HOLD_HOURS } from '../config/pricing';
+import { byDate, normalizeDates } from '../lib/firestoreData';
+
+// Every ticket read goes through here: dates become ISO strings, and
+// bookings without createdAt fall back to purchasedAt.
+function toTicket(id: string, raw: any): PurchasedTicket {
+  const d = normalizeDates(raw ?? {});
+  return { id, ...d, createdAt: d.createdAt ?? d.purchasedAt ?? '' } as PurchasedTicket;
+}
 
 interface CreateTicketInput {
   userId: string;
@@ -61,13 +69,15 @@ export async function createTicket(input: CreateTicketInput) {
 export async function getTicketById(ticketId: string): Promise<PurchasedTicket | null> {
   const snap = await getDoc(doc(db, 'tickets', ticketId));
   if (!snap.exists()) return null;
-  return { id: snap.id, ...(snap.data() as Omit<PurchasedTicket, 'id'>) };
+  return toTicket(snap.id, snap.data());
 }
 
 // When the hold ends: the stored value, or createdAt + HOLD_HOURS for
 // bookings made before holds were recorded.
 export function holdEndsAt(t: Pick<PurchasedTicket, 'holdExpiresAt' | 'createdAt'>): number {
   if (t.holdExpiresAt) return new Date(t.holdExpiresAt).getTime();
+  // No timestamps at all (very old bookings): treat the hold as open.
+  if (!t.createdAt) return Infinity;
   return new Date(t.createdAt).getTime() + HOLD_HOURS * 3600 * 1000;
 }
 
@@ -84,7 +94,7 @@ export function listenToTicket(ticketId: string, callback: (ticket: PurchasedTic
       callback(null);
       return;
     }
-    callback({ id: snapshot.id, ...(snapshot.data() as Omit<PurchasedTicket, 'id'>) });
+    callback(toTicket(snapshot.id, snapshot.data()));
   });
 }
 
@@ -93,7 +103,7 @@ export function listenToUserTickets(userId: string, callback: (tickets: Purchase
   return onSnapshot(
     userQuery,
     (snapshot) => {
-      callback(snapshot.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<PurchasedTicket, 'id'>) })));
+      callback(snapshot.docs.map((d) => (toTicket(d.id, d.data()))));
     },
     onError
   );
@@ -103,9 +113,9 @@ export function listenToUserTickets(userId: string, callback: (tickets: Purchase
 export function listenToTicketsByStatus(status: TicketStatus, callback: (tickets: PurchasedTicket[]) => void) {
   const q = query(collection(db, 'tickets'), where('status', '==', status));
   return onSnapshot(q, (snapshot) => {
-    const tickets = snapshot.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<PurchasedTicket, 'id'>) }));
+    const tickets = snapshot.docs.map((d) => (toTicket(d.id, d.data())));
     // Oldest first — guests wait on these.
-    tickets.sort((a, b) => (a.proofUploadedAt ?? a.createdAt).localeCompare(b.proofUploadedAt ?? b.createdAt));
+    tickets.sort((a, b) => byDate(a.proofUploadedAt ?? a.createdAt, b.proofUploadedAt ?? b.createdAt));
     callback(tickets);
   });
 }
@@ -119,7 +129,7 @@ export function listenToPendingTickets(callback: (tickets: PurchasedTicket[]) =>
 export function listenToEventTickets(eventId: string, callback: (tickets: PurchasedTicket[]) => void) {
   const q = query(collection(db, 'tickets'), where('eventId', '==', eventId));
   return onSnapshot(q, (snapshot) => {
-    callback(snapshot.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<PurchasedTicket, 'id'>) })));
+    callback(snapshot.docs.map((d) => (toTicket(d.id, d.data()))));
   });
 }
 
