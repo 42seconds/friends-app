@@ -19,10 +19,11 @@ export function useUserRole() {
       return;
     }
 
-    getUserProfile(user.uid).then((profile) => {
-      setRole(profile?.role ?? 'resident');
-      setLoading(false);
-    });
+    getUserProfile(user.uid)
+      .then((profile) => setRole(profile?.role ?? 'resident'))
+      // Offline or refused: treat as a regular member until it loads.
+      .catch(() => setRole('resident'))
+      .finally(() => setLoading(false));
   }, [user]);
 
   return { role,

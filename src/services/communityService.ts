@@ -31,11 +31,18 @@ export async function setWaitlistAlerts(eventId: string, userId: string, whatsap
 
 export function listenToWaitlist(eventId: string, userId: string, cb: (state: { entry: WaitlistEntry | null; position: number; total: number }) => void) {
   const q = query(collection(db, 'waitlist'), where('eventId', '==', eventId));
-  return onSnapshot(q, (snap) => {
-    const all = snap.docs.map((d) => normalizeDates(d.data()) as WaitlistEntry).sort((a, b) => byDate(a.joinedAt, b.joinedAt));
-    const idx = all.findIndex((e) => e.userId === userId);
-    cb({ entry: idx >= 0 ? all[idx] : null, position: idx + 1, total: all.length });
-  });
+  return onSnapshot(
+    q,
+    (snap) => {
+      const all = snap.docs.map((d) => normalizeDates(d.data()) as WaitlistEntry).sort((a, b) => byDate(a.joinedAt, b.joinedAt));
+      const idx = all.findIndex((e) => e.userId === userId);
+      cb({ entry: idx >= 0 ? all[idx] : null, position: idx + 1, total: all.length });
+    },
+    (e) => {
+      console.warn('Firestore waitlist listener stopped:', e.message);
+      cb({ entry: null, position: 0, total: 0 });
+    }
+  );
 }
 
 export async function getWaitlistCount(eventId: string) {
