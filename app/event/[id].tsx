@@ -12,6 +12,7 @@ import { addToCalendar, quote, selectionParams } from '../../src/lib/booking';
 import { shortDate } from '../../src/lib/dates';
 import { HOLD_HOURS, MAX_TICKETS_PER_PERSON } from '../../src/config/pricing';
 import { night } from '../../src/theme/night';
+import { safeBack } from '../../src/lib/nav';
 
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -67,7 +68,7 @@ export default function EventDetailScreen() {
       headerBg={brand.color}
       header={
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <IconButton icon="arrow-back" label="Back" tone="ink" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/home'))} />
+          <IconButton icon="arrow-back" label="Back" tone="ink" onPress={() => safeBack(router, '/(tabs)/home')} />
           <View style={{ flexDirection: 'row', gap: 8 }}>
             <IconButton icon={saved ? 'heart' : 'heart-outline'} label={saved ? 'Unsave' : 'Save'} tone="ink" onPress={() => toggleSaved(event.id)} />
             <IconButton icon="share-outline" label="Share" tone="ink" onPress={() => Share.share({ message: `${event.title} · ${shortDate(event.date, event.time)} · ${event.location}` })} />

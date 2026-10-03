@@ -6,6 +6,7 @@ import { T, H2, Screen, IconButton, MapArt, PrimaryButton, TextLink, IconName } 
 import { useEvent } from '../../src/hooks/useEvents';
 import { openDirections, TravelMode } from '../../src/lib/booking';
 import { night } from '../../src/theme/night';
+import { safeBack } from '../../src/lib/nav';
 
 const MODES: { key: TravelMode; icon: IconName; label: string }[] = [
   { key: 'walking', icon: 'walk', label: 'Walk' },
@@ -25,7 +26,7 @@ export default function DirectionsScreen() {
     <Screen
       padTop={false}
       headerBg={night.sand}
-      header={<IconButton icon="arrow-back" label="Back" onPress={() => router.back()} />}
+      header={<IconButton icon="arrow-back" label="Back" onPress={() => safeBack(router)} />}
       hero={
         <View>
           <MapArt height={400} route />

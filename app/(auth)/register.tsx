@@ -6,6 +6,7 @@ import { T, H1, Amp, TopBar, Field, PrimaryButton, TextLink, Screen, Hero, Secti
 import { registerUser, authErrorMessage } from '../../src/services/authService';
 import { SUB_BRANDS } from '../../src/lib/subbrands';
 import { night } from '../../src/theme/night';
+import { safeBack } from '../../src/lib/nav';
 
 // 0-4 bars: length, mixed case, digit, symbol.
 function strength(pw: string) {
@@ -60,7 +61,7 @@ export default function RegisterScreen() {
   };
 
   return (
-    <Screen header={<TopBar dark onBack={() => (router.canGoBack() ? router.back() : router.replace('/(auth)/login'))} />} headerBg={night.ink}
+    <Screen header={<TopBar dark onBack={() => safeBack(router, '/(auth)/login')} />} headerBg={night.ink}
       padTop={false}
       hero={
         <Hero bg={night.ink} gap={14}>

@@ -6,6 +6,7 @@ import { T, H1, IconButton, PageDots, NextPill, BrandTile } from '../../src/comp
 import { useOnboarding } from '../../src/context/OnboardingContext';
 import { SUB_BRANDS } from '../../src/lib/subbrands';
 import { night } from '../../src/theme/night';
+import { safeBack } from '../../src/lib/nav';
 
 // Onboarding 2 of 3: the four sub-brands.
 export default function BrandsScreen() {
@@ -23,7 +24,7 @@ export default function BrandsScreen() {
     <View style={{ flex: 1, backgroundColor: night.ink, paddingTop: insets.top + 12 }}>
       <StatusBar style="light" />
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20 }}>
-        <IconButton icon="arrow-back" label="Back" tone="dark" onPress={() => router.back()} />
+        <IconButton icon="arrow-back" label="Back" tone="dark" onPress={() => safeBack(router, '/(onboarding)/welcome')} />
         <IconButton label="Skip" tone="dark" onPress={skip}>
           <T size={14} weight="600" color={night.paper}>Skip</T>
         </IconButton>

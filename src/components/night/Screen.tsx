@@ -5,6 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useRouter } from 'expo-router';
 import { night } from '../../theme/night';
 import { IconButton, IconName } from './Buttons';
+import { safeBack } from '../../lib/nav';
 
 // True inside a Screen that has a pinned header: Hero then skips the
 // safe-area top padding because the header already covers it.
@@ -117,7 +118,7 @@ export default function Screen({
 // Top row with a back button on the left and optional content on the right.
 export function TopBar({ dark, onColor, right, center, onBack, icon = 'arrow-back' }: { dark?: boolean; onColor?: boolean; right?: ReactNode; center?: ReactNode; onBack?: () => void; icon?: IconName }) {
   const router = useRouter();
-  const back = onBack ?? (() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/home')));
+  const back = onBack ?? (() => safeBack(router, '/(tabs)/home'));
   return (
     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', minHeight: 44 }}>
       <IconButton icon={icon} label="Back" tone={onColor ? 'onColor' : dark ? 'dark' : 'light'} onPress={back} />
@@ -143,7 +144,7 @@ export function Hero({ bg, children, gap = 12, pb = 26 }: { bg: string; children
 export function Sheet({ children, footer, onClose }: { children: ReactNode; footer?: ReactNode; onClose?: () => void }) {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const close = onClose ?? (() => router.back());
+  const close = onClose ?? (() => safeBack(router));
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <StatusBar style="light" />

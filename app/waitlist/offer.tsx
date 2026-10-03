@@ -11,6 +11,7 @@ import { selectionParams } from '../../src/lib/booking';
 import { shortDate } from '../../src/lib/dates';
 import { subBrandFor } from '../../src/lib/subbrands';
 import { night } from '../../src/theme/night';
+import { safeBack } from '../../src/lib/nav';
 
 const WINDOW_MS = 30 * 60 * 1000;
 
@@ -44,7 +45,7 @@ export default function WaitlistOfferScreen() {
             color={night.inkMuted}
             onPress={async () => {
               if (user) await leaveWaitlist(eventId, user.uid);
-              router.back();
+              safeBack(router);
             }}
           />
         </>

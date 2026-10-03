@@ -6,6 +6,7 @@ import { useEvent } from '../../src/hooks/useEvents';
 import { openMap } from '../../src/lib/booking';
 import { shortDate } from '../../src/lib/dates';
 import { night } from '../../src/theme/night';
+import { safeBack } from '../../src/lib/nav';
 
 // Event location: address, copy/share, open in Maps.
 export default function EventMapScreen() {
@@ -20,7 +21,7 @@ export default function EventMapScreen() {
       headerBg={night.sand}
       header={
         <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-          <IconButton icon="arrow-back" label="Back" onPress={() => router.back()} />
+          <IconButton icon="arrow-back" label="Back" onPress={() => safeBack(router)} />
           <IconButton icon="open-outline" label="Open in Maps" onPress={() => openMap(address)} />
         </View>
       }

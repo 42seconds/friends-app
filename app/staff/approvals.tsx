@@ -8,6 +8,7 @@ import { rand } from '../../src/lib/pricing';
 import { subBrandFor } from '../../src/lib/subbrands';
 import { night } from '../../src/theme/night';
 import { PurchasedTicket, TicketStatus } from '../../src/types';
+import { safeBack } from '../../src/lib/nav';
 
 const TABS: { key: TicketStatus; label: string }[] = [
   { key: 'pending_verification', label: 'To review' },
@@ -31,7 +32,7 @@ export default function ApprovalsScreen() {
 
   return (
     <StaffGate>
-      <Screen header={<TopBar dark onBack={() => (router.canGoBack() ? router.back() : router.replace('/staff'))} center={<StaffPill />} />} headerBg={night.ink}
+      <Screen header={<TopBar dark onBack={() => safeBack(router, '/staff')} center={<StaffPill />} />} headerBg={night.ink}
         padTop={false}
         footer={tab === 'pending_verification' && review.length ? <PrimaryButton label={`Start reviewing · ${review.length}`} onPress={() => router.push(`/staff/review/${review[0].id}`)} /> : undefined}
         hero={

@@ -6,6 +6,7 @@ import { T, H1, Amp, TopBar, Field, PrimaryButton, TextLink, Screen } from '../.
 import { loginUser, resetPassword, authErrorMessage } from '../../src/services/authService';
 import { useAuth } from '../../src/context/AuthContext';
 import { night } from '../../src/theme/night';
+import { safeBack } from '../../src/lib/nav';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -55,7 +56,7 @@ export default function LoginScreen() {
   };
 
   return (
-    <Screen header={<TopBar dark onBack={() => (router.canGoBack() ? router.back() : router.replace('/(onboarding)/how'))} />}
+    <Screen header={<TopBar dark onBack={() => safeBack(router, '/(onboarding)/how')} />}
       bg={night.ink}
       dark
       padTop={false}
