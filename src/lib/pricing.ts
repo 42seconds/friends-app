@@ -33,6 +33,8 @@ export function breakdown(faceSubtotal: number, percentOff = 0): PriceBreakdown 
 
 // "R1,234.50" — or "R181" when `short` is set (used on cards).
 export function rand(amount: number, short = false): string {
+  // Older bookings may be missing a price; show R0 rather than crash.
+  if (typeof amount !== 'number' || !Number.isFinite(amount)) amount = Number(amount) || 0;
   if (short) return `R${Math.round(amount).toLocaleString('en-ZA').replace(/ /g, ',')}`;
   const [whole, cents] = amount.toFixed(2).split('.');
   return `R${Number(whole).toLocaleString('en-ZA').replace(/ /g, ',')}.${cents}`;

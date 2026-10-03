@@ -1,6 +1,7 @@
 import { collection, doc, getDoc, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 import { Event } from '../types';
+import { normalizeDates } from '../lib/firestoreData';
 
 // Listens to the events collection in real time, filtered to only
 // published events (drafts stay hidden from the mobile app).
@@ -14,7 +15,7 @@ export function listenToEvents(callback: (events: Event[]) => void, onError?: (e
   return onSnapshot(
     publishedQuery,
     (snapshot) => {
-      callback(snapshot.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Event, 'id'>) })));
+      callback(snapshot.docs.map((d) => ({ id: d.id, ...(normalizeDates(d.data()) as Omit<Event, 'id'>) })));
     },
     onError
   );
@@ -24,5 +25,5 @@ export function listenToEvents(callback: (events: Event[]) => void, onError?: (e
 export async function getEventById(eventId: string): Promise<Event | null> {
   const snapshot = await getDoc(doc(db, 'events', eventId));
   if (!snapshot.exists()) return null;
-  return { id: snapshot.id, ...(snapshot.data() as Omit<Event, 'id'>) };
+  return { id: snapshot.id, ...(normalizeDates(snapshot.data()) as Omit<Event, 'id'>) };
 }

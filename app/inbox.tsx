@@ -42,7 +42,7 @@ export default function InboxScreen() {
       if (t.transfer) out.push({ id: `${t.id}-tr`, kind: 'friends', icon: 'paper-plane-outline', tile: night.blue, title: t.transfer.status === 'accepted' ? `${t.transfer.toName} accepted your ticket` : `Ticket sent to ${t.transfer.toName}`, body: t.transfer.status === 'pending' ? 'Waiting for them to accept.' : `For ${ev}.`, at: t.transfer.sentAt });
       if (s === 'confirmed' && isPast(t.eventDate, t.eventTime)) out.push({ id: `${t.id}-rate`, kind: 'tickets', icon: 'star-outline', tile: night.sand, title: `How was ${ev}?`, body: 'Rate the night.', at: t.eventDate ?? t.createdAt, cta: { label: 'Rate it', href: `/rate/${t.eventId}`, tone: night.card } });
     }
-    return out.sort((a, b) => (b.at ?? '').localeCompare(a.at ?? ''));
+    return out.sort((a, b) => String(b.at ?? '').localeCompare(String(a.at ?? '')));
   }, [tickets]);
 
   const shown = items.filter((i) => filter === 'all' || i.kind === filter);
