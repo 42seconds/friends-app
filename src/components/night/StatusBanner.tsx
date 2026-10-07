@@ -22,7 +22,7 @@ export default function StatusBanner({ tickets }: { tickets: PurchasedTicket[] }
     s === 'rejected'
       ? { title: 'Your proof needs a fix', sub: `${t.eventTitle ?? 'Your booking'} · tickets still held`, dot: night.danger, to: `/purchase/rejected?ticketId=${t.id}` }
       : s === 'pending_payment'
-        ? { title: 'Finish paying by EFT', sub: `${t.eventTitle ?? 'Your booking'} · held for ${countdown(holdEndsAt(t)).slice(0, 5)}`, dot: night.orange, to: `/purchase/pay?ticketId=${t.id}` }
+        ? { title: 'Finish paying by EFT', sub: `${t.eventTitle ?? 'Your booking'} · ${Number.isFinite(holdEndsAt(t)) ? `held for ${countdown(holdEndsAt(t)).slice(0, 5)}` : 'awaiting payment'}`, dot: night.orange, to: `/purchase/pay?ticketId=${t.id}` }
         : { title: 'Verifying your payment', sub: `${t.eventTitle ?? 'Your booking'} · proof received`, dot: night.yellow, to: `/purchase/awaiting?ticketId=${t.id}` };
 
   return (

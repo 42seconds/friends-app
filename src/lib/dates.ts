@@ -80,6 +80,8 @@ export function ago(iso?: string): string {
 
 // "23:41:10" countdown to a target time; "00:00:00" once passed.
 export function countdown(targetMs: number, now = Date.now()): string {
+  // Older bookings have no deadline.
+  if (!Number.isFinite(targetMs)) return '--:--:--';
   const s = Math.max(0, Math.floor((targetMs - now) / 1000));
   const hh = String(Math.floor(s / 3600)).padStart(2, '0');
   const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
