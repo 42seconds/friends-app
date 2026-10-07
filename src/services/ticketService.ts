@@ -24,10 +24,18 @@ function quiet(what: string, then?: () => void) {
 }
 
 // Every ticket read goes through here: dates become ISO strings, and
-// bookings without createdAt fall back to purchasedAt.
+// bookings without createdAt fall back to purchasedAt. Bookings made on
+// the website have no status or totalPrice, only validated and total,
+// so those are mapped onto the app's fields.
 function toTicket(id: string, raw: any): PurchasedTicket {
   const d = normalizeDates(raw ?? {});
-  return { id, ...d, createdAt: d.createdAt ?? d.purchasedAt ?? '' } as PurchasedTicket;
+  return {
+    id,
+    ...d,
+    status: d.status ?? (d.validated ? 'confirmed' : 'pending_payment'),
+    totalPrice: d.totalPrice ?? d.total ?? 0,
+    createdAt: d.createdAt ?? d.purchasedAt ?? '',
+  } as PurchasedTicket;
 }
 
 interface CreateTicketInput {
@@ -81,13 +89,12 @@ export async function getTicketById(ticketId: string): Promise<PurchasedTicket |
   return toTicket(snap.id, snap.data());
 }
 
-// When the hold ends: the stored value, or createdAt + HOLD_HOURS for
-// bookings made before holds were recorded.
-export function holdEndsAt(t: Pick<PurchasedTicket, 'holdExpiresAt' | 'createdAt'>): number {
+// When the hold ends (holdExpiresAt is set when the app creates a booking).
+export function holdEndsAt(t: Pick<PurchasedTicket, 'holdExpiresAt'>): number {
   if (t.holdExpiresAt) return new Date(t.holdExpiresAt).getTime();
-  // No timestamps at all (very old bookings): treat the hold as open.
-  if (!t.createdAt) return Infinity;
-  return new Date(t.createdAt).getTime() + HOLD_HOURS * 3600 * 1000;
+  // Bookings from before holds existed (or made on the website) never
+  // had a deadline, so they don't expire on their own.
+  return Infinity;
 }
 
 // Unpaid holds lapse client-side too, so the UI is right even before

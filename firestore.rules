@@ -49,7 +49,7 @@ service cloud.firestore {
       // A booking always starts as an unpaid hold owned by its creator.
       allow create: if signedIn()
         && request.resource.data.userId == request.auth.uid
-        && request.resource.data.status == 'pending_payment';
+        && (!('status' in request.resource.data) || request.resource.data.status == 'pending_payment');
 
       // Owners may: upload proof (moves it to "checking"), send it to a
       // friend, release it to the waitlist or ask for a refund. They can
@@ -60,7 +60,8 @@ service cloud.firestore {
         && (
           (
             onlyChanges(['proofOfPayment', 'proofUploadedAt', 'status'])
-            && resource.data.status in ['pending_payment', 'rejected']
+            // Website bookings have no status yet: treat them as unpaid.
+            && resource.data.get('status', 'pending_payment') in ['pending_payment', 'rejected']
             && request.resource.data.status == 'pending_verification'
           )
           || onlyChanges(['transfer'])
@@ -104,6 +105,17 @@ service cloud.firestore {
     match /promoCodes/{code} {
       allow get: if signedIn();
       allow list, write: if isAdmin();
+    }
+
+    // ---- Gallery and site content (footer): public, admins edit ---------
+    match /gallery/{campaignId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /content/{doc} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
 
     // ---- App config (e.g. config/app.minVersion) ---------------------------

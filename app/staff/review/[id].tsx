@@ -98,7 +98,7 @@ export default function ProofReviewScreen() {
           </View>
           <CheckRow on={checks.amount} onToggle={() => setChecks((c) => ({ ...c, amount: !c.amount }))} label="Amount is" value={rand(t.totalPrice)} />
           <CheckRow on={checks.ref} onToggle={() => setChecks((c) => ({ ...c, ref: !c.ref }))} label="Reference is" value={t.id} />
-          <CheckRow on={checks.hold} onToggle={() => setChecks((c) => ({ ...c, hold: !c.hold }))} label="Paid within hold" value={`by ${stamp(new Date(holdEndsAt(t)).toISOString())}`} />
+          <CheckRow on={checks.hold} onToggle={() => setChecks((c) => ({ ...c, hold: !c.hold }))} label="Paid within hold" value={Number.isFinite(holdEndsAt(t)) ? `by ${stamp(new Date(holdEndsAt(t)).toISOString())}` : 'No deadline'} />
         </Card>
 
         {reviewable && (
