@@ -1,5 +1,5 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import { BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
@@ -33,22 +33,36 @@ function RedirectGate() {
   const router = useRouter();
   const updateRequired = useUpdateRequired();
 
+  // The route as a string (useSegments() returns a new array every render),
+  // and the redirect already on its way, so the same one is never sent
+  // twice while navigation catches up.
+  const path = segments.join('/');
+  const pending = useRef<string | null>(null);
+
   useEffect(() => {
     if (authLoading || hasSeenOnboarding === null) return;
 
     const group = segments[0] as string | undefined;
     const inOnboardingGroup = group === '(onboarding)';
     const inAuthGroup = group === '(auth)';
-    if (PUBLIC.has(segments.join('/'))) return;
 
-    if (!hasSeenOnboarding && !inOnboardingGroup && !inAuthGroup && !browsing) {
-      router.replace('/(onboarding)/welcome');
-    } else if (!user && !inAuthGroup && !inOnboardingGroup && !(browsing && group && BROWSABLE.has(group))) {
-      router.replace(browsing ? '/(tabs)/home' : '/(auth)/login');
-    } else if (user && (inAuthGroup || inOnboardingGroup)) {
-      router.replace('/(tabs)/home');
+    let target: string | null = null;
+    if (PUBLIC.has(path)) target = null;
+    // Onboarding is only for people who aren't logged in. A logged-in user
+    // who skipped it (e.g. tapped Log in on the first slide) would otherwise
+    // bounce between Welcome and Explore forever.
+    else if (!user && !hasSeenOnboarding && !inOnboardingGroup && !inAuthGroup && !browsing) target = '/(onboarding)/welcome';
+    else if (!user && !inAuthGroup && !inOnboardingGroup && !(browsing && group && BROWSABLE.has(group))) target = browsing ? '/(tabs)/home' : '/(auth)/login';
+    else if (user && (inAuthGroup || inOnboardingGroup)) target = '/(tabs)/home';
+
+    if (!target) {
+      pending.current = null;
+      return;
     }
-  }, [user, authLoading, hasSeenOnboarding, segments, browsing]);
+    if (pending.current === target) return;
+    pending.current = target;
+    router.replace(target as any);
+  }, [user, authLoading, hasSeenOnboarding, path, browsing]);
 
   if (authLoading || hasSeenOnboarding === null) return <Splash />;
   if (updateRequired) return <UpdateRequired />;
