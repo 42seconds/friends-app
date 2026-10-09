@@ -49,7 +49,7 @@ export default function RejectSheet() {
           );
         })}
       </ListGroup>
-      <Field label={`MESSAGE TO ${first.toUpperCase()}`} value={message} onChangeText={setMessage} multiline />
+      <Field label={`MESSAGE TO ${first.toUpperCase()}`} value={message} onChangeText={setMessage} multiline maxLength={1000} />
       <ListGroup>
         <ToggleRow title="Keep their tickets held" subtitle="They won't have to pay again" value={keepHeld} onChange={setKeepHeld} />
       </ListGroup>

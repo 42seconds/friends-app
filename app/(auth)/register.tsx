@@ -7,6 +7,7 @@ import { registerUser, authErrorMessage } from '../../src/services/authService';
 import { SUB_BRANDS } from '../../src/lib/subbrands';
 import { night } from '../../src/theme/night';
 import { safeBack } from '../../src/lib/nav';
+import { LIMITS, checkName, checkEmail, checkPassword, checkPhone, normalizePhone, collectErrors } from '../../src/lib/validation';
 
 // 0-4 bars: length, mixed case, digit, symbol.
 function strength(pw: string) {
@@ -34,21 +35,23 @@ export default function RegisterScreen() {
   const bars = strength(password);
 
   const handleRegister = async () => {
-    const e: Record<string, string> = {};
-    if (!first.trim()) e.first = 'Add your first name';
-    if (!/\S+@\S+\.\S+/.test(email.trim())) e.email = "That email doesn't look right";
-    if (password.length < 8) e.password = 'Use at least 8 characters';
-    if (!agreed) e.terms = 'Please accept the Terms and Privacy Policy';
+    const e = collectErrors({
+      first: checkName(first, 'first name'),
+      last: checkName(last, 'last name', false),
+      email: checkEmail(email),
+      phone: checkPhone(phone),
+      password: checkPassword(password),
+      terms: agreed ? null : 'Please accept the Terms and Privacy Policy',
+    });
     setErrors(e);
     if (Object.keys(e).length) return;
 
     setLoading(true);
     try {
-      const digits = phone.replace(/\D/g, '').replace(/^0/, '');
       await registerUser({
         name: [first.trim(), last.trim()].filter(Boolean).join(' '),
         email: email.trim(),
-        phone: digits ? `+27 ${digits}` : '',
+        phone: normalizePhone(phone),
         password,
         interests,
       });
@@ -76,19 +79,21 @@ export default function RegisterScreen() {
     >
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={{ flex: 1 }}>
-          <Field label="FIRST NAME" value={first} onChangeText={setFirst} autoCapitalize="words" error={errors.first} />
+          <Field label="FIRST NAME" value={first} onChangeText={setFirst} autoCapitalize="words" maxLength={LIMITS.name} error={errors.first} />
         </View>
         <View style={{ flex: 1 }}>
-          <Field label="LAST NAME" value={last} onChangeText={setLast} autoCapitalize="words" />
+          <Field label="LAST NAME" value={last} onChangeText={setLast} autoCapitalize="words" maxLength={LIMITS.name} error={errors.last} />
         </View>
       </View>
-      <Field label="EMAIL" value={email} onChangeText={setEmail} placeholder="hello@example.com" keyboardType="email-address" autoCapitalize="none" error={errors.email} />
+      <Field label="EMAIL" value={email} onChangeText={setEmail} placeholder="hello@example.com" keyboardType="email-address" autoCapitalize="none" maxLength={LIMITS.email} error={errors.email} />
       <Field
         label="PHONE"
         value={phone}
         onChangeText={setPhone}
         placeholder="82 000 0000"
         keyboardType="phone-pad"
+        maxLength={LIMITS.phone}
+        error={errors.phone}
         left={
           <View style={{ marginLeft: -6, paddingHorizontal: 10, height: 36, borderRadius: 10, backgroundColor: night.sand, justifyContent: 'center' }}>
             <T mono size={15}>+27</T>
@@ -97,7 +102,7 @@ export default function RegisterScreen() {
         hint="For ticket updates on WhatsApp, if you turn them on"
       />
       <View style={{ gap: 8 }}>
-        <Field label="PASSWORD" value={password} onChangeText={setPassword} placeholder="8+ characters" secure autoCapitalize="none" error={errors.password} />
+        <Field label="PASSWORD" value={password} onChangeText={setPassword} placeholder="8+ characters, a letter and a number" secure autoCapitalize="none" maxLength={LIMITS.password} error={errors.password} />
         <View style={{ flexDirection: 'row', gap: 4 }} accessibilityLabel={`Password strength ${bars} of 4`}>
           {[0, 1, 2, 3].map((i) => (
             <View key={i} style={{ flex: 1, height: 4, borderRadius: 9, backgroundColor: i < bars ? (bars < 2 ? night.orange : bars < 4 ? night.yellow : night.success) : night.border }} />

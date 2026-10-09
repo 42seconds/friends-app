@@ -6,6 +6,7 @@ import { T, H1, Amp, TopBar, Field, PrimaryButton, TextLink, Screen } from '../.
 import { loginUser, resetPassword, authErrorMessage } from '../../src/services/authService';
 import { useAuth } from '../../src/context/AuthContext';
 import { night } from '../../src/theme/night';
+import { LIMITS, checkEmail } from '../../src/lib/validation';
 import { safeBack } from '../../src/lib/nav';
 
 export default function LoginScreen() {
@@ -17,14 +18,14 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const emailOk = /\S+@\S+\.\S+/.test(email.trim());
+  const emailOk = !checkEmail(email);
 
   // AuthContext picks up the login and the RedirectGate sends the user
   // on to Explore — nothing to navigate here.
   const handleLogin = async () => {
     setError('');
     if (!emailOk || !password) {
-      setError('Enter your email and password.');
+      setError(!email.trim() && !password ? 'Enter your email and password.' : !emailOk ? (checkEmail(email) as string) : 'Enter your password.');
       return;
     }
     setLoading(true);
@@ -72,7 +73,7 @@ export default function LoginScreen() {
         </View>
       }
     >
-      <Field label="EMAIL" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" placeholder="you@example.com" right={emailOk ? <Ionicons name="checkmark-circle" size={20} color={night.success} /> : undefined} />
+      <Field label="EMAIL" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" maxLength={LIMITS.email} placeholder="you@example.com" right={emailOk ? <Ionicons name="checkmark-circle" size={20} color={night.success} /> : undefined} />
       <Field
         label="PASSWORD"
         value={password}

@@ -8,6 +8,7 @@ import { updateUserProfile } from '../../src/services/userService';
 import { SUB_BRANDS } from '../../src/lib/subbrands';
 import { night } from '../../src/theme/night';
 import { safeBack } from '../../src/lib/nav';
+import { LIMITS, checkName, checkPhone, normalizePhone, collectErrors } from '../../src/lib/validation';
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function EditProfileScreen() {
   const [phone, setPhone] = useState('');
   const [interests, setInterests] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (!profile) return;
@@ -29,9 +31,12 @@ export default function EditProfileScreen() {
 
   const save = async () => {
     if (!user) return;
+    const e = collectErrors({ first: checkName(first, 'first name'), last: checkName(last, 'last name', false), phone: checkPhone(phone) });
+    setErrors(e);
+    if (Object.keys(e).length) return;
     setSaving(true);
     try {
-      await updateUserProfile(user.uid, { name: [first.trim(), last.trim()].filter(Boolean).join(' '), phone: phone.trim(), interests });
+      await updateUserProfile(user.uid, { name: [first.trim(), last.trim()].filter(Boolean).join(' '), phone: normalizePhone(phone), interests });
       safeBack(router);
     } catch {
       Alert.alert("Couldn't save", 'Check your connection and try again.');
@@ -41,7 +46,7 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <Screen header={<TopBar />} footer={<PrimaryButton label="Save changes" loading={saving} disabled={!first.trim()} onPress={save} />}>
+    <Screen header={<TopBar />} footer={<PrimaryButton label="Save changes" loading={saving} onPress={save} />}>
       <H1 size={56}>Edit profile</H1>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <Avatar name={`${first} ${last}`} size={72} color={night.blue} />
@@ -49,10 +54,10 @@ export default function EditProfileScreen() {
       </View>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={{ flex: 1 }}>
-          <Field label="FIRST NAME" value={first} onChangeText={setFirst} autoCapitalize="words" />
+          <Field label="FIRST NAME" value={first} onChangeText={setFirst} autoCapitalize="words" maxLength={LIMITS.name} error={errors.first} />
         </View>
         <View style={{ flex: 1 }}>
-          <Field label="LAST NAME" value={last} onChangeText={setLast} autoCapitalize="words" />
+          <Field label="LAST NAME" value={last} onChangeText={setLast} autoCapitalize="words" maxLength={LIMITS.name} error={errors.last} />
         </View>
       </View>
       <Field
@@ -69,7 +74,7 @@ export default function EditProfileScreen() {
         }
         hint="Your email is your login, so it can't be changed here."
       />
-      <Field label="PHONE" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+      <Field label="PHONE" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholder="082 123 4567" maxLength={LIMITS.phone} error={errors.phone} />
       <SectionLabel>WHAT YOU'RE INTO</SectionLabel>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
         {SUB_BRANDS.map((b) => {

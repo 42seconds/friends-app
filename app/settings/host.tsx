@@ -6,6 +6,7 @@ import { useProfile } from '../../src/hooks/useProfile';
 import { sendEnquiry } from '../../src/services/communityService';
 import { SUB_BRANDS } from '../../src/lib/subbrands';
 import { night } from '../../src/theme/night';
+import { LIMITS, checkName, checkText, checkGuests, collectErrors } from '../../src/lib/validation';
 
 const TYPES = [
   { label: 'Live music', brand: SUB_BRANDS[0] },
@@ -27,12 +28,22 @@ export default function HostScreen() {
   const [company, setCompany] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (profile?.name) setName(profile.name);
   }, [profile]);
 
   const send = async () => {
+    const e = collectErrors({
+      date: checkText(date, 'a date', LIMITS.shortText, false),
+      guests: checkGuests(guests),
+      vibe: checkText(vibe, 'a few words about your event'),
+      name: checkName(name),
+      company: checkText(company, 'company', LIMITS.shortText, false),
+    });
+    setErrors(e);
+    if (Object.keys(e).length) return;
     setSending(true);
     setError('');
     try {
@@ -48,7 +59,7 @@ export default function HostScreen() {
   return (
     <Screen header={<TopBar />} headerBg={night.lime}
       padTop={false}
-      footer={<PrimaryButton label="Send enquiry" disabled={!name.trim() || !vibe.trim()} loading={sending} onPress={send} />}
+      footer={<PrimaryButton label="Send enquiry" loading={sending} onPress={send} />}
       hero={
         <Hero bg={night.lime}>
           <Amp size={320} color={night.limeDeep} style={{ right: -40, top: 0 }} />
@@ -82,15 +93,15 @@ export default function HostScreen() {
       </ChipRow>
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <View style={{ flex: 3 }}>
-          <Field label="DATE" value={date} onChangeText={setDate} placeholder="e.g. Sat 25 Jul" />
+          <Field label="DATE" value={date} onChangeText={setDate} placeholder="e.g. Sat 25 Jul" maxLength={LIMITS.shortText} error={errors.date} />
         </View>
         <View style={{ flex: 2 }}>
-          <Field label="GUESTS" value={guests} onChangeText={setGuests} placeholder="About 120" keyboardType="number-pad" />
+          <Field label="GUESTS" value={guests} onChangeText={setGuests} placeholder="About 120" keyboardType="number-pad" maxLength={5} error={errors.guests} />
         </View>
       </View>
-      <Field label="TELL US THE VIBE" value={vibe} onChangeText={setVibe} multiline placeholder="What's the idea? Sound, setup, food, anything we should know." />
-      <Field label="YOUR NAME" value={name} onChangeText={setName} autoCapitalize="words" />
-      <Field label="COMPANY" value={company} onChangeText={setCompany} placeholder="Optional" />
+      <Field label="TELL US THE VIBE" value={vibe} onChangeText={setVibe} multiline maxLength={LIMITS.longText} error={errors.vibe} placeholder="What's the idea? Sound, setup, food, anything we should know." />
+      <Field label="YOUR NAME" value={name} onChangeText={setName} autoCapitalize="words" maxLength={LIMITS.name} error={errors.name} />
+      <Field label="COMPANY" value={company} onChangeText={setCompany} placeholder="Optional" maxLength={LIMITS.shortText} error={errors.company} />
       {!!user?.email && <T size={13} color={night.muted}>We'll reply to {user.email}.</T>}
       {!!error && <T size={14} weight="600" color={night.danger}>{error}</T>}
     </Screen>

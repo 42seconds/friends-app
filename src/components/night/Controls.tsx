@@ -171,9 +171,10 @@ interface FieldProps {
   labelRight?: ReactNode;
   autoFocus?: boolean;
   onSubmitEditing?: () => void;
+  maxLength?: number;
 }
 
-export function Field({ label, value, onChangeText, placeholder, secure, mono, right, left, keyboardType, autoCapitalize, multiline, editable = true, error, dark, hint, labelRight, autoFocus, onSubmitEditing }: FieldProps) {
+export function Field({ label, value, onChangeText, placeholder, secure, mono, right, left, keyboardType, autoCapitalize, multiline, editable = true, error, dark, hint, labelRight, autoFocus, onSubmitEditing, maxLength }: FieldProps) {
   const [focused, setFocused] = useState(false);
   const borderColor = error ? night.danger : focused ? (dark ? night.paper : night.ink) : dark ? night.ink2 : night.border;
   return (
@@ -212,6 +213,7 @@ export function Field({ label, value, onChangeText, placeholder, secure, mono, r
           editable={editable}
           autoFocus={autoFocus}
           onSubmitEditing={onSubmitEditing}
+          maxLength={maxLength}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           style={{
