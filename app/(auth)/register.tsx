@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { T, H1, Amp, TopBar, Field, PrimaryButton, TextLink, Screen, Hero, SectionLabel } from '../../src/components/night';
+import { T, H1, Amp, TopBar, Field, PrimaryButton, TextLink, Screen, Hero, SectionLabel, GoogleButton } from '../../src/components/night';
 import { registerUser, authErrorMessage } from '../../src/services/authService';
 import { SUB_BRANDS } from '../../src/lib/subbrands';
 import { night } from '../../src/theme/night';
@@ -148,6 +148,7 @@ export default function RegisterScreen() {
       {!!errors.form && <T size={14} weight="600" color={night.danger}>{errors.form}</T>}
 
       <PrimaryButton label="Create my account" onPress={handleRegister} loading={loading} />
+      <GoogleButton />
       <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
         <T size={15} color={night.muted}>Already a member?</T>
         <TextLink label="Log in" size={15} onPress={() => router.replace('/(auth)/login')} />
