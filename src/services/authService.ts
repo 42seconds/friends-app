@@ -9,6 +9,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebaseConfig';
 import { UserProfile } from '../types';
 import { deleteUserProfile } from './userService';
+import { signOutOfGoogle } from './googleAuth';
 
 interface RegisterUserInput {
   name: string;
@@ -53,6 +54,7 @@ export async function loginUser(email: string, password: string) {
 
 export async function logoutUser() {
   await signOut(auth);
+  await signOutOfGoogle();
 }
 
 export async function resetPassword(email: string) {

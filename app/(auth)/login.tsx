@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Alert, Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { T, H1, Amp, TopBar, Field, PrimaryButton, TextLink, Screen } from '../../src/components/night';
+import { T, H1, Amp, TopBar, Field, PrimaryButton, TextLink, Screen, GoogleButton } from '../../src/components/night';
 import { loginUser, resetPassword, authErrorMessage } from '../../src/services/authService';
 import { useAuth } from '../../src/context/AuthContext';
 import { night } from '../../src/theme/night';
@@ -94,6 +94,7 @@ export default function LoginScreen() {
         error={error}
       />
       <PrimaryButton label="Log in" onPress={handleLogin} loading={loading} style={{ marginTop: 6 }} />
+      <GoogleButton />
       <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
         <T size={15} color={night.muted}>New here?</T>
         <TextLink label="Create an account" size={15} onPress={() => router.push('/(auth)/register')} />
