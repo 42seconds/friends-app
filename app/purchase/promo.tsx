@@ -66,6 +66,7 @@ export default function PromoSheet() {
         placeholder="E.G. BRAAMFAM"
         mono
         autoCapitalize="characters"
+        maxLength={30}
         onSubmitEditing={check}
         error={error}
         right={

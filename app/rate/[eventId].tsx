@@ -65,7 +65,7 @@ export default function RateScreen() {
           <Chip key={h} label={h} active={picked.includes(h)} onPress={() => setPicked((p) => (p.includes(h) ? p.filter((x) => x !== h) : [...p, h]))} />
         ))}
       </ChipRow>
-      <Field label="ANYTHING WE SHOULD FIX?" value={fix} onChangeText={setFix} placeholder="Bar queues, sound, anything…" multiline />
+      <Field label="ANYTHING WE SHOULD FIX?" value={fix} onChangeText={setFix} placeholder="Bar queues, sound, anything…" multiline maxLength={1000} />
       {!!event?.gallery?.length && (
         <Pressable onPress={() => router.push(`/gallery/${eventId}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: night.card, borderWidth: 1.5, borderColor: night.line }}>
           <Ionicons name="images-outline" size={20} color={night.ink} />

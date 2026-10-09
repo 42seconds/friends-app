@@ -80,7 +80,9 @@ export async function sendRating(input: { eventId: string; userId: string | null
 
 export async function lookupPromo(code: string, eventId: string): Promise<{ code: string; percentOff: number } | null> {
   const clean = code.trim().toUpperCase();
-  if (!clean) return null;
+  // Codes are letters, digits, - and _ only. Anything else (a "/" would
+  // even break the document path) can't be a real code.
+  if (!/^[A-Z0-9_-]{1,30}$/.test(clean)) return null;
   const snap = await getDoc(doc(db, 'promoCodes', clean));
   if (!snap.exists()) return null;
   const data = snap.data() as { percentOff?: number; active?: boolean; eventId?: string };
