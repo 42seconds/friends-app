@@ -12,7 +12,11 @@ import {
 } from 'firebase/firestore';
 import { PurchasedTicket, TicketStatus } from '../types';
 import { HOLD_HOURS } from '../config/pricing';
-import { byDate, normalizeDates } from '../lib/firestoreData';
+import { byDate } from '../lib/firestoreData';
+import { toTicket, holdEndsAt, effectiveStatus } from '../lib/tickets';
+
+// Re-exported so screens can keep importing them from here.
+export { toTicket, holdEndsAt, effectiveStatus };
 
 // Listener errors (offline, or rules refusing access, e.g. right after
 // logging out) are reported quietly instead of as uncaught errors.
@@ -21,21 +25,6 @@ function quiet(what: string, then?: () => void) {
     console.warn(`Firestore ${what} listener stopped:`, e.message);
     then?.();
   };
-}
-
-// Every ticket read goes through here: dates become ISO strings, and
-// bookings without createdAt fall back to purchasedAt. Bookings made on
-// the website have no status or totalPrice, only validated and total,
-// so those are mapped onto the app's fields.
-function toTicket(id: string, raw: any): PurchasedTicket {
-  const d = normalizeDates(raw ?? {});
-  return {
-    id,
-    ...d,
-    status: d.status ?? (d.validated ? 'confirmed' : 'pending_payment'),
-    totalPrice: d.totalPrice ?? d.total ?? 0,
-    createdAt: d.createdAt ?? d.purchasedAt ?? '',
-  } as PurchasedTicket;
 }
 
 interface CreateTicketInput {
@@ -87,21 +76,6 @@ export async function getTicketById(ticketId: string): Promise<PurchasedTicket |
   const snap = await getDoc(doc(db, 'tickets', ticketId));
   if (!snap.exists()) return null;
   return toTicket(snap.id, snap.data());
-}
-
-// When the hold ends (holdExpiresAt is set when the app creates a booking).
-export function holdEndsAt(t: Pick<PurchasedTicket, 'holdExpiresAt'>): number {
-  if (t.holdExpiresAt) return new Date(t.holdExpiresAt).getTime();
-  // Bookings from before holds existed (or made on the website) never
-  // had a deadline, so they don't expire on their own.
-  return Infinity;
-}
-
-// Unpaid holds lapse client-side too, so the UI is right even before
-// the backend sweeps them.
-export function effectiveStatus(t: PurchasedTicket): TicketStatus {
-  if (t.status === 'pending_payment' && holdEndsAt(t) < Date.now()) return 'expired';
-  return t.status;
 }
 
 export function listenToTicket(ticketId: string, callback: (ticket: PurchasedTicket | null) => void) {

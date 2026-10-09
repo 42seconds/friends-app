@@ -1,0 +1,82 @@
+# &FRIENDS continuous integration.
+# Every push and pull request is typechecked, unit tested, has its
+# Firestore rules tested against the emulator, and is built into an
+# Android APK that can be downloaded from the run's "Artifacts" section.
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+# A newer push to the same branch cancels the run that's still going.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Typecheck and unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test -- --ci
+
+  rules:
+    name: Firestore rules tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      # The Firestore emulator runs on Java.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci --legacy-peer-deps
+      - name: Rules tests (local emulator, never the live database)
+        run: npm run test:rules
+
+  android:
+    name: Build Android APK
+    needs: [checks, rules]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v5
+      - run: npm ci --legacy-peer-deps
+      - name: Generate the native Android project
+        run: npx expo prebuild --platform android --no-install
+      # Release build, signed with the debug key so it installs straight
+      # onto a phone. arm64 only: that covers modern Android phones and
+      # keeps the build fast.
+      - name: Build APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: friends-app-${{ github.sha }}
+          path: android/app/build/outputs/apk/release/*.apk
+          retention-days: 30
