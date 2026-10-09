@@ -4,8 +4,11 @@
 # Android APK that can be downloaded from the run's "Artifacts" section.
 name: CI
 
+# Pushes to master, and every pull request into master (which covers
+# pushes to its branch), so each commit is checked once.
 on:
   push:
+    branches: [master]
   pull_request:
     branches: [master]
   workflow_dispatch:
