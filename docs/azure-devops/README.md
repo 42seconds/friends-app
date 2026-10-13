@@ -8,7 +8,7 @@ Files in this folder:
 
 | File | What it is |
 |---|---|
-| `azure-boards-backlog.csv` | 86 work items (9 epics, 20 features, 57 user stories) over 7 sprints, ready to import |
+| `azure-boards-backlog.csv` | 86 work items (9 epics, 20 features, 57 user stories) over 7 sprints, with state tags, ready to import |
 | `make_backlog.py` | The script that makes the CSV (edit it and run `python docs/azure-devops/make_backlog.py` to regenerate) |
 | `../../azure-pipelines.yml` | The Azure Pipeline: typecheck, unit tests (with a Tests tab), Firestore rules tests, Android APK |
 
@@ -43,18 +43,20 @@ sure these exist (rename the default "Iteration 1/2/3" and add the rest). Set th
 Then **Project settings → Team configuration → Iterations → + Select iteration(s)** and tick all 7,
 so they appear under Boards → Sprints.
 
-## 3. Import the backlog (2 min)
+## 3. Import the backlog (5 min)
 
-1. **Boards → Work items → Import work items** (top right, or the "…" menu).
-2. Choose `docs/azure-devops/azure-boards-backlog.csv` (download it from GitHub: open the file → **Download raw file**).
-3. Click **Import**, check the preview, then **Save items**.
+**First** make sure Sprint 1 to Sprint 7 exist exactly with those names (step 2) and the
+project is called `FRIENDS-App`. Every item's Iteration Path is `FRIENDS-App\Sprint N`.
 
-The epics, features and stories are linked parent → child automatically, and each has its
-sprint and state (Closed = done, Active = in progress, New = to do).
-
-> If the import complains about **State**, delete the `State` column in Excel, import again,
-> then select items on the board and bulk-edit **State** (select → right-click → Edit).
-
+1. **Boards → Work items → Import work items**.
+2. Choose `docs/azure-devops/azure-boards-backlog.csv`, then **Import**, check the preview, and **Save items**.
+   Epics, features and stories are linked parent → child automatically.
+3. **Set the real states** (an import can only create items as "New"). Each item has a tag:
+   `done`, `in-progress` or `to-do`.
+   1. **Boards → Queries → + New query**. Set the clause to **Tags · Contains · done** and click **Run query**.
+   2. Click the first row, press **Ctrl + A** to select all, then right-click and choose **Edit**.
+   3. **Field: State → Closed**, click **Save**.
+   4. Repeat with **Tags Contains in-progress** → State **Active**. Items tagged `to-do` stay **New**.
 4. **Assign work:** open **Boards → Backlogs**, select stories and set **Assigned To** for each
    team member (who built or owns what). The lecturer uses this to see who did which tasks.
 
