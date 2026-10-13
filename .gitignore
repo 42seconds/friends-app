@@ -47,3 +47,6 @@ firestore-debug.log
 # Firebase service account keys: full admin access, never commit
 serviceAccount*.json
 *-firebase-adminsdk-*.json
+
+# test reports
+junit.xml
