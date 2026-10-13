@@ -76,6 +76,10 @@ This links commits and pull requests to work items.
 3. Stages: **Typecheck and tests** (unit tests + rules tests) → **Build Android APK**.
    The **Tests** tab shows every unit test, and the APK is under **Artifacts**.
 
+> **Minutes:** the free tier gives 1 Microsoft-hosted job and 1,800 minutes a month. A full run
+> takes about 30–45 minutes, so the pipeline runs on pushes to `master` and when you click
+> **Run pipeline** (pick the branch). GitHub Actions checks every other push for free.
+
 > **First run says "No hosted parallelism has been purchased or granted"?** New Azure DevOps
 > organisations must request free build minutes once. Fill in
 > **https://aka.ms/azpipelines-parallelism-request** (private project, free tier). Approval usually
