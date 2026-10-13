@@ -5,6 +5,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { T, Amp, Screen, PrimaryButton, OutlineButton } from '../../src/components/night';
 import { logoutUser } from '../../src/services/authService';
 import { useProfile } from '../../src/hooks/useProfile';
+import { useOnboarding } from '../../src/context/OnboardingContext';
 import { night } from '../../src/theme/night';
 import { safeBack } from '../../src/lib/nav';
 
@@ -17,6 +18,7 @@ const SIZE = 220, STROKE = 12, R = (SIZE - STROKE) / 2, C = 2 * Math.PI * R;
 export default function LogoutScreen() {
   const router = useRouter();
   const { profile } = useProfile();
+  const { markOnboardingSeen } = useOnboarding();
   const [left, setLeft] = useState(SECONDS * 1000);
   const [leaving, setLeaving] = useState(false);
   const done = useRef(false);
@@ -25,6 +27,8 @@ export default function LogoutScreen() {
     if (done.current) return;
     done.current = true;
     setLeaving(true);
+    // They've used the app: land on Log in next time, not the intro slides.
+    await markOnboardingSeen().catch(() => {});
     await logoutUser().catch(() => {});
   };
 
