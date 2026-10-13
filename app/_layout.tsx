@@ -16,6 +16,7 @@ import Splash from '../src/components/night/Splash';
 import UpdateRequired from '../src/components/night/UpdateRequired';
 import { useUpdateRequired } from '../src/hooks/useMinVersion';
 import { night } from '../src/theme/night';
+import { useTicketAlerts } from '../src/hooks/useTicketAlerts';
 
 // Routes a logged-out visitor may open while "just browsing".
 const BROWSABLE = new Set(['(tabs)', 'event', 'search', 'filters', 'brand', 'venue', 'past', 'offline']);
@@ -25,6 +26,11 @@ const PUBLIC = new Set(['settings/legal', 'settings/help', 'settings/about', 'se
 
 // Routes presented as bottom sheets (transparent modals that draw their own backdrop).
 const SHEETS = ['filters', 'purchase/tickets', 'purchase/promo', 'waitlist/join', 'ticket/send', 'staff/reject'];
+
+function TicketAlerts() {
+  useTicketAlerts();
+  return null;
+}
 
 function RedirectGate() {
   const { user, loading: authLoading, browsing } = useAuth();
@@ -68,12 +74,15 @@ function RedirectGate() {
   if (updateRequired) return <UpdateRequired />;
 
   return (
+    <>
+    <TicketAlerts />
     <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: night.paper }, animation: 'slide_from_right' }}>
       {SHEETS.map((name) => (
         <Stack.Screen key={name} name={name} options={{ presentation: 'transparentModal', animation: 'slide_from_bottom', contentStyle: { backgroundColor: 'transparent' } }} />
       ))}
       <Stack.Screen name="purchase/confirmed" options={{ animation: 'fade', gestureEnabled: false }} />
     </Stack>
+    </>
   );
 }
 

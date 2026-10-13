@@ -1,21 +1,13 @@
-import { Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import Constants from 'expo-constants';
 import { T, H1, Screen, TopBar, SectionLabel, ListGroup, ListRow } from '../../src/components/night';
 import { useProfile } from '../../src/hooks/useProfile';
-import { logoutUser } from '../../src/services/authService';
 import { last4 } from '../../src/services/userService';
 import { night } from '../../src/theme/night';
 
 export default function SettingsScreen() {
   const router = useRouter();
   const { profile } = useProfile();
-
-  const logout = () =>
-    Alert.alert('Log out?', 'Your tickets will be here when you log back in.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Log out', style: 'destructive', onPress: () => logoutUser() },
-    ]);
 
   return (
     <Screen header={<TopBar />}>
@@ -38,7 +30,7 @@ export default function SettingsScreen() {
         <ListRow icon="document-text-outline" title="Terms and privacy" chevron onPress={() => router.push('/settings/legal')} />
       </ListGroup>
       <ListGroup>
-        <ListRow icon="log-out-outline" title="Log out" onPress={logout} />
+        <ListRow icon="log-out-outline" title="Log out" chevron onPress={() => router.push('/settings/logout')} />
         <ListRow icon="trash-outline" title="Delete account" danger chevron onPress={() => router.push('/settings/delete')} />
       </ListGroup>
       <T mono size={11} color={night.faint} center>&amp;FRIENDS · VERSION {Constants.expoConfig?.version ?? ''}</T>
