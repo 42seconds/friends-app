@@ -24,3 +24,62 @@ export async function enablePushNotifications(): Promise<boolean> {
     return false;
   }
 }
+
+type NotificationsModule = typeof import('expo-notifications');
+let mod: NotificationsModule | null = null;
+function notifications(): NotificationsModule | null {
+  if (unsupported || Platform.OS === 'web') return null;
+  if (!mod) {
+    try {
+      mod = require('expo-notifications');
+      mod!.setNotificationHandler({
+        handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
+      });
+      if (Platform.OS === 'android') {
+        mod!.setNotificationChannelAsync('tickets', { name: 'Tickets', importance: mod!.AndroidImportance.HIGH, vibrationPattern: [0, 200, 120, 200], lightColor: '#C8F03C' }).catch(() => {});
+      }
+    } catch {
+      mod = null;
+    }
+  }
+  return mod;
+}
+
+// Shows a notification on this phone right away. `url` is opened when
+// the person taps it. Quietly does nothing without permission.
+export async function notifyNow(title: string, body: string, url?: string) {
+  const N = notifications();
+  if (!N) return;
+  try {
+    const { granted } = await N.getPermissionsAsync();
+    if (!granted) return;
+    await N.scheduleNotificationAsync({
+      content: { title, body, data: url ? { url } : {}, sound: 'default' },
+      trigger: Platform.OS === 'android' ? { channelId: 'tickets' } as any : null,
+    });
+  } catch {
+    // Notifications are a nice-to-have; the Inbox still has the update.
+  }
+}
+
+// Opens the screen a notification points to when it's tapped (including
+// the tap that launched the app). Returns a cleanup function.
+export function handleNotificationTaps(open: (url: string) => void): () => void {
+  const N = notifications();
+  if (!N) return () => {};
+  const go = (r: { notification: { request: { content: { data?: any } } } } | null) => {
+    const url = r?.notification.request.content.data?.url;
+    if (typeof url === 'string') open(url);
+  };
+  // The tap that launched the app: handle it once, then forget it so the
+  // next launch doesn't jump to the same screen again.
+  N.getLastNotificationResponseAsync()
+    .then((r) => {
+      if (!r) return;
+      setTimeout(() => go(r), 600);
+      N.clearLastNotificationResponseAsync().catch(() => {});
+    })
+    .catch(() => {});
+  const sub = N.addNotificationResponseReceivedListener(go);
+  return () => sub.remove();
+}
