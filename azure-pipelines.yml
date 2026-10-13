@@ -4,13 +4,14 @@
 # Setup: Azure DevOps > Pipelines > New pipeline > GitHub > 42seconds/friends-app
 # > "Existing Azure Pipelines YAML file" > /azure-pipelines.yml > Run.
 
+# Runs on pushes to master and on demand (Pipelines > Run pipeline).
+# The free tier has 1,800 minutes a month and a full run takes ~30-45,
+# so feature-branch pushes and PRs are left to GitHub Actions.
 trigger:
   branches:
-    include: [master, claude/*]
-
-pr:
-  branches:
     include: [master]
+
+pr: none
 
 pool:
   vmImage: ubuntu-latest
