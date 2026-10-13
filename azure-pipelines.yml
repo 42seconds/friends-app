@@ -1,0 +1,83 @@
+# &FRIENDS: Azure Pipelines (Build, Test and Release stages of the
+# DevOps life cycle). Mirrors .github/workflows/ci.yml.
+#
+# Setup: Azure DevOps > Pipelines > New pipeline > GitHub > 42seconds/friends-app
+# > "Existing Azure Pipelines YAML file" > /azure-pipelines.yml > Run.
+
+trigger:
+  branches:
+    include: [master, claude/*]
+
+pr:
+  branches:
+    include: [master]
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: Test
+    displayName: Typecheck and tests
+    jobs:
+      - job: unit
+        displayName: Typecheck and unit tests
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '22.x'
+            displayName: Use Node 22
+          - script: npm ci --legacy-peer-deps
+            displayName: Install dependencies
+          - script: npm run typecheck
+            displayName: Typecheck (TypeScript)
+          - script: npx jest --ci --reporters=default --reporters=jest-junit
+            displayName: Unit tests (Jest)
+            env:
+              JEST_JUNIT_OUTPUT_DIR: $(Build.ArtifactStagingDirectory)/test-results
+          - task: PublishTestResults@2
+            condition: succeededOrFailed()
+            displayName: Publish test results
+            inputs:
+              testResultsFormat: JUnit
+              testResultsFiles: '$(Build.ArtifactStagingDirectory)/test-results/*.xml'
+              testRunTitle: Unit tests
+
+      - job: rules
+        displayName: Firestore security rules tests
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '22.x'
+          - script: npm ci --legacy-peer-deps
+            displayName: Install dependencies
+          # The Firestore emulator needs Java 21 (preinstalled on the image).
+          - script: |
+              export JAVA_HOME=$JAVA_HOME_21_X64
+              export PATH=$JAVA_HOME/bin:$PATH
+              npm run test:rules
+            displayName: Rules tests (local emulator, never the live database)
+
+  - stage: Build
+    displayName: Build Android APK
+    dependsOn: Test
+    jobs:
+      - job: android
+        displayName: Android release APK
+        timeoutInMinutes: 60
+        steps:
+          - task: NodeTool@0
+            inputs:
+              versionSpec: '22.x'
+          - script: npm ci --legacy-peer-deps
+            displayName: Install dependencies
+          - script: npx expo prebuild --platform android --no-install
+            displayName: Generate native Android project
+          - script: |
+              export JAVA_HOME=$JAVA_HOME_17_X64
+              cd android && ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
+            displayName: Build APK (Gradle)
+          - task: PublishPipelineArtifact@1
+            displayName: Publish APK
+            inputs:
+              targetPath: android/app/build/outputs/apk/release
+              artifact: friends-app-apk
