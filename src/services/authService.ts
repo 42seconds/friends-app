@@ -57,8 +57,16 @@ export async function logoutUser() {
   await signOutOfGoogle();
 }
 
+// "No account with that email" is treated like success, so the screen never
+// reveals who is signed up (projects without Firebase's email enumeration
+// protection would otherwise say so).
 export async function resetPassword(email: string) {
-  await sendPasswordResetEmail(auth, email);
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (e: any) {
+    if (String(e?.code ?? '').includes('user-not-found')) return;
+    throw e;
+  }
 }
 
 // Firebase refuses to delete an account whose login is old
@@ -71,10 +79,21 @@ export async function deleteAccount(reason?: string) {
   await deleteUser(user);
 }
 
+// Errors for the reset-password email. Firebase doesn't say whether an
+// account exists (email enumeration protection), so there is no
+// "no such user" case here.
+export function resetErrorMessage(err: any): string {
+  const code: string = err?.code ?? '';
+  if (code.includes('invalid-email') || code.includes('missing-email')) return "That email doesn't look right.";
+  if (code.includes('too-many-requests')) return 'Too many tries. Wait a few minutes, then try again.';
+  if (code.includes('network')) return "You're offline. Connect to the internet and try again.";
+  return "We couldn't send the link. Please try again.";
+}
+
 // Friendly copy for Firebase auth errors.
 export function authErrorMessage(err: any): string {
   const code: string = err?.code ?? '';
-  if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return "That email and password don't match.";
+  if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return "That email and password don't match. Forgot your password? Tap the link above to reset it.";
   if (code.includes('email-already-in-use')) return 'There is already an account with that email. Try logging in.';
   if (code.includes('invalid-email')) return "That email doesn't look right.";
   if (code.includes('weak-password')) return 'Use at least 8 characters.';
