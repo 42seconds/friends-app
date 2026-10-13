@@ -108,9 +108,14 @@ task('Launch video (motion graphics, voice-over, soundtrack)', 'Closed', 7)
 task('Merge to master and tag release', 'New', 7)
 task('Submit documentation on ARC (no zip files)', 'New', 7)
 
+# Azure only lets an import create items in their first state ("New"), so
+# the real state goes into a tag instead. After importing, query each tag
+# and bulk-edit State (see README step 3).
+STATE_TAG = {'Closed': 'done', 'Active': 'in-progress', 'New': 'to-do'}
 out = os.path.join(os.path.dirname(__file__), 'azure-boards-backlog.csv')
 with open(out, 'w', newline='', encoding='utf-8') as f:
     w = csv.writer(f)
-    w.writerow(['Work Item Type', 'Title 1', 'Title 2', 'Title 3', 'State', 'Iteration Path', 'Tags', 'Description'])
-    w.writerows(rows)
+    w.writerow(['Work Item Type', 'Title 1', 'Title 2', 'Title 3', 'Iteration Path', 'Tags', 'Description'])
+    for kind, t1, t2, t3, state, it, tags, desc in rows:
+        w.writerow([kind, t1, t2, t3, it, '; '.join(x for x in (tags, STATE_TAG[state]) if x), desc])
 print(len(rows), 'work items ->', out)
