@@ -34,7 +34,7 @@ function TicketAlerts() {
 
 function RedirectGate() {
   const { user, loading: authLoading, browsing } = useAuth();
-  const { hasSeenOnboarding } = useOnboarding();
+  const { hasSeenOnboarding, hasSeenGuide } = useOnboarding();
   const segments = useSegments();
   const router = useRouter();
   const updateRequired = useUpdateRequired();
@@ -46,7 +46,7 @@ function RedirectGate() {
   const pending = useRef<string | null>(null);
 
   useEffect(() => {
-    if (authLoading || hasSeenOnboarding === null) return;
+    if (authLoading || hasSeenOnboarding === null || hasSeenGuide === null) return;
 
     const group = segments[0] as string | undefined;
     const inOnboardingGroup = group === '(onboarding)';
@@ -59,7 +59,10 @@ function RedirectGate() {
     // bounce between Welcome and Explore forever.
     else if (!user && !hasSeenOnboarding && !inOnboardingGroup && !inAuthGroup && !browsing) target = '/(onboarding)/welcome';
     else if (!user && !inAuthGroup && !inOnboardingGroup && !(browsing && group && BROWSABLE.has(group))) target = browsing ? '/(tabs)/home' : '/(auth)/login';
-    else if (user && (inAuthGroup || inOnboardingGroup)) target = '/(tabs)/home';
+    else if (user && (inAuthGroup || inOnboardingGroup)) target = hasSeenGuide ? '/(tabs)/home' : '/guide';
+    // First login on this phone: show "How &FRIENDS works" once (it can be
+    // skipped). The notifications step after sign-up comes first.
+    else if (user && !hasSeenGuide && path !== 'guide' && path !== 'notifications-optin') target = '/guide';
 
     if (!target) {
       pending.current = null;
@@ -68,9 +71,9 @@ function RedirectGate() {
     if (pending.current === target) return;
     pending.current = target;
     router.replace(target as any);
-  }, [user, authLoading, hasSeenOnboarding, path, browsing]);
+  }, [user, authLoading, hasSeenOnboarding, hasSeenGuide, path, browsing]);
 
-  if (authLoading || hasSeenOnboarding === null) return <Splash />;
+  if (authLoading || hasSeenOnboarding === null || hasSeenGuide === null) return <Splash />;
   if (updateRequired) return <UpdateRequired />;
 
   return (

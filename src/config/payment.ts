@@ -11,6 +11,7 @@ export const bankDetails = {
 export const support = {
   whatsapp: '27000000000', // international format, no +
   email: 'hello@example.com',
+  hours: 'every day, 09:00 to 21:00', // shown under "Still stuck?" in Help
   instagram: 'https://instagram.com/',
   whatsappChannel: 'https://whatsapp.com/channel/',
   policyUrl: 'https://example.com/privacy',
