@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Alert, Pressable, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Pressable, View } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { T, H1, Amp, TopBar, Field, PrimaryButton, TextLink, Screen, GoogleButton } from '../../src/components/night';
-import { loginUser, resetPassword, authErrorMessage } from '../../src/services/authService';
+import { loginUser, authErrorMessage } from '../../src/services/authService';
 import { useAuth } from '../../src/context/AuthContext';
 import { night } from '../../src/theme/night';
 import { LIMITS, checkEmail } from '../../src/lib/validation';
@@ -12,7 +12,8 @@ import { safeBack } from '../../src/lib/nav';
 export default function LoginScreen() {
   const router = useRouter();
   const { setBrowsing } = useAuth();
-  const [email, setEmail] = useState('');
+  const params = useLocalSearchParams<{ email?: string }>();
+  const [email, setEmail] = useState(params.email ?? '');
   const [password, setPassword] = useState('');
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -38,18 +39,7 @@ export default function LoginScreen() {
     }
   };
 
-  const handleForgot = async () => {
-    if (!emailOk) {
-      setError('Type your email first, then tap Forgot.');
-      return;
-    }
-    try {
-      await resetPassword(email.trim());
-      Alert.alert('Check your inbox', `We sent a reset link to ${email.trim()}.`);
-    } catch (e) {
-      setError(authErrorMessage(e));
-    }
-  };
+  const forgot = () => router.push({ pathname: '/(auth)/forgot', params: emailOk ? { email: email.trim() } : {} });
 
   const browse = () => {
     setBrowsing(true);
@@ -82,8 +72,8 @@ export default function LoginScreen() {
         autoCapitalize="none"
         onSubmitEditing={handleLogin}
         labelRight={
-          <Pressable onPress={handleForgot} hitSlop={8}>
-            <T size={13} weight="600" style={{ textDecorationLine: 'underline' }}>Forgot?</T>
+          <Pressable onPress={forgot} hitSlop={8} accessibilityRole="link">
+            <T size={13} weight="600" style={{ textDecorationLine: 'underline' }}>Forgot password?</T>
           </Pressable>
         }
         right={
