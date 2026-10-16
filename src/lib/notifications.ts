@@ -1,6 +1,8 @@
 import { Platform } from 'react-native';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { prefsStore } from '../store';
+import { auth } from '../firebase/firebaseConfig';
+import { registerPushToken } from './push';
 
 // Expo Go on Android (SDK 53+) crashes as soon as expo-notifications is
 // loaded, so it is only required here, and never inside Expo Go on
@@ -18,6 +20,7 @@ export async function enablePushNotifications(): Promise<boolean> {
     const current = await Notifications.getPermissionsAsync();
     const granted = current.granted || (await Notifications.requestPermissionsAsync()).granted;
     prefsStore.set({ push: granted });
+    if (granted && auth.currentUser) registerPushToken(auth.currentUser.uid);
     return granted;
   } catch {
     prefsStore.set({ push: false });
@@ -33,7 +36,12 @@ function notifications(): NotificationsModule | null {
     try {
       mod = require('expo-notifications');
       mod!.setNotificationHandler({
-        handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: true, shouldSetBadge: false }),
+        // While the app is open it announces changes itself, so a push for
+        // the same change is not shown twice.
+        handleNotification: async (n) => {
+          const remote = (n.request.trigger as { type?: string } | null)?.type === 'push';
+          return { shouldShowBanner: !remote, shouldShowList: !remote, shouldPlaySound: !remote, shouldSetBadge: false };
+        },
       });
       if (Platform.OS === 'android') {
         mod!.setNotificationChannelAsync('tickets', { name: 'Tickets', importance: mod!.AndroidImportance.HIGH, vibrationPattern: [0, 200, 120, 200], lightColor: '#C8F03C' }).catch(() => {});

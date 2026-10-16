@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../context/AuthContext';
@@ -6,6 +7,7 @@ import { listenToUserTickets } from '../services/ticketService';
 import { notifyNow, handleNotificationTaps } from '../lib/notifications';
 import { PurchasedTicket } from '../types';
 import { alertFor } from '../lib/ticketAlerts';
+import { registerPushToken, pushReady } from '../lib/push';
 
 const KEY = 'nightTicketStatus';
 
@@ -18,6 +20,11 @@ export function useTicketAlerts() {
   const router = useRouter();
 
   useEffect(() => handleNotificationTaps((url) => router.push(url as any)), []);
+
+  // Make sure this phone can get pushes while the app is closed.
+  useEffect(() => {
+    if (user) registerPushToken(user.uid);
+  }, [user?.uid]);
 
   useEffect(() => {
     if (!user) return;
@@ -35,7 +42,8 @@ export function useTicketAlerts() {
         // First time we see a booking: remember it, don't announce it.
         if (before !== undefined) {
           const a = alertFor(t, before);
-          if (a) notifyNow(a.title, a.body, a.url);
+          // In the background the push from the team covers it.
+          if (a && (AppState.currentState === 'active' || !pushReady())) notifyNow(a.title, a.body, a.url);
         }
         if (before !== t.status) {
           seen[t.id] = t.status;
