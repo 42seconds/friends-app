@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { listenToEvents } from '../services/eventService';
 import { Event } from '../types';
 import { isPast, parseEventDate } from '../lib/dates';
+import { readCache, writeCache, shouldKeepSaved } from '../lib/offlineCache';
 
 // Shared live listener: every screen that calls useEvents() reads the
 // same Firestore subscription instead of opening its own.
@@ -11,14 +12,26 @@ let error: Error | null = null;
 let unsubscribe: (() => void) | null = null;
 const subscribers = new Set<() => void>();
 
+let live = false; // true once Firestore has answered this session
+
 function start() {
   if (unsubscribe) return;
+  // Show the events saved last time straight away, then the live list.
+  if (!live) readCache<Event[]>('events').then((saved) => {
+    if (live || !saved?.length) return;
+    cache = saved;
+    loaded = true;
+    subscribers.forEach((s) => s());
+  });
   unsubscribe = listenToEvents(
-    (data) => {
+    (data, fromCache) => {
+      if (shouldKeepSaved(data, fromCache, cache)) return;
       // Soonest first; unparseable dates go last.
       cache = [...data].sort((a, b) => (parseEventDate(a.date, a.time)?.getTime() ?? Infinity) - (parseEventDate(b.date, b.time)?.getTime() ?? Infinity));
       loaded = true;
+      live = true;
       error = null;
+      if (!fromCache) writeCache('events', cache);
       subscribers.forEach((s) => s());
     },
     (e) => {

@@ -14,6 +14,7 @@ import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { OnboardingProvider, useOnboarding } from '../src/context/OnboardingContext';
 import Splash from '../src/components/night/Splash';
 import UpdateRequired from '../src/components/night/UpdateRequired';
+import OfflineBanner from '../src/components/night/OfflineBanner';
 import { useUpdateRequired } from '../src/hooks/useMinVersion';
 import { night } from '../src/theme/night';
 import { useTicketAlerts } from '../src/hooks/useTicketAlerts';
@@ -85,6 +86,7 @@ function RedirectGate() {
       ))}
       <Stack.Screen name="purchase/confirmed" options={{ animation: 'fade', gestureEnabled: false }} />
     </Stack>
+    <OfflineBanner />
     </>
   );
 }

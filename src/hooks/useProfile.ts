@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getUserProfile } from '../services/userService';
 import { UserProfile } from '../types';
+import { readCache, writeCache } from '../lib/offlineCache';
 
 export function useProfile() {
   const { user } = useAuth();
@@ -14,8 +15,15 @@ export function useProfile() {
       setLoading(false);
       return;
     }
-    const p = await getUserProfile(user.uid).catch(() => null);
-    setProfile(p);
+    // Saved copy first so names and settings show instantly offline.
+    const saved = await readCache<UserProfile>(`profile:${user.uid}`);
+    if (saved) {
+      setProfile(saved);
+      setLoading(false);
+    }
+    const p = await getUserProfile(user.uid).catch(() => undefined);
+    if (p) writeCache(`profile:${user.uid}`, p);
+    if (p !== undefined || !saved) setProfile(p ?? null);
     setLoading(false);
   }, [user]);
 
