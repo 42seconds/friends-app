@@ -5,6 +5,7 @@ import T from './T';
 import { OutlineButton } from './Buttons';
 import { night } from '../../theme/night';
 import { googleSignInAvailable, signInWithGoogle, googleErrorMessage, GoogleSignInCancelled } from '../../services/googleAuth';
+import { requireOnline } from '../../lib/online';
 
 // "Continue with Google" with an "or" divider above it. Renders nothing
 // where Google sign-in can't work (Expo Go, web).
@@ -18,6 +19,7 @@ export default function GoogleButton() {
     setBusy(true);
     setError('');
     try {
+      await requireOnline();
       const { isNew } = await signInWithGoogle();
       // Returning members are sent on by the RedirectGate; new ones
       // see the notifications step first, like email sign-ups.

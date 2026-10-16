@@ -9,6 +9,7 @@ import { uploadProofOfPayment } from '../../src/services/paymentService';
 import { pickProof, ProofSource } from '../../src/lib/proof';
 import { rand } from '../../src/lib/pricing';
 import { night } from '../../src/theme/night';
+import { requireOnline, withTimeout, isOfflineError } from '../../src/lib/online';
 
 function Check({ children }: { children: React.ReactNode }) {
   return (
@@ -49,11 +50,12 @@ export default function UploadProofScreen() {
     if (!imageUri || !ticketId) return;
     setUploading(true);
     try {
-      await uploadProofOfPayment(ticketId, imageUri);
+      await requireOnline();
+      await withTimeout(uploadProofOfPayment(ticketId, imageUri), 45000);
       router.replace(`/purchase/awaiting?ticketId=${ticketId}`);
     } catch (error: any) {
       console.error('Upload failed:', error);
-      Alert.alert('Upload failed', error?.message ?? 'Please try again.');
+      Alert.alert(isOfflineError(error) ? "You're offline" : 'Upload failed', isOfflineError(error) ? 'Sending your proof needs an internet connection. Your tickets stay held, so try again once you are connected.' : error?.message ?? 'Please try again.');
     } finally {
       setUploading(false);
     }

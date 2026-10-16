@@ -8,6 +8,7 @@ import { SUB_BRANDS } from '../../src/lib/subbrands';
 import { night } from '../../src/theme/night';
 import { safeBack } from '../../src/lib/nav';
 import { LIMITS, checkName, checkEmail, checkPassword, checkPhone, normalizePhone, collectErrors } from '../../src/lib/validation';
+import { requireOnline } from '../../src/lib/online';
 
 // 0-4 bars: length, mixed case, digit, symbol.
 function strength(pw: string) {
@@ -48,6 +49,7 @@ export default function RegisterScreen() {
 
     setLoading(true);
     try {
+      await requireOnline();
       await registerUser({
         name: [first.trim(), last.trim()].filter(Boolean).join(' '),
         email: email.trim(),

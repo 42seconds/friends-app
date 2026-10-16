@@ -14,6 +14,7 @@ import { rand } from '../../src/lib/pricing';
 import { shortDate } from '../../src/lib/dates';
 import { HOLD_HOURS, SERVICE_FEE_RATE, VAT_RATE } from '../../src/config/pricing';
 import { night } from '../../src/theme/night';
+import { requireOnline, withTimeout, isOfflineError } from '../../src/lib/online';
 
 // Step 2 of 4: Review booking. Tapping Reserve creates the booking and
 // starts the EFT hold.
@@ -44,7 +45,8 @@ export default function ReviewBookingScreen() {
     setSubmitting(true);
     setError('');
     try {
-      const ticketId = await createTicket({
+      await requireOnline();
+      const ticketId = await withTimeout(createTicket({
         userId: user.uid,
         userName: profile?.name ?? 'Unknown',
         userEmail: user.email ?? '',
@@ -64,12 +66,12 @@ export default function ReviewBookingScreen() {
         discount: q.discount,
         promoCode: percentOff ? promo.code : undefined,
         totalPrice: q.total,
-      });
+      }));
       promoStore.set({ eventId: null, code: '', percentOff: 0 });
       router.replace(`/purchase/pay?ticketId=${ticketId}`);
     } catch (e) {
       console.error('Failed to create ticket:', e);
-      setError("We couldn't reserve your tickets. Check your connection and try again.");
+      setError(isOfflineError(e) ? "You're offline. Reserving tickets needs an internet connection. Your selection is still here, so try again once you're connected." : "We couldn't reserve your tickets. Check your connection and try again.");
     } finally {
       setSubmitting(false);
     }
