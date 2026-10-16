@@ -53,7 +53,8 @@ export const FAQ: HelpItem[] = [
   { topic: 'eft', q: 'Why EFT and not card?', a: 'EFT has no card fees, which keeps ticket prices lower for everyone. Every South African bank app can do an EFT.' },
   { topic: 'eft', q: 'I paid but used the wrong reference', a: "Upload your proof anyway. We also match payments by amount and date, and we'll contact you if we can't find it." },
   { topic: 'eft', q: 'My hold ran out but I already paid', a: 'Open the booking and tap "I already paid, upload proof". Upload your proof and we\'ll sort it out, or refund you if the tickets are gone.' },
-  { topic: 'eft', q: 'Can I pay later?', a: `Yes, as long as it's within ${HOLD_HOURS} hours of reserving. Your booking stays in Tickets under Pending with a countdown, so you can pick up where you left off.` },
+  { topic: 'eft', q: 'Can I pay later?', a: `Yes, as long as it's within ${HOLD_HOURS} hours of reserving. Tap "I'll pay later, remind me" on the Pay by EFT screen to pick reminders. Your booking stays in Tickets under Pending with a countdown, so you can pick up where you left off.` },
+  { topic: 'eft', q: 'Where does each detail go in my banking app?', a: 'On the Pay by EFT screen, tap "Where does each detail go in my banking app?". It shows a payment form with every box filled in. Your booking reference goes in "Their reference", not "My reference".' },
 
   // Proof and checking
   { topic: 'checking', q: 'What is proof of payment?', a: 'A screenshot or photo of your bank\'s confirmation screen or payment notification. It must show the amount, your booking reference, a date, and that the payment was successful or paid.' },
@@ -90,7 +91,7 @@ export const FAQ: HelpItem[] = [
   { topic: 'notifications', q: 'What will you notify me about?', a: 'When your tickets are approved and when a proof needs fixing, plus waitlist updates. Everything also shows in your Inbox (the bell on Explore). You can choose what you get in Settings, Notifications.' },
 
   // Trouble
-  { topic: 'trouble', q: "The app says I'm offline", a: 'Check your Wi-Fi or mobile data. Your tickets you have already opened still work offline. New events, reserving and uploading proof need a connection.' },
+  { topic: 'trouble', q: "The app says I'm offline", a: "Check your Wi-Fi or mobile data. While you're offline the app shows what it saved last time: events, your bookings and your QR tickets all still open. Reserving, uploading proof and new events need a connection, and everything updates by itself when you're back online." },
   { topic: 'trouble', q: 'The app looks out of date or a screen is stuck', a: 'Close the app fully and open it again. If the app asks you to update, install the latest version so everything works.' },
   { topic: 'trouble', q: 'Something else is wrong', a: 'Message us on WhatsApp or email us below with your booking reference (TKT-…) and a screenshot, and we\'ll help.' },
 ];
