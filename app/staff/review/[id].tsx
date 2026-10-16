@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Image, Modal, Pressable, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Modal, Pressable, View } from 'react-native';
+import { requireOnline, withTimeout, isOfflineError } from '../../../src/lib/online';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { T, H1, Screen, Hero, TopBar, StaffGate, Card, SectionLabel, Chip, ChipRow, Pill, PrimaryButton, OutlineButton, IconButton } from '../../../src/components/night';
@@ -54,9 +55,13 @@ export default function ProofReviewScreen() {
     if (!user) return;
     setApproving(true);
     try {
-      await approveTicket(t.id, user.uid);
+      await requireOnline();
+      await withTimeout(approveTicket(t.id, user.uid));
       if (nextId) router.replace(`/staff/review/${nextId}`);
       else router.replace('/staff/approvals');
+    } catch (e) {
+      if (isOfflineError(e)) Alert.alert("You're offline", 'Approving and rejecting need an internet connection, so the guest is told straight away. Nothing was changed. Try again once you are connected.');
+      else Alert.alert("Couldn't approve", 'Please try again.');
     } finally {
       setApproving(false);
     }

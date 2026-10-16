@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Pressable, View } from 'react-native';
+import { Alert, Pressable, View } from 'react-native';
+import { requireOnline, withTimeout, isOfflineError } from '../../src/lib/online';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { T, H2, Sheet, Field, ListGroup, ToggleRow, PrimaryButton } from '../../src/components/night';
 import { useTicket } from '../../src/hooks/useTicket';
@@ -28,8 +29,12 @@ export default function RejectSheet() {
     if (!user || !ticket) return;
     setSending(true);
     try {
-      await rejectTicket(ticket.id, user.uid, { reason, message: message.trim(), keepHeld });
+      await requireOnline();
+      await withTimeout(rejectTicket(ticket.id, user.uid, { reason, message: message.trim(), keepHeld }));
       router.dismissTo('/staff/approvals');
+    } catch (e) {
+      if (isOfflineError(e)) Alert.alert("You're offline", 'Approving and rejecting need an internet connection, so the guest is told straight away. Nothing was changed. Try again once you are connected.');
+      else Alert.alert("Couldn't send it back", 'Please try again.');
     } finally {
       setSending(false);
     }
