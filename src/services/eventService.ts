@@ -10,12 +10,12 @@ import { normalizeDates } from '../lib/firestoreData';
 // fires again automatically with the updated list, no refresh needed.
 //
 // Returns an "unsubscribe" function — calling it stops the listener.
-export function listenToEvents(callback: (events: Event[]) => void, onError?: (e: Error) => void) {
+export function listenToEvents(callback: (events: Event[], fromCache: boolean) => void, onError?: (e: Error) => void) {
   const publishedQuery = query(collection(db, 'events'), where('status', '==', 'published'));
   return onSnapshot(
     publishedQuery,
     (snapshot) => {
-      callback(snapshot.docs.map((d) => ({ id: d.id, ...(normalizeDates(d.data()) as Omit<Event, 'id'>) })));
+      callback(snapshot.docs.map((d) => ({ id: d.id, ...(normalizeDates(d.data()) as Omit<Event, 'id'>) })), snapshot.metadata.fromCache);
     },
     onError
   );

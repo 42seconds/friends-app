@@ -94,12 +94,12 @@ export function listenToTicket(ticketId: string, callback: (ticket: PurchasedTic
   );
 }
 
-export function listenToUserTickets(userId: string, callback: (tickets: PurchasedTicket[]) => void, onError?: (e: Error) => void) {
+export function listenToUserTickets(userId: string, callback: (tickets: PurchasedTicket[], fromCache: boolean) => void, onError?: (e: Error) => void) {
   const userQuery = query(collection(db, 'tickets'), where('userId', '==', userId));
   return onSnapshot(
     userQuery,
     (snapshot) => {
-      callback(snapshot.docs.map((d) => (toTicket(d.id, d.data()))));
+      callback(snapshot.docs.map((d) => (toTicket(d.id, d.data()))), snapshot.metadata.fromCache);
     },
     onError
   );
