@@ -14,6 +14,8 @@ import { PurchasedTicket, TicketStatus } from '../types';
 import { HOLD_HOURS } from '../config/pricing';
 import { byDate } from '../lib/firestoreData';
 import { toTicket, holdEndsAt, effectiveStatus } from '../lib/tickets';
+import { alertFor } from '../lib/ticketAlerts';
+import { pushToUser } from '../lib/push';
 
 // Re-exported so screens can keep importing them from here.
 export { toTicket, holdEndsAt, effectiveStatus };
@@ -143,6 +145,18 @@ export async function approveTicket(ticketId: string, adminUid: string) {
     confirmedBy: adminUid,
     rejection: deleteField(),
   });
+  notifyOwner(ticketId);
+}
+
+// Tells the guest on their phone, even if the app is closed. Runs in the
+// background so staff never wait on it.
+function notifyOwner(ticketId: string) {
+  getTicketById(ticketId)
+    .then((t) => {
+      const a = t && alertFor(t, undefined);
+      if (t?.userId && a) return pushToUser(t.userId, a);
+    })
+    .catch(() => {});
 }
 
 export interface RejectInput {
@@ -161,6 +175,7 @@ export async function rejectTicket(ticketId: string, adminUid: string, input: Re
     rejectedAt: now,
     rejection: { ...input, at: now },
   });
+  notifyOwner(ticketId);
 }
 
 export async function markProofUploaded(ticketId: string, proofOfPayment: string) {
