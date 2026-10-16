@@ -2,7 +2,7 @@ import { ActivityIndicator, Pressable, Share, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
-import { T, Screen, TopBar, IconButton, Amp, QR, Pill, PrimaryButton, IconName } from '../../src/components/night';
+import { T, Screen, TopBar, IconButton, Amp, QR, Pill, PrimaryButton, IconName, CoachMark } from '../../src/components/night';
 import StatusBadge from '../../src/components/statusBadge';
 import { useTicket } from '../../src/hooks/useTicket';
 import { effectiveStatus } from '../../src/services/ticketService';
@@ -81,7 +81,9 @@ export default function TicketDetailScreen() {
         <View style={{ alignItems: 'center', padding: 20, paddingTop: 8, gap: 12 }}>
           {confirmed ? (
             <>
-              <QR value={ticket.id} size={200} />
+              <CoachMark id="ticket-qr" tailAlign="center" radius={16} text="Your QR is ready 🎉 Show this at the door. It works without signal once opened">
+                <QR value={ticket.id} size={200} />
+              </CoachMark>
               <Pressable accessibilityLabel="Copy ticket ID" onPress={() => Clipboard.setStringAsync(ticket.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <T mono weight="700" size={15}>{ticket.id}</T>
                 <Ionicons name="copy-outline" size={14} color={night.muted} />

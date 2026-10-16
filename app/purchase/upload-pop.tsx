@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Alert, Image, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { T, Screen, TopBar, Segmented, OutlineButton, PrimaryButton } from '../../src/components/night';
+import { T, Screen, TopBar, Segmented, OutlineButton, PrimaryButton, CoachMark, FirstTicketTracker } from '../../src/components/night';
+import { useFirstTicketGuide } from '../../src/hooks/useFirstTicketGuide';
 import { useTicket } from '../../src/hooks/useTicket';
 import { uploadProofOfPayment } from '../../src/services/paymentService';
 import { pickProof, ProofSource } from '../../src/lib/proof';
@@ -28,6 +29,7 @@ export default function UploadProofScreen() {
   const [source, setSource] = useState<ProofSource>(initial ?? 'photos');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const guide = useFirstTicketGuide();
 
   const pick = async (s: ProofSource) => {
     setSource(s);
@@ -77,15 +79,18 @@ export default function UploadProofScreen() {
       }
       footerDark
     >
-      <Segmented
-        dark
-        value={source}
-        onChange={(s) => pick(s)}
-        options={[
-          { key: 'camera', label: 'Camera' },
-          { key: 'photos', label: 'Photos' },
-        ]}
-      />
+      {guide && <FirstTicketTracker step={4} />}
+      <CoachMark id="upload-pick" radius={99} text="Pick the screenshot of your payment. It's usually the newest one in Photos">
+        <Segmented
+          dark
+          value={source}
+          onChange={(s) => pick(s)}
+          options={[
+            { key: 'camera', label: 'Camera' },
+            { key: 'photos', label: 'Photos' },
+          ]}
+        />
+      </CoachMark>
       <View style={{ height: 380, borderRadius: 24, backgroundColor: night.ink2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
         {imageUri ? (
           <Image source={{ uri: imageUri }} style={{ width: '100%', height: '100%' }} resizeMode="contain" accessibilityLabel="Your proof of payment" />

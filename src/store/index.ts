@@ -89,3 +89,11 @@ export interface QueuedScan {
 }
 
 export const scanQueueStore = createPersistedStore<{ scans: QueuedScan[]; lastSyncedAt: string | null }>('nightScanQueue', { scans: [], lastSyncedAt: null });
+
+// First-visit coach marks already dismissed, and whether the person hid
+// the "Your first ticket" guide.
+export const coachStore = createPersistedStore<{ seen: string[]; guideHidden: boolean }>('nightCoach', { seen: [], guideHidden: false });
+
+export function dismissCoach(id: string) {
+  coachStore.set((s) => (s.seen.includes(id) ? {} : { seen: [...s.seen, id] }));
+}

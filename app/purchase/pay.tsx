@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { T, H1, Screen, TopBar, StepProgress, CopyRow, SectionLabel, OutlineButton, PrimaryButton, TextLink, Card } from '../../src/components/night';
+import { T, H1, Screen, TopBar, StepProgress, CopyRow, SectionLabel, OutlineButton, PrimaryButton, TextLink, Card, CoachMark, FirstTicketTracker, HideGuideLink } from '../../src/components/night';
+import { useFirstTicketGuide } from '../../src/hooks/useFirstTicketGuide';
 import { useTicket } from '../../src/hooks/useTicket';
 import { useNow } from '../../src/hooks/useProfile';
 import { effectiveStatus, holdEndsAt } from '../../src/services/ticketService';
@@ -16,6 +17,7 @@ export default function PayScreen() {
   const router = useRouter();
   const { ticket, loading } = useTicket(ticketId);
   const now = useNow();
+  const guide = useFirstTicketGuide();
 
   const status = ticket ? effectiveStatus(ticket) : null;
   useEffect(() => {
@@ -29,11 +31,15 @@ export default function PayScreen() {
   const upload = (source: 'camera' | 'photos') => router.push(`/purchase/upload-pop?ticketId=${ticketId}&source=${source}`);
 
   return (
-    <Screen header={<><TopBar onBack={() => router.replace('/(tabs)/tickets')} /><StepProgress step={3} /></>}
+    <Screen header={<><TopBar onBack={() => router.replace('/(tabs)/tickets')} right={guide ? <HideGuideLink /> : undefined} />{guide ? <FirstTicketTracker step={3} /> : <StepProgress step={3} />}</>}
       footer={
         <>
-          <PrimaryButton label="Upload proof of payment" icon="cloud-upload-outline" onPress={() => upload('photos')} />
-          <TextLink label="I'll pay later, remind me" muted onPress={() => router.replace('/(tabs)/tickets')} />
+          {guide ? (
+            <PrimaryButton label="Next: pay in my banking app" onPress={() => router.push(`/purchase/bank-help?ticketId=${ticketId}`)} />
+          ) : (
+            <PrimaryButton label="Upload proof of payment" icon="cloud-upload-outline" onPress={() => upload('photos')} />
+          )}
+          <TextLink label="I'll pay later, remind me" muted onPress={() => router.push(`/purchase/pay-later?ticketId=${ticketId}`)} />
         </>
       }
     >
@@ -62,9 +68,12 @@ export default function PayScreen() {
         </View>
       </View>
 
-      <View style={{ paddingHorizontal: 16, paddingVertical: 6, borderRadius: 18, backgroundColor: night.cream, borderWidth: 1.5, borderColor: '#F0DFA0' }}>
-        <CopyRow label="Reference · use exactly this" value={ticket.id} />
-      </View>
+      <CoachMark id="pay-reference" text="Copy this reference and use it exactly in your banking app. It's how we find your payment">
+        <View style={{ paddingHorizontal: 16, paddingVertical: 6, borderRadius: 18, backgroundColor: night.cream, borderWidth: 1.5, borderColor: '#F0DFA0' }}>
+          <CopyRow label="Reference · use exactly this" value={ticket.id} />
+        </View>
+      </CoachMark>
+      <TextLink label="Where does each detail go in my banking app?" size={14} onPress={() => router.push(`/purchase/bank-help?ticketId=${ticketId}`)} />
 
       <SectionLabel>PROOF OF PAYMENT</SectionLabel>
       {ticket.proofOfPayment ? (

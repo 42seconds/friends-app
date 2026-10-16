@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { T, H1, H2, Screen, IconButton, Chip, StatusBanner, FeaturedEventCard, EventListRow, EmptyState, PrimaryButton, OutlineButton, TextLink } from '../../src/components/night';
+import { T, H1, H2, Screen, IconButton, Chip, StatusBanner, FeaturedEventCard, EventListRow, EmptyState, PrimaryButton, OutlineButton, TextLink, CoachMark, FirstTicketIntro } from '../../src/components/night';
+import { useFirstTicketGuide } from '../../src/hooks/useFirstTicketGuide';
 import { useEvents, retryEvents } from '../../src/hooks/useEvents';
 import { useBookings } from '../../src/hooks/useBookings';
 import { useAuth } from '../../src/context/AuthContext';
@@ -15,6 +16,7 @@ export default function ExploreScreen() {
   const { upcoming, loading, error } = useEvents();
   const { tickets } = useBookings();
   const [brand, setBrand] = useState<SubBrandKey | 'all'>('all');
+  const guide = useFirstTicketGuide();
 
   const list = useMemo(() => (brand === 'all' ? upcoming : upcoming.filter((e) => subBrandFor(e.tag).key === brand)), [upcoming, brand]);
   const featured = list.find((e) => e.featured) ?? list[0];
@@ -50,6 +52,7 @@ export default function ExploreScreen() {
     >
 
       <StatusBanner tickets={tickets} />
+      {guide && <FirstTicketIntro />}
 
       <View style={{ marginTop: 6 }}>
         <H1 size={60}>This week{'\n'}in Braam</H1>
@@ -71,7 +74,9 @@ export default function ExploreScreen() {
         </EmptyState>
       ) : (
         <>
-          <FeaturedEventCard event={featured} />
+          <CoachMark id="explore-card" number={guide ? 1 : undefined} text={guide ? 'Start here. Tap any event that looks good' : 'Tap an event to see tickets'} radius={24}>
+            <FeaturedEventCard event={featured} />
+          </CoachMark>
           {rest.length > 0 && (
             <>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 6 }}>

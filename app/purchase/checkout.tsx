@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { T, H1, Screen, TopBar, StepProgress, Avatar, Card, KV, Note, PrimaryButton, SectionLabel, EventThumb } from '../../src/components/night';
+import { T, H1, Screen, TopBar, StepProgress, Avatar, Card, KV, Note, PrimaryButton, SectionLabel, EventThumb, FirstTicketTracker } from '../../src/components/night';
+import { useFirstTicketGuide } from '../../src/hooks/useFirstTicketGuide';
 import { useEvent } from '../../src/hooks/useEvents';
 import { useAuth } from '../../src/context/AuthContext';
 import { useProfile } from '../../src/hooks/useProfile';
@@ -25,6 +26,7 @@ export default function ReviewBookingScreen() {
   const promo = promoStore.useStore();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const guide = useFirstTicketGuide();
 
   // A code only applies to the event it was entered for.
   useEffect(() => {
@@ -74,7 +76,7 @@ export default function ReviewBookingScreen() {
   };
 
   return (
-    <Screen header={<><TopBar /><StepProgress step={2} /></>} footer={<PrimaryButton label="Reserve and pay by EFT" onPress={reserve} loading={submitting} disabled={!tier} />}>
+    <Screen header={<><TopBar />{guide ? <FirstTicketTracker step={2} /> : <StepProgress step={2} />}</>} footer={<PrimaryButton label="Reserve and pay by EFT" onPress={reserve} loading={submitting} disabled={!tier} />}>
       <H1 size={56}>Review{'\n'}booking</H1>
 
       {event && (

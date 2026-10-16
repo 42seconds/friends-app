@@ -13,3 +13,4 @@ export { default as CopyRow } from './CopyRow';
 export { default as MapArt } from './MapArt';
 export { default as StaffGate, StaffPill } from './StaffGate';
 export { default as GoogleButton } from './GoogleButton';
+export { CoachMark, FirstTicketTracker, FirstTicketIntro, HideGuideLink } from './Coach';

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { ActivityIndicator, Image, Pressable, Share, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { T, H1, H2, Amp, Screen, IconButton, Stepper, Note, Card, Pill, PrimaryButton, EmptyState, TextLink } from '../../src/components/night';
+import { T, H1, H2, Amp, Screen, IconButton, Stepper, Note, Card, Pill, PrimaryButton, EmptyState, TextLink, CoachMark, FirstTicketTracker } from '../../src/components/night';
+import { useFirstTicketGuide } from '../../src/hooks/useFirstTicketGuide';
 import { useEvent } from '../../src/hooks/useEvents';
 import { useAuth } from '../../src/context/AuthContext';
 import { savedStore, toggleSaved } from '../../src/store';
@@ -22,6 +23,7 @@ export default function EventDetailScreen() {
   const saved = savedStore.useStore().ids.includes(id ?? '');
   // One tier per booking: picking a quantity on one tier clears the others.
   const [sel, setSel] = useState<{ tier: string; qty: number } | null>(null);
+  const guide = useFirstTicketGuide();
 
   if (loading) return <View style={{ flex: 1, justifyContent: 'center', backgroundColor: night.paper }}><ActivityIndicator color={night.ink} /></View>;
   if (!event) {
@@ -52,13 +54,15 @@ export default function EventDetailScreen() {
   const footer = event.soldOut ? (
     <PrimaryButton label="Sold out · join the waitlist" onPress={() => router.push(`/waitlist/${event.id}`)} />
   ) : available.length === 0 ? null : (
-    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-      <View style={{ minWidth: 96 }}>
-        <T size={13} color={night.muted}>{sel?.qty ? `${sel.qty} × ${sel.tier}` : 'Pick tickets'}</T>
-        <T display size={28}>{sel?.qty ? rand(q.total) : '—'}</T>
+    <CoachMark id="event-reserve" after="event-stepper" show={!!sel?.qty} placement="above" tailAlign="right" number={2} text="Then tap Reserve. Reserving is free">
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+        <View style={{ minWidth: 96 }}>
+          <T size={13} color={night.muted}>{sel?.qty ? `${sel.qty} × ${sel.tier}` : 'Pick tickets'}</T>
+          <T display size={28}>{sel?.qty ? rand(q.total) : '—'}</T>
+        </View>
+        <PrimaryButton label="Reserve tickets" disabled={!sel?.qty} onPress={reserve} style={{ flex: 1 }} />
       </View>
-      <PrimaryButton label="Reserve tickets" disabled={!sel?.qty} onPress={reserve} style={{ flex: 1 }} />
-    </View>
+    </CoachMark>
   );
 
   return (
@@ -88,6 +92,7 @@ export default function EventDetailScreen() {
         </View>
       }
     >
+      {guide && !event.soldOut && <FirstTicketTracker step={2} />}
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Card style={{ flex: 1, gap: 4 }} pad={14}>
           <T mono weight="700" size={11} color={night.muted}>WHEN</T>
@@ -122,11 +127,13 @@ export default function EventDetailScreen() {
             <H2>Tickets</H2>
             <T size={12} color={night.muted}>Prices include fees + VAT</T>
           </View>
-          {event.tickets.map((t) => {
+          {event.tickets.map((t, i) => {
             const qty = sel?.tier === t.tier ? sel.qty : 0;
             const soldOut = !t.available;
+            const first = event.tickets!.findIndex((x) => x.available) === i;
             return (
-              <View key={t.tier} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: night.card, borderWidth: qty ? 2 : 1.5, borderColor: qty ? night.ink : night.line, opacity: soldOut ? 0.55 : 1 }}>
+              <CoachMark key={t.tier} id="event-stepper" show={first} number={1} tailAlign="right" text="Choose how many with + and −. The price already includes fees and VAT">
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: night.card, borderWidth: qty ? 2 : 1.5, borderColor: qty ? night.ink : night.line, opacity: soldOut ? 0.55 : 1 }}>
                 <View style={{ flex: 1, gap: 2 }}>
                   <T size={16} weight="600" style={soldOut ? { textDecorationLine: 'line-through' } : undefined}>{t.tier}</T>
                   {!!t.description && <T size={13} color={night.muted}>{t.description}</T>}
@@ -134,6 +141,7 @@ export default function EventDetailScreen() {
                 </View>
                 {soldOut ? <Pill label="Sold out" /> : <Stepper value={qty} max={MAX_TICKETS_PER_PERSON} onChange={(n) => setSel(n ? { tier: t.tier, qty: n } : null)} />}
               </View>
+              </CoachMark>
             );
           })}
         </View>
