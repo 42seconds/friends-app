@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, Share, View } from 'react-native';
+import { ActivityIndicator, Alert, Image, Pressable, Share, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { T, H1, H2, Amp, Screen, IconButton, Stepper, Note, Card, Pill, PrimaryButton, EmptyState, TextLink, CoachMark, FirstTicketTracker } from '../../src/components/night';
@@ -14,6 +14,7 @@ import { shortDate } from '../../src/lib/dates';
 import { HOLD_HOURS, MAX_TICKETS_PER_PERSON } from '../../src/config/pricing';
 import { night } from '../../src/theme/night';
 import { safeBack } from '../../src/lib/nav';
+import { useOnline } from '../../src/hooks/useOnline';
 
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -24,6 +25,7 @@ export default function EventDetailScreen() {
   // One tier per booking: picking a quantity on one tier clears the others.
   const [sel, setSel] = useState<{ tier: string; qty: number } | null>(null);
   const guide = useFirstTicketGuide();
+  const online = useOnline();
 
   if (loading) return <View style={{ flex: 1, justifyContent: 'center', backgroundColor: night.paper }}><ActivityIndicator color={night.ink} /></View>;
   if (!event) {
@@ -44,6 +46,10 @@ export default function EventDetailScreen() {
 
   const reserve = () => {
     if (!sel?.qty) return;
+    if (!online) {
+      Alert.alert("You're offline", 'You can keep browsing, but reserving tickets needs an internet connection.');
+      return;
+    }
     if (!user) {
       router.push('/(auth)/login');
       return;

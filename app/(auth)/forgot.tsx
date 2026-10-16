@@ -7,6 +7,7 @@ import { resetPassword, resetErrorMessage } from '../../src/services/authService
 import { night } from '../../src/theme/night';
 import { LIMITS, checkEmail } from '../../src/lib/validation';
 import { safeBack } from '../../src/lib/nav';
+import { requireOnline } from '../../src/lib/online';
 
 const RESEND_SECONDS = 60;
 
@@ -35,6 +36,7 @@ export default function ForgotPasswordScreen() {
     if (problem) return;
     setSending(true);
     try {
+      await requireOnline();
       await resetPassword(email.trim());
       setSentTo(email.trim());
       setWait(RESEND_SECONDS);

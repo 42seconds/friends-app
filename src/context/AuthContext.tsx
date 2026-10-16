@@ -7,6 +7,9 @@ import { parseSavedUser, savedUserKey } from '../lib/savedUser';
 
 // How long the splash waits for Firebase before using the saved login.
 const STARTUP_WAIT_MS = 1500;
+// Remembers "Just browsing for now", so a guest who reopens the app
+// (even offline) goes straight back to the events.
+const BROWSING_KEY = 'nightBrowsing';
 
 interface AuthContextType {
   user: User | null; // null = nobody logged in, otherwise the Firebase user object
@@ -22,10 +25,19 @@ const AuthContext = createContext<AuthContextType>({ user: null, loading: true, 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [browsing, setBrowsing] = useState(false);
+  const [browsing, setBrowsingState] = useState(false);
+  const [browsingLoaded, setBrowsingLoaded] = useState(false);
+  const setBrowsing = (b: boolean) => {
+    setBrowsingState(b);
+    AsyncStorage.setItem(BROWSING_KEY, b ? 'true' : 'false').catch(() => {});
+  };
 
   useEffect(() => {
     let answered = false;
+    AsyncStorage.getItem(BROWSING_KEY)
+      .then((v) => v === 'true' && setBrowsingState(true))
+      .catch(() => {})
+      .finally(() => setBrowsingLoaded(true));
     // Fires once Firebase knows who is logged in, then on every login/logout.
     const unsub = onAuthStateChanged(auth, (u) => {
       answered = true;
@@ -54,7 +66,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  return <AuthContext.Provider value={{ user, loading, browsing, setBrowsing }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading: loading || !browsingLoaded, browsing, setBrowsing }}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => useContext(AuthContext);

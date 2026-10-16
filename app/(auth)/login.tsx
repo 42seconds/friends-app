@@ -8,6 +8,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { night } from '../../src/theme/night';
 import { LIMITS, checkEmail } from '../../src/lib/validation';
 import { safeBack } from '../../src/lib/nav';
+import { requireOnline } from '../../src/lib/online';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -31,6 +32,7 @@ export default function LoginScreen() {
     }
     setLoading(true);
     try {
+      await requireOnline();
       await loginUser(email.trim(), password);
     } catch (e) {
       setError(authErrorMessage(e));
