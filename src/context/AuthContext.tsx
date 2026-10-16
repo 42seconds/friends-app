@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../firebase/firebaseConfig';
+import { parseSavedUser, savedUserKey } from '../lib/savedUser';
+
+// How long the splash waits for Firebase before using the saved login.
+const STARTUP_WAIT_MS = 1500;
 
 interface AuthContextType {
   user: User | null; // null = nobody logged in, otherwise the Firebase user object
@@ -19,13 +25,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [browsing, setBrowsing] = useState(false);
 
   useEffect(() => {
-    // Fires immediately with the current state, then on every login/logout.
+    let answered = false;
+    // Fires once Firebase knows who is logged in, then on every login/logout.
     const unsub = onAuthStateChanged(auth, (u) => {
+      answered = true;
       setUser(u);
       if (u) setBrowsing(false);
       setLoading(false);
     });
-    return unsub;
+
+    // With a saved login, Firebase checks it with Google's servers before
+    // answering. On a slow or missing connection (or a day later, when the
+    // token must be refreshed first) that can take a minute, and the app
+    // sat on the splash. So after a moment we carry on with the saved
+    // login; Firebase corrects it (e.g. logs out) when it answers.
+    const timer = setTimeout(async () => {
+      if (answered) return;
+      const saved = Platform.OS === 'web' ? null
+        : parseSavedUser(await AsyncStorage.getItem(savedUserKey(auth.app.options.apiKey ?? '', auth.app.name)).catch(() => null));
+      if (answered) return;
+      if (saved) setUser(saved);
+      setLoading(false);
+    }, STARTUP_WAIT_MS);
+
+    return () => {
+      unsub();
+      clearTimeout(timer);
+    };
   }, []);
 
   return <AuthContext.Provider value={{ user, loading, browsing, setBrowsing }}>{children}</AuthContext.Provider>;
