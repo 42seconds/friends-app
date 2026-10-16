@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { ActivityIndicator, Linking, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { T, H1, Screen, Hero, TopBar, StepProgress, Timeline, ListGroup, ToggleRow, TextLink, Card, Pill } from '../../src/components/night';
+import { T, H1, Screen, Hero, TopBar, StepProgress, Timeline, ListGroup, ToggleRow, TextLink, Card, Pill, CoachMark, FirstTicketTracker } from '../../src/components/night';
+import { useFirstTicketGuide } from '../../src/hooks/useFirstTicketGuide';
 import { useTicket } from '../../src/hooks/useTicket';
 import { prefsStore } from '../../src/store';
 import { enablePushNotifications } from '../../src/lib/notifications';
@@ -18,6 +19,7 @@ export default function PaymentStatusScreen() {
   const router = useRouter();
   const { ticket, loading } = useTicket(ticketId);
   const prefs = prefsStore.useStore();
+  const guide = useFirstTicketGuide();
 
   useEffect(() => {
     if (ticket?.status === 'confirmed') router.replace(`/purchase/confirmed?ticketId=${ticketId}`);
@@ -40,7 +42,7 @@ export default function PaymentStatusScreen() {
       padTop={false}
       hero={
         <Hero bg={night.ink} gap={16}>
-          <StepProgress step={4} dark label={`STEP 4 OF 4 · REF ${ticket.id}`} />
+          {guide ? <FirstTicketTracker step={5} /> : <StepProgress step={4} dark label={`STEP 4 OF 4 · REF ${ticket.id}`} />}
           <View style={{ flexDirection: 'row' }}>
             <Pill label="IN PROGRESS" bg={night.yellow} mono />
           </View>
@@ -49,6 +51,7 @@ export default function PaymentStatusScreen() {
         </Hero>
       }
     >
+      <CoachMark id="awaiting-timeline" radius={20} text="That was the hard part. We'll notify you the moment your QR is ready">
       <Card>
         <Timeline
           steps={[
@@ -59,6 +62,7 @@ export default function PaymentStatusScreen() {
           ]}
         />
       </Card>
+      </CoachMark>
 
       <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center', padding: 14, borderRadius: 20, backgroundColor: night.orange }}>
         <View style={{ width: 64, height: 64, borderRadius: 12, backgroundColor: night.card, padding: 8, flexDirection: 'row', flexWrap: 'wrap', gap: 2, opacity: 0.35 }}>

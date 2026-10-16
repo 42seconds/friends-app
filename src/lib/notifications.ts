@@ -91,3 +91,22 @@ export function handleNotificationTaps(open: (url: string) => void): () => void 
   const sub = N.addNotificationResponseReceivedListener(go);
   return () => sub.remove();
 }
+
+// Schedules a reminder on this phone for a set time (pay-later reminders).
+// Returns false when it can't (no permission, Expo Go on Android, web, or
+// the time has already passed).
+export async function scheduleReminder(at: Date, title: string, body: string, url?: string): Promise<boolean> {
+  const N = notifications();
+  if (!N || at.getTime() <= Date.now()) return false;
+  try {
+    const { granted } = await N.getPermissionsAsync();
+    if (!granted && !(await N.requestPermissionsAsync()).granted) return false;
+    await N.scheduleNotificationAsync({
+      content: { title, body, data: url ? { url } : {}, sound: 'default' },
+      trigger: { type: N.SchedulableTriggerInputTypes.DATE, date: at, ...(Platform.OS === 'android' ? { channelId: 'tickets' } : {}) } as any,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
