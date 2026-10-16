@@ -1,0 +1,821 @@
+[
+ {
+  "type": "Epic",
+  "title": "DevOps and project setup",
+  "state": "Closed",
+  "sprint": 1,
+  "tags": "epic",
+  "description": "Repository, tooling, boards and pipelines for the full DevOps life cycle.",
+  "parent": null
+ },
+ {
+  "type": "Feature",
+  "title": "Repository and tooling",
+  "state": "Closed",
+  "sprint": 1,
+  "tags": "",
+  "description": "",
+  "parent": 0
+ },
+ {
+  "type": "User Story",
+  "title": "Create GitHub repository and branch strategy (master + feature branches + pull requests)",
+  "state": "Closed",
+  "sprint": 1,
+  "tags": "task",
+  "description": "",
+  "parent": 1
+ },
+ {
+  "type": "User Story",
+  "title": "Set up Expo (React Native) project with TypeScript",
+  "state": "Closed",
+  "sprint": 1,
+  "tags": "task",
+  "description": "",
+  "parent": 1
+ },
+ {
+  "type": "User Story",
+  "title": "Set up Firebase project (Authentication, Firestore, Storage)",
+  "state": "Closed",
+  "sprint": 2,
+  "tags": "task",
+  "description": "",
+  "parent": 1
+ },
+ {
+  "type": "User Story",
+  "title": "Create Azure DevOps project, sprints and backlog",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "task",
+  "description": "",
+  "parent": 1
+ },
+ {
+  "type": "Feature",
+  "title": "Continuous integration and delivery",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "",
+  "description": "",
+  "parent": 0
+ },
+ {
+  "type": "User Story",
+  "title": "GitHub Actions: typecheck and unit tests on every pull request",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "task",
+  "description": "",
+  "parent": 6
+ },
+ {
+  "type": "User Story",
+  "title": "GitHub Actions: Firestore security-rules tests on the emulator",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "task",
+  "description": "",
+  "parent": 6
+ },
+ {
+  "type": "User Story",
+  "title": "GitHub Actions: build installable Android APK artifact",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "task",
+  "description": "",
+  "parent": 6
+ },
+ {
+  "type": "User Story",
+  "title": "GitHub Actions: iOS simulator build (manual / master / label)",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "task",
+  "description": "",
+  "parent": 6
+ },
+ {
+  "type": "User Story",
+  "title": "Azure Pipelines: test + build pipeline (azure-pipelines.yml)",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "task",
+  "description": "",
+  "parent": 6
+ },
+ {
+  "type": "Epic",
+  "title": "Design (Braam Night+)",
+  "state": "Closed",
+  "sprint": 2,
+  "tags": "epic",
+  "description": "UI/UX design of all app screens in the design canvas.",
+  "parent": null
+ },
+ {
+  "type": "Feature",
+  "title": "Design system and screens",
+  "state": "Closed",
+  "sprint": 2,
+  "tags": "",
+  "description": "",
+  "parent": 12
+ },
+ {
+  "type": "User Story",
+  "title": "As a designer I want a colour, type and component system so screens look consistent",
+  "state": "Closed",
+  "sprint": 2,
+  "tags": "",
+  "description": "",
+  "parent": 13
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want a clear onboarding so I understand the app on first open",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 13
+ },
+ {
+  "type": "User Story",
+  "title": "Design 75+ app screens (explore, event, booking, tickets, staff, settings)",
+  "state": "Closed",
+  "sprint": 2,
+  "tags": "task",
+  "description": "",
+  "parent": 13
+ },
+ {
+  "type": "User Story",
+  "title": "Design first-time guide, coach marks and guided first payment",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "task",
+  "description": "",
+  "parent": 13
+ },
+ {
+  "type": "Epic",
+  "title": "Accounts and authentication",
+  "state": "Closed",
+  "sprint": 4,
+  "tags": "epic",
+  "description": "Register, log in, SSO, password reset, settings.",
+  "parent": null
+ },
+ {
+  "type": "Feature",
+  "title": "Register and log in",
+  "state": "Closed",
+  "sprint": 4,
+  "tags": "",
+  "description": "",
+  "parent": 18
+ },
+ {
+  "type": "User Story",
+  "title": "As a new user I want to register with my email and a password so I can buy tickets",
+  "state": "Closed",
+  "sprint": 4,
+  "tags": "",
+  "description": "Passwords are hashed by Firebase Authentication (scrypt) and never stored by the app.",
+  "parent": 19
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to log in and stay logged in between app launches",
+  "state": "Closed",
+  "sprint": 4,
+  "tags": "",
+  "description": "",
+  "parent": 19
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want clear errors when my details are wrong",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "",
+  "description": "",
+  "parent": 19
+ },
+ {
+  "type": "User Story",
+  "title": "Input validation: names, email, password strength, SA mobile numbers",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "task",
+  "description": "",
+  "parent": 19
+ },
+ {
+  "type": "Feature",
+  "title": "Single sign-on (SSO)",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "",
+  "description": "",
+  "parent": 18
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to Continue with Google instead of making a new password",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "",
+  "description": "",
+  "parent": 24
+ },
+ {
+  "type": "User Story",
+  "title": "Enable Google provider, register Android/iOS apps and SHA-1",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "task",
+  "description": "",
+  "parent": 24
+ },
+ {
+  "type": "User Story",
+  "title": "Create user profile on first Google sign-in",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "task",
+  "description": "",
+  "parent": 24
+ },
+ {
+  "type": "Feature",
+  "title": "Password and sessions",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "",
+  "description": "",
+  "parent": 18
+ },
+ {
+  "type": "User Story",
+  "title": "As a user who forgot my password I want a reset link by email",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "",
+  "description": "",
+  "parent": 28
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want a clear log out with a chance to cancel",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "",
+  "description": "",
+  "parent": 28
+ },
+ {
+  "type": "Feature",
+  "title": "Settings",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 18
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to edit my profile, notifications, language and refund bank details",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 31
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to delete my account",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 31
+ },
+ {
+  "type": "Epic",
+  "title": "Events and discovery",
+  "state": "Closed",
+  "sprint": 3,
+  "tags": "epic",
+  "description": "",
+  "parent": null
+ },
+ {
+  "type": "Feature",
+  "title": "Explore and search",
+  "state": "Closed",
+  "sprint": 3,
+  "tags": "",
+  "description": "",
+  "parent": 34
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to see this week's events from the database",
+  "state": "Closed",
+  "sprint": 3,
+  "tags": "",
+  "description": "",
+  "parent": 35
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to filter by sub-brand, price and date, and search",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 35
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to save events and see past events and galleries",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 35
+ },
+ {
+  "type": "Feature",
+  "title": "Event details",
+  "state": "Closed",
+  "sprint": 3,
+  "tags": "",
+  "description": "",
+  "parent": 34
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to see lineup, venue, map and all-in prices",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 39
+ },
+ {
+  "type": "Epic",
+  "title": "Booking and EFT payment",
+  "state": "Closed",
+  "sprint": 3,
+  "tags": "epic",
+  "description": "",
+  "parent": null
+ },
+ {
+  "type": "Feature",
+  "title": "Reserve and pay",
+  "state": "Closed",
+  "sprint": 3,
+  "tags": "",
+  "description": "",
+  "parent": 41
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to reserve tickets and have them held for 24 hours",
+  "state": "Closed",
+  "sprint": 3,
+  "tags": "",
+  "description": "",
+  "parent": 42
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want bank details and a reference I can copy to pay by EFT",
+  "state": "Closed",
+  "sprint": 3,
+  "tags": "",
+  "description": "",
+  "parent": 42
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to upload proof of payment from my camera or photos",
+  "state": "Closed",
+  "sprint": 3,
+  "tags": "",
+  "description": "",
+  "parent": 42
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to see where my payment check is (timeline)",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 42
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to use promo and access codes",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 42
+ },
+ {
+  "type": "Feature",
+  "title": "Guided first payment",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "",
+  "description": "Step tracker on the real screens, banking-app helper, upload quick check, pay-later reminders.",
+  "parent": 41
+ },
+ {
+  "type": "User Story",
+  "title": "As a first-time buyer I want step-by-step help through my first payment",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "",
+  "description": "",
+  "parent": 48
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want reminders when I choose to pay later",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "",
+  "description": "",
+  "parent": 48
+ },
+ {
+  "type": "Epic",
+  "title": "Tickets and the door",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "epic",
+  "description": "",
+  "parent": null
+ },
+ {
+  "type": "Feature",
+  "title": "Tickets",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 51
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want a QR ticket that admits everyone on my booking",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 52
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to send a ticket to a friend or release it to the waitlist",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 52
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to join a waitlist for sold-out events",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 52
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want a notification when my payment is approved or needs a fix",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "",
+  "description": "",
+  "parent": 52
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want a push notification even when the app is closed",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "",
+  "description": "",
+  "parent": 52
+ },
+ {
+  "type": "Feature",
+  "title": "Staff mode",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 51
+ },
+ {
+  "type": "User Story",
+  "title": "As an admin I want to review proofs and approve or reject with a reason",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 58
+ },
+ {
+  "type": "User Story",
+  "title": "As door staff I want to scan QR codes, see the guest list, and keep scanning offline",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 58
+ },
+ {
+  "type": "Epic",
+  "title": "Database and security",
+  "state": "Closed",
+  "sprint": 2,
+  "tags": "epic",
+  "description": "",
+  "parent": null
+ },
+ {
+  "type": "Feature",
+  "title": "Firestore database",
+  "state": "Closed",
+  "sprint": 2,
+  "tags": "",
+  "description": "",
+  "parent": 61
+ },
+ {
+  "type": "User Story",
+  "title": "Design collections: users, events, tickets, waitlist, ratings, enquiries, promoCodes, config, gallery, content",
+  "state": "Closed",
+  "sprint": 2,
+  "tags": "task",
+  "description": "",
+  "parent": 62
+ },
+ {
+  "type": "User Story",
+  "title": "Seed script: at least 10 records per collection",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "task",
+  "description": "",
+  "parent": 62
+ },
+ {
+  "type": "User Story",
+  "title": "Read website bookings (shared database with the admin website)",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "task",
+  "description": "",
+  "parent": 62
+ },
+ {
+  "type": "Feature",
+  "title": "Security",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "",
+  "description": "",
+  "parent": 61
+ },
+ {
+  "type": "User Story",
+  "title": "Firestore security rules (roles: resident, admin)",
+  "state": "Closed",
+  "sprint": 5,
+  "tags": "task",
+  "description": "",
+  "parent": 66
+ },
+ {
+  "type": "User Story",
+  "title": "53 automated rules tests on the Firestore emulator",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "task",
+  "description": "",
+  "parent": 66
+ },
+ {
+  "type": "Epic",
+  "title": "Quality and user support",
+  "state": "Active",
+  "sprint": 6,
+  "tags": "epic",
+  "description": "",
+  "parent": null
+ },
+ {
+  "type": "Feature",
+  "title": "Stability fixes",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "",
+  "description": "",
+  "parent": 69
+ },
+ {
+  "type": "User Story",
+  "title": "Fix Expo Go crash (notifications), GO_BACK errors, listener errors",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "task",
+  "description": "",
+  "parent": 70
+ },
+ {
+  "type": "User Story",
+  "title": "Fix redirect loop when logging in before onboarding",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "task",
+  "description": "",
+  "parent": 70
+ },
+ {
+  "type": "User Story",
+  "title": "Fix app hanging on the splash screen when reopened",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "task",
+  "description": "",
+  "parent": 70
+ },
+ {
+  "type": "User Story",
+  "title": "Replace the default Expo icon with the &FRIENDS logo",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "task",
+  "description": "",
+  "parent": 70
+ },
+ {
+  "type": "Feature",
+  "title": "Help system and user documentation",
+  "state": "Active",
+  "sprint": 7,
+  "tags": "",
+  "description": "",
+  "parent": 69
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want a searchable help page with step-by-step answers",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "",
+  "description": "",
+  "parent": 75
+ },
+ {
+  "type": "User Story",
+  "title": "As a new user I want a 9-step guide after my first login",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "",
+  "description": "",
+  "parent": 75
+ },
+ {
+  "type": "User Story",
+  "title": "As a new user I want one-time bubbles pointing at what to tap",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "",
+  "description": "",
+  "parent": 75
+ },
+ {
+  "type": "User Story",
+  "title": "Write the user guide and technical documentation",
+  "state": "Active",
+  "sprint": 7,
+  "tags": "task",
+  "description": "",
+  "parent": 75
+ },
+ {
+  "type": "Feature",
+  "title": "Offline mode",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "",
+  "description": "",
+  "parent": 69
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to open my tickets and recent events without internet",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "",
+  "description": "",
+  "parent": 80
+ },
+ {
+  "type": "User Story",
+  "title": "As a user I want to see when I am offline",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "",
+  "description": "",
+  "parent": 80
+ },
+ {
+  "type": "Feature",
+  "title": "Automated testing",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "",
+  "description": "",
+  "parent": 69
+ },
+ {
+  "type": "User Story",
+  "title": "Unit tests (Jest): pricing, dates, filters, validation, tickets, help, alerts",
+  "state": "Closed",
+  "sprint": 6,
+  "tags": "task",
+  "description": "",
+  "parent": 83
+ },
+ {
+  "type": "Epic",
+  "title": "Release and demonstration",
+  "state": "Active",
+  "sprint": 7,
+  "tags": "epic",
+  "description": "",
+  "parent": null
+ },
+ {
+  "type": "Feature",
+  "title": "Demo and submission",
+  "state": "Active",
+  "sprint": 7,
+  "tags": "",
+  "description": "",
+  "parent": 85
+ },
+ {
+  "type": "User Story",
+  "title": "Record demonstration video on a real phone with voice-over",
+  "state": "New",
+  "sprint": 7,
+  "tags": "task",
+  "description": "",
+  "parent": 86
+ },
+ {
+  "type": "User Story",
+  "title": "Launch video (motion graphics, voice-over, soundtrack)",
+  "state": "Closed",
+  "sprint": 7,
+  "tags": "task",
+  "description": "",
+  "parent": 86
+ },
+ {
+  "type": "User Story",
+  "title": "Merge to master and tag release",
+  "state": "New",
+  "sprint": 7,
+  "tags": "task",
+  "description": "",
+  "parent": 86
+ },
+ {
+  "type": "User Story",
+  "title": "Submit documentation on ARC (no zip files)",
+  "state": "New",
+  "sprint": 7,
+  "tags": "task",
+  "description": "",
+  "parent": 86
+ }
+]

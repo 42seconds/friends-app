@@ -65,8 +65,9 @@ story('As a user I want bank details and a reference I can copy to pay by EFT', 
 story('As a user I want to upload proof of payment from my camera or photos', 'Closed', 3)
 story('As a user I want to see where my payment check is (timeline)', 'Closed', 5)
 story('As a user I want to use promo and access codes', 'Closed', 5)
-feat('Guided first payment', 'Active', 7, 'Step tracker on the real screens, banking-app helper, upload quick check, pay-later reminders.')
-story('As a first-time buyer I want step-by-step help through my first payment', 'Active', 7)
+feat('Guided first payment', 'Closed', 7, 'Step tracker on the real screens, banking-app helper, upload quick check, pay-later reminders.')
+story('As a first-time buyer I want step-by-step help through my first payment', 'Closed', 7)
+story('As a user I want reminders when I choose to pay later', 'Closed', 7)
 
 epic('Tickets and the door', 'Closed', 5)
 feat('Tickets', 'Closed', 5)
@@ -74,6 +75,7 @@ story('As a user I want a QR ticket that admits everyone on my booking', 'Closed
 story('As a user I want to send a ticket to a friend or release it to the waitlist', 'Closed', 5)
 story('As a user I want to join a waitlist for sold-out events', 'Closed', 5)
 story('As a user I want a notification when my payment is approved or needs a fix', 'Closed', 7)
+story('As a user I want a push notification even when the app is closed', 'Closed', 7)
 feat('Staff mode', 'Closed', 5)
 story('As an admin I want to review proofs and approve or reject with a reason', 'Closed', 5)
 story('As door staff I want to scan QR codes, see the guest list, and keep scanning offline', 'Closed', 5)
@@ -91,13 +93,16 @@ epic('Quality and user support', 'Active', 6)
 feat('Stability fixes', 'Closed', 6)
 task('Fix Expo Go crash (notifications), GO_BACK errors, listener errors', 'Closed', 6)
 task('Fix redirect loop when logging in before onboarding', 'Closed', 6)
+task('Fix app hanging on the splash screen when reopened', 'Closed', 7)
+task('Replace the default Expo icon with the &FRIENDS logo', 'Closed', 7)
 feat('Help system and user documentation', 'Active', 7)
 story('As a user I want a searchable help page with step-by-step answers', 'Closed', 7)
 story('As a new user I want a 9-step guide after my first login', 'Closed', 7)
-story('As a new user I want one-time bubbles pointing at what to tap', 'Active', 7)
+story('As a new user I want one-time bubbles pointing at what to tap', 'Closed', 7)
 task('Write the user guide and technical documentation', 'Active', 7)
-feat('Offline mode', 'New', 7)
-story('As a user I want to open my tickets and recent events without internet', 'New', 7)
+feat('Offline mode', 'Closed', 7)
+story('As a user I want to open my tickets and recent events without internet', 'Closed', 7)
+story('As a user I want to see when I am offline', 'Closed', 7)
 feat('Automated testing', 'Closed', 6)
 task('Unit tests (Jest): pricing, dates, filters, validation, tickets, help, alerts', 'Closed', 6)
 
@@ -119,3 +124,17 @@ with open(out, 'w', newline='', encoding='utf-8') as f:
     for kind, t1, t2, t3, state, it, tags, desc in rows:
         w.writerow([kind, t1, t2, t3, it, '; '.join(x for x in (tags, STATE_TAG[state]) if x), desc])
 print(len(rows), 'work items ->', out)
+
+# The same backlog as JSON for setup-azure-boards.ps1, which creates the
+# items through the Azure DevOps API with their real state and parent.
+import json
+items, last = [], {}
+for kind, t1, t2, t3, state, it, tags, desc in rows:
+    level = 0 if t1 else 1 if t2 else 2
+    last[level] = len(items)
+    items.append({
+        'type': kind, 'title': t1 or t2 or t3, 'state': state, 'sprint': int(it.rsplit(' ', 1)[1]),
+        'tags': tags, 'description': desc, 'parent': last.get(level - 1) if level else None,
+    })
+with open(os.path.join(os.path.dirname(__file__), 'azure-boards-backlog.json'), 'w', encoding='utf-8') as f:
+    json.dump(items, f, indent=1, ensure_ascii=False)

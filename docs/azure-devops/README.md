@@ -8,13 +8,17 @@ Files in this folder:
 
 | File | What it is |
 |---|---|
-| `azure-boards-backlog.csv` | 86 work items (9 epics, 20 features, 57 user stories) over 7 sprints, with state tags, ready to import |
+| `setup-azure-boards.ps1` | **Start here.** Creates the 7 sprints and all 91 work items with their real states and links |
+| `azure-boards-backlog.json` / `.csv` | The backlog (9 epics, 20 features, 62 user stories); the CSV is for a manual import |
 | `make_backlog.py` | The script that makes the CSV (edit it and run `python docs/azure-devops/make_backlog.py` to regenerate) |
 | `../../azure-pipelines.yml` | The Azure Pipeline: typecheck, unit tests (with a Tests tab), Firestore rules tests, Android APK |
 
 ---
 
 ## 1. Create the organisation and project (5 min)
+
+**Starting again?** Delete the old project first: Project settings (bottom left) →
+**Overview** → **Delete** → type the project name. Then create it again below.
 
 1. Go to **https://dev.azure.com** and sign in with your student Microsoft account.
 2. If asked, create an **organisation** (e.g. `andfriends-team`). Choose **South Africa North** (or nearest) as the region.
@@ -25,10 +29,41 @@ Files in this folder:
 4. Click **Create**.
 5. **Add your team:** Project settings → Teams → FRIENDS-App Team → **Add** each team member's email.
 
-## 2. Create the sprints (3 min)
+## 2. Build the board with the script (5 min)
 
-Project settings → **Boards → Project configuration → Iterations**. Under `FRIENDS-App`, make
-sure these exist (rename the default "Iteration 1/2/3" and add the rest). Set the dates:
+The script `setup-azure-boards.ps1` creates **Sprint 1 to Sprint 7** with their dates and
+all **91 work items** with their real state (Closed / Active / New), sprint, tags and
+parent links. No CSV import and no bulk editing.
+
+1. **Make a Personal Access Token (PAT):** click your profile picture (top right) →
+   **Personal access tokens** → **+ New Token**.
+   - Name: `boards-setup`, Expiration: 7 days
+   - Scopes: **Custom defined** → **Work Items: Read & write** and
+     **Project and Team: Read & write** (click "Show all scopes" to find the second one)
+   - **Create**, then copy the token. Don't share it or put it in Git.
+2. **Run the script** in PowerShell from the project folder:
+   ```powershell
+   cd friends-app\docs\azure-devops
+   powershell -ExecutionPolicy Bypass -File .\setup-azure-boards.ps1 -Org ST10448302 -Project FRIENDS-App
+   ```
+   Paste the token when asked (it stays hidden). Add `-AssignTo "your@email"` to set
+   Assigned To on everything. It lists each item as it creates it, about 2 minutes.
+3. **Check:** Boards → Backlogs → switch the level (top right) to **Epics** → turn on
+   **View options → Completed child items** → expand all. Boards → Sprints shows the
+   7 sprints with dates.
+
+The script refuses to run on a project that already has work items, so nothing gets
+doubled. To redo it, delete the project and start from step 1 again.
+
+<details><summary>Without the script (CSV import)</summary>
+
+Create Sprint 1 to 7 under Project settings → Boards → Project configuration →
+Iterations (dates in the table below), tick them under Team configuration → Iterations,
+then Boards → Work items → **Import work items** → `azure-boards-backlog.csv`.
+An import can only create items as "New", so each item carries a tag: query
+**Tags Contains done** → select all → Edit → State **Closed**; repeat with
+**in-progress** → **Active**.
+</details>
 
 | Sprint | Dates | What happened |
 |---|---|---|
@@ -38,27 +73,12 @@ sure these exist (rename the default "Iteration 1/2/3" and add the rest). Set th
 | Sprint 4 | 1 Sep – 14 Sep | Register / log in and authentication screens |
 | Sprint 5 | 15 Sep – 28 Sep | Tickets, staff mode, Braam Night+ redesign, security rules |
 | Sprint 6 | 29 Sep – 12 Oct | Bug fixes, CI/CD, validation, Google SSO, seed data |
-| Sprint 7 | 13 Oct – 26 Oct | Password reset, notifications, guide, help, docs, video |
+| Sprint 7 | 13 Oct – 26 Oct | Password reset, push notifications, guide, coach marks, offline mode, help, docs, video |
 
-Then **Project settings → Team configuration → Iterations → + Select iteration(s)** and tick all 7,
-so they appear under Boards → Sprints.
+## 3. Assign work (5 min)
 
-## 3. Import the backlog (5 min)
-
-**First** make sure Sprint 1 to Sprint 7 exist exactly with those names (step 2) and the
-project is called `FRIENDS-App`. Every item's Iteration Path is `FRIENDS-App\Sprint N`.
-
-1. **Boards → Work items → Import work items**.
-2. Choose `docs/azure-devops/azure-boards-backlog.csv`, then **Import**, check the preview, and **Save items**.
-   Epics, features and stories are linked parent → child automatically.
-3. **Set the real states** (an import can only create items as "New"). Each item has a tag:
-   `done`, `in-progress` or `to-do`.
-   1. **Boards → Queries → + New query**. Set the clause to **Tags · Contains · done** and click **Run query**.
-   2. Click the first row, press **Ctrl + A** to select all, then right-click and choose **Edit**.
-   3. **Field: State → Closed**, click **Save**.
-   4. Repeat with **Tags Contains in-progress** → State **Active**. Items tagged `to-do` stay **New**.
-4. **Assign work:** open **Boards → Backlogs**, select stories and set **Assigned To** for each
-   team member (who built or owns what). The lecturer uses this to see who did which tasks.
+Open **Boards → Backlogs**, select stories and set **Assigned To** for each team member
+(who built or owns what). The lecturer uses this to see who did which tasks.
 
 ## 4. Connect GitHub to Boards (3 min)
 
