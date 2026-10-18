@@ -26,11 +26,13 @@
     "expo-status-bar": "~57.0.1",
     "firebase": "^12.16.0",
     "react": "19.2.3",
+    "react-dom": "19.2.3",
     "react-native": "0.86.2",
     "react-native-qrcode-svg": "^6.3.21",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
-    "react-native-svg": "15.15.4"
+    "react-native-svg": "15.15.4",
+    "react-native-web": "~0.21.0"
   },
   "devDependencies": {
     "@expo/ngrok": "^4.1.0",
@@ -52,7 +54,8 @@
     "test": "jest",
     "typecheck": "tsc --noEmit",
     "test:rules": "npx -y firebase-tools@15 emulators:exec --only firestore --project demo-friends \"node tests/rules/firestore-rules.test.mjs\"",
-    "seed": "node scripts/seed.mjs"
+    "seed": "node scripts/seed.mjs",
+    "deploy:web": "expo export --platform web && npx -y firebase-tools@15 deploy --only hosting --project andfriends-c5552"
   },
   "private": true,
   "jest": {
