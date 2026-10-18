@@ -14,7 +14,7 @@ trigger:
 pr: none
 
 pool:
-  vmImage: ubuntu-latest
+  vmImage: ubuntu-24.04
 
 stages:
   - stage: Test
@@ -23,9 +23,9 @@ stages:
       - job: unit
         displayName: Typecheck and unit tests
         steps:
-          - task: NodeTool@0
+          - task: UseNode@1
             inputs:
-              versionSpec: '22.x'
+              version: '22.x'
             displayName: Use Node 22
           - script: npm ci --legacy-peer-deps
             displayName: Install dependencies
@@ -46,9 +46,9 @@ stages:
       - job: rules
         displayName: Firestore security rules tests
         steps:
-          - task: NodeTool@0
+          - task: UseNode@1
             inputs:
-              versionSpec: '22.x'
+              version: '22.x'
           - script: npm ci --legacy-peer-deps
             displayName: Install dependencies
           # The Firestore emulator needs Java 21 (preinstalled on the image).
@@ -66,9 +66,9 @@ stages:
         displayName: Android release APK
         timeoutInMinutes: 60
         steps:
-          - task: NodeTool@0
+          - task: UseNode@1
             inputs:
-              versionSpec: '22.x'
+              version: '22.x'
           - script: npm ci --legacy-peer-deps
             displayName: Install dependencies
           - script: npx expo prebuild --platform android --no-install
