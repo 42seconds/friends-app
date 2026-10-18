@@ -90,6 +90,15 @@ This links commits and pull requests to work items.
    `Add coach marks on Explore AB#57`. The work item shows the commit, and
    `Fixes AB#57` closes the item when merged.
 
+### Work item IDs on our board
+
+The script creates items in backlog order, so on the FRIENDS-App board the epics are:
+87 DevOps and project setup · 99 Design · 105 Accounts and authentication ·
+121 Events and discovery · 128 Booking and EFT payment · 138 Tickets and the door ·
+148 Database and security · 156 Quality and user support · 172 Release and demonstration.
+Useful stories: AB#92 (Azure DevOps project and backlog), AB#98 (Azure Pipelines),
+AB#166 (user guide and technical documentation).
+
 ## 5. Run the pipeline (5 min)
 
 1. **Pipelines → New pipeline → GitHub (YAML)** → pick **42seconds/friends-app** (approve access).
