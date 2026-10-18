@@ -102,7 +102,7 @@ AB#166 (user guide and technical documentation).
 ## 5. Run the pipeline (5 min)
 
 1. **Pipelines → New pipeline → GitHub (YAML)** → pick **42seconds/friends-app** (approve access).
-2. Choose **Existing Azure Pipelines YAML file**. Branch: `claude/friends-app-braam-night-screens-3mxbsj`
+2. Choose **Existing Azure Pipelines YAML file**. Branch: `feature/braam-night`
    (or `master` after merging). Path: `/azure-pipelines.yml`. Click **Continue → Run**.
 3. Stages: **Typecheck and tests** (unit tests + rules tests) → **Build Android APK**.
    The **Tests** tab shows every unit test, and the APK is under **Artifacts**.
