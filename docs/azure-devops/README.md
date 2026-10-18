@@ -117,6 +117,29 @@ AB#166 (user guide and technical documentation).
 > takes 2–3 working days. Until then, the same checks run on **GitHub Actions** (Actions tab),
 > which you can show as the CI evidence.
 
+## 5b. Deploy the web version (10 min, free)
+
+The pipeline's **Deploy web app** stage publishes the app as a website, so people
+on iPhones (or any browser) can use it from a link without installing anything.
+
+1. Go to **https://portal.azure.com** with your student account (Azure for Students
+   needs no card) → **Create a resource** → **Static Web App** → **Create**.
+   - Resource group: new, `friends-app`
+   - Name: `andfriends`
+   - Plan type: **Free**
+   - Deployment source: **Other**
+   - **Review + create** → **Create**, then **Go to resource**.
+2. On the Static Web App's **Overview**, click **Manage deployment token** and copy it.
+3. Azure DevOps → **Pipelines** → the friends-app pipeline → **Edit** → **Variables** →
+   **New variable**: name `SWA_DEPLOY_TOKEN`, paste the token, tick
+   **Keep this value secret** → **OK** → **Save**.
+4. **Run pipeline**. The **Deploy web app** stage builds the web version and publishes it.
+   The address is on the Static Web App's Overview (**URL**, e.g.
+   `https://<name>.azurestaticapps.net`).
+
+The web version uses the same Firebase database and logins. Google sign-in, push
+notifications and offline mode need the installed app.
+
 ## 6. Use it during the project
 
 - **Daily:** move cards on **Boards → Sprints → Taskboard** (New → Active → Closed).
@@ -147,6 +170,6 @@ AB#166 (user guide and technical documentation).
 | **Build** | Azure Pipelines + GitHub Actions: Android APK (and iOS simulator build) |
 | **Test** | Jest unit tests, Firestore rules tests on the emulator, typecheck |
 | **Release** | APK published as a build artifact, installable on a phone |
-| **Deploy** | Firestore rules published to Firebase; app distributed as the APK |
+| **Deploy** | Web version on Azure Static Web Apps (pipeline Deploy stage); Firestore rules published to Firebase; APK for Android |
 | **Operate** | Firebase console (Auth users, Firestore data), Staff mode in the app |
 | **Monitor** | Pipeline history, Firebase usage dashboard, in-app error handling |
