@@ -1,123 +1,93 @@
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useEffect } from 'react';
+import { ActivityIndicator, Linking, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { listenToTicket } from '../../src/services/ticketService';
-import { PurchasedTicket } from '../../src/types';
+import { T, H1, Screen, Hero, TopBar, StepProgress, Timeline, ListGroup, ToggleRow, TextLink, Card, Pill, CoachMark, FirstTicketTracker } from '../../src/components/night';
+import { useFirstTicketGuide } from '../../src/hooks/useFirstTicketGuide';
+import { useTicket } from '../../src/hooks/useTicket';
+import { prefsStore } from '../../src/store';
+import { enablePushNotifications } from '../../src/lib/notifications';
+import { clock } from '../../src/lib/dates';
+import { rand } from '../../src/lib/pricing';
+import { whatsappLink } from '../../src/lib/booking';
+import { support } from '../../src/config/payment';
+import { night } from '../../src/theme/night';
 
-export default function BookingAwaitingScreen() {
+// Step 4 of 4: live payment status. Moves on by itself the moment staff
+// approve (-> You're in) or send the proof back (-> needs a fix).
+export default function PaymentStatusScreen() {
   const { ticketId } = useLocalSearchParams<{ ticketId: string }>();
   const router = useRouter();
-
-  const [ticket, setTicket] = useState<PurchasedTicket | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { ticket, loading } = useTicket(ticketId);
+  const prefs = prefsStore.useStore();
+  const guide = useFirstTicketGuide();
 
   useEffect(() => {
-    if (!ticketId) return;
+    if (ticket?.status === 'confirmed') router.replace(`/purchase/confirmed?ticketId=${ticketId}`);
+    if (ticket?.status === 'rejected') router.replace(`/purchase/rejected?ticketId=${ticketId}`);
+  }, [ticket?.status]);
 
-    // Live listener — this is the key piece. The moment the admin
-    // approves/rejects on the website, Firestore pushes the update
-    // here automatically, and this screen re-renders with the new status.
-    const unsubscribe = listenToTicket(ticketId, (data) => {
-      setTicket(data);
-      setLoading(false);
-    });
-
-    // Stop listening when the user navigates away from this screen.
-    return () => unsubscribe();
-  }, [ticketId]);
-
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#C1502E" />
-      </View>
-    );
-  }
-
+  if (loading) return <View style={{ flex: 1, justifyContent: 'center', backgroundColor: night.paper }}><ActivityIndicator color={night.ink} /></View>;
   if (!ticket) {
     return (
-      <View style={styles.centered}>
-        <Text style={styles.emptyText}>Booking not found.</Text>
-      </View>
+      <Screen header={<TopBar />}>
+        <H1>Booking not found</H1>
+      </Screen>
     );
   }
 
-  // Three distinct visual states depending on live status —
-  // this screen's whole purpose is to reflect that status accurately.
-  const isConfirmed = ticket.status === 'confirmed';
-  const isRejected = ticket.status === 'rejected';
+  const proofIn = ticket.status === 'pending_verification';
 
   return (
-    <View style={styles.container}>
-      <View style={styles.iconCircle}>
-        <Text style={styles.iconText}>
-          {isConfirmed ? '✓' : isRejected ? '✕' : '⏳'}
-        </Text>
+    <Screen header={<TopBar dark onBack={() => router.replace('/(tabs)/home')} />} headerBg={night.ink}
+      padTop={false}
+      hero={
+        <Hero bg={night.ink} gap={16}>
+          {guide ? <FirstTicketTracker step={5} /> : <StepProgress step={4} dark label={`STEP 4 OF 4 · REF ${ticket.id}`} />}
+          <View style={{ flexDirection: 'row' }}>
+            <Pill label="IN PROGRESS" bg={night.yellow} mono />
+          </View>
+          <H1 size={56} color={night.paper}>We're checking{'\n'}your payment</H1>
+          <T size={15} lh={1.5} color={night.inkMuted}>Your tickets are safe and held for you. We'll notify you the moment your QR is ready.</T>
+        </Hero>
+      }
+    >
+      <CoachMark id="awaiting-timeline" radius={20} text="That was the hard part. We'll notify you the moment your QR is ready">
+      <Card>
+        <Timeline
+          steps={[
+            { label: 'Tickets reserved', sub: clock(ticket.createdAt), state: 'done' },
+            { label: 'Proof received', sub: proofIn ? clock(ticket.proofUploadedAt) : 'Waiting for your upload', state: proofIn ? 'done' : 'current' },
+            { label: 'Team is verifying', sub: 'Usually within a few hours', state: proofIn ? 'current' : 'todo' },
+            { label: 'QR ticket ready', state: 'todo' },
+          ]}
+        />
+      </Card>
+      </CoachMark>
+
+      <View style={{ flexDirection: 'row', gap: 14, alignItems: 'center', padding: 14, borderRadius: 20, backgroundColor: night.orange }}>
+        <View style={{ width: 64, height: 64, borderRadius: 12, backgroundColor: night.card, padding: 8, flexDirection: 'row', flexWrap: 'wrap', gap: 2, opacity: 0.35 }}>
+          {Array.from({ length: 25 }).map((_, i) => (
+            <View key={i} style={{ width: 7.6, height: 7.6, backgroundColor: i % 3 ? night.ink : 'transparent' }} />
+          ))}
+        </View>
+        <View style={{ flex: 1, gap: 2 }}>
+          <T display size={24}>{ticket.eventTitle}</T>
+          <T size={13}>{ticket.quantity} × {ticket.tier} · {rand(ticket.totalPrice)}</T>
+          <T size={13} weight="600">Your QR unlocks here</T>
+        </View>
       </View>
 
-      <Text style={styles.title}>
-        {isConfirmed
-          ? 'Booking Confirmed!'
-          : isRejected
-          ? 'Payment Not Verified'
-          : 'Awaiting Verification'}
-      </Text>
+      <ListGroup>
+        <ToggleRow
+          title="Push notification"
+          subtitle="When it's approved or if we need anything"
+          value={prefs.push}
+          onChange={(v) => (v ? enablePushNotifications() : prefsStore.set({ push: false }))}
+        />
+        <ToggleRow title="WhatsApp updates" subtitle="Handy if you're low on data" value={prefs.whatsapp} onChange={(v) => prefsStore.set({ whatsapp: v })} />
+      </ListGroup>
 
-      <Text style={styles.subtitle}>
-        {isConfirmed
-          ? 'Your ticket is ready. You can view your QR code in My Tickets.'
-          : isRejected
-          ? 'There was an issue verifying your payment. Please contact support.'
-          : 'We\'ve received your proof of payment. This usually takes a short while to verify.'}
-      </Text>
-
-      <View style={styles.detailsBox}>
-        <Text style={styles.detailLabel}>Booking Reference</Text>
-        <Text style={styles.detailValue}>{ticket.id}</Text>
-      </View>
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.replace('/(tabs)/tickets')}
-      >
-        <Text style={styles.buttonText}>
-          {isConfirmed ? 'View My Ticket' : 'Back to Home'}
-        </Text>
-      </TouchableOpacity>
-    </View>
+      <TextLink label="Taking too long? Chat to us" onPress={() => Linking.openURL(whatsappLink(`Hi! Checking on my payment for ${ticket.eventTitle}, ref ${ticket.id}.`, support.whatsapp))} />
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF', padding: 24, justifyContent: 'center' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFFFFF' },
-  emptyText: { color: '#555555' },
-  iconCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#F4EBE1',
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'center',
-    marginBottom: 24,
-  },
-  iconText: { fontSize: 32, color: '#C1502E' },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#000000', textAlign: 'center', marginBottom: 12 },
-  subtitle: { fontSize: 15, color: '#555555', textAlign: 'center', marginBottom: 32, lineHeight: 22 },
-  detailsBox: {
-    backgroundColor: '#F4EBE1',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 32,
-  },
-  detailLabel: { fontSize: 12, color: '#3B2A22', marginBottom: 4 },
-  detailValue: { fontSize: 14, fontWeight: '600', color: '#000000' },
-  button: {
-    backgroundColor: '#C1502E',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  buttonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
-});

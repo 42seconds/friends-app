@@ -1,126 +1,114 @@
-import { useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { useEffect, useState } from 'react';
+import { Alert, Image, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { T, Screen, TopBar, Segmented, OutlineButton, PrimaryButton, CoachMark, FirstTicketTracker } from '../../src/components/night';
+import { useFirstTicketGuide } from '../../src/hooks/useFirstTicketGuide';
+import { useTicket } from '../../src/hooks/useTicket';
 import { uploadProofOfPayment } from '../../src/services/paymentService';
+import { pickProof, ProofSource } from '../../src/lib/proof';
+import { rand } from '../../src/lib/pricing';
+import { night } from '../../src/theme/night';
+import { requireOnline, withTimeout, isOfflineError } from '../../src/lib/online';
 
+function Check({ children }: { children: React.ReactNode }) {
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+      <View style={{ width: 22, height: 22, borderRadius: 99, backgroundColor: night.success, alignItems: 'center', justifyContent: 'center' }}>
+        <Ionicons name="checkmark" size={14} color={night.paper} />
+      </View>
+      <T size={14} style={{ flex: 1 }}>{children}</T>
+    </View>
+  );
+}
+
+// Proof of payment: take a photo or pick a screenshot, check it, send.
 export default function UploadProofScreen() {
-  // ticketId came from checkout.tsx's router.push after createTicket() succeeded.
-  const { ticketId } = useLocalSearchParams<{ ticketId: string }>();
+  const { ticketId, source: initial } = useLocalSearchParams<{ ticketId: string; source?: ProofSource }>();
   const router = useRouter();
-
-  // Holds the LOCAL device URI of the picked image, before upload.
-  // Used to show a preview to the user so they can confirm it's the
-  // right screenshot before submitting.
+  const { ticket } = useTicket(ticketId);
+  const [source, setSource] = useState<ProofSource>(initial ?? 'photos');
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const guide = useFirstTicketGuide();
 
-  const pickImage = async () => {
-    // Ask for permission to access the photo library. If denied,
-    // launchImageLibraryAsync would just silently fail — better to
-    // check explicitly and tell the user why nothing happened.
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) {
-      Alert.alert('Permission needed', 'Please allow photo access to upload proof of payment.');
+  const pick = async (s: ProofSource) => {
+    setSource(s);
+    const uri = await pickProof(s);
+    if (uri === 'denied') {
+      router.push(`/purchase/camera-permission?ticketId=${ticketId}&source=${s}`);
       return;
     }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      quality: 0.7, // compressed slightly — full-res screenshots are unnecessarily large for a POP image
-    });
-
-    // result.canceled is true if the user backed out of the picker
-    // without selecting anything.
-    if (!result.canceled && result.assets.length > 0) {
-      setImageUri(result.assets[0].uri);
-    }
+    if (uri) setImageUri(uri);
   };
 
-  const handleSubmit = async () => {
-    if (!imageUri || !ticketId) return;
+  useEffect(() => {
+    pick(source);
+  }, []);
 
+  const submit = async () => {
+    if (!imageUri || !ticketId) return;
     setUploading(true);
     try {
-      await uploadProofOfPayment(ticketId, imageUri);
-      // Move to the "awaiting verification" screen once upload +
-      // Firestore update both succeed.
-      router.push(`/purchase/awaiting?ticketId=${ticketId}`);
-    } catch (error) {
+      await requireOnline();
+      await withTimeout(uploadProofOfPayment(ticketId, imageUri), 45000);
+      router.replace(`/purchase/awaiting?ticketId=${ticketId}`);
+    } catch (error: any) {
       console.error('Upload failed:', error);
-      Alert.alert('Upload failed', 'Please try again.');
+      Alert.alert(isOfflineError(error) ? "You're offline" : 'Upload failed', isOfflineError(error) ? 'Sending your proof needs an internet connection. Your tickets stay held, so try again once you are connected.' : error?.message ?? 'Please try again.');
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.header}>Upload Proof of Payment</Text>
-
-      {/* Placeholder bank details — replace with your real business
-          banking info before the actual demo. */}
-      <View style={styles.bankBox}>
-        <Text style={styles.bankLabel}>Bank Transfer Details</Text>
-        <Text style={styles.bankText}>Account Name: &FRIENDS</Text>
-        <Text style={styles.bankText}>Bank: FNB</Text>
-        <Text style={styles.bankText}>Account No: 0000000000</Text>
-        <Text style={styles.bankText}>Reference: {ticketId}</Text>
-      </View>
-
-      <TouchableOpacity style={styles.pickButton} onPress={pickImage}>
-        <Text style={styles.pickButtonText}>
-          {imageUri ? 'Change Image' : 'Select Proof of Payment'}
-        </Text>
-      </TouchableOpacity>
-
-      {/* Preview — only shows once an image has actually been picked. */}
-      {imageUri && (
-        <Image source={{ uri: imageUri }} style={styles.preview} />
-      )}
-
-      <TouchableOpacity
-        style={[styles.submitButton, !imageUri && styles.submitButtonDisabled]}
-        onPress={handleSubmit}
-        disabled={!imageUri || uploading}
-      >
-        {uploading ? (
-          <ActivityIndicator color="#fff" />
+    <Screen header={<TopBar
+        dark
+        center={
+          <View style={{ alignItems: 'center' }}>
+            <T size={15} weight="600" color={night.paper}>Proof of payment</T>
+            <T mono weight="700" size={11} color={night.inkMuted}>STEP 3 OF 4</T>
+          </View>
+        }
+      />}
+      bg={night.ink}
+      dark
+      footer={
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <OutlineButton dark label={imageUri ? 'Retake' : 'Choose'} onPress={() => pick(source)} style={{ flex: 1 }} height={58} />
+          <PrimaryButton tone="orange" label="Use this photo" disabled={!imageUri} loading={uploading} onPress={submit} style={{ flex: 2 }} />
+        </View>
+      }
+      footerDark
+    >
+      {guide && <FirstTicketTracker step={4} />}
+      <CoachMark id="upload-pick" radius={99} text="Pick the screenshot of your payment. It's usually the newest one in Photos">
+        <Segmented
+          dark
+          value={source}
+          onChange={(s) => pick(s)}
+          options={[
+            { key: 'camera', label: 'Camera' },
+            { key: 'photos', label: 'Photos' },
+          ]}
+        />
+      </CoachMark>
+      <View style={{ height: 380, borderRadius: 24, backgroundColor: night.ink2, overflow: 'hidden', alignItems: 'center', justifyContent: 'center' }}>
+        {imageUri ? (
+          <Image source={{ uri: imageUri }} style={{ width: '100%', height: '100%' }} resizeMode="contain" accessibilityLabel="Your proof of payment" />
         ) : (
-          <Text style={styles.submitButtonText}>Submit</Text>
+          <View style={{ alignItems: 'center', gap: 10 }}>
+            <Ionicons name={source === 'camera' ? 'camera-outline' : 'image-outline'} size={44} color={night.inkMuted} />
+            <T size={14} color={night.inkMuted}>No proof chosen yet</T>
+          </View>
         )}
-      </TouchableOpacity>
-    </View>
+      </View>
+      <View style={{ padding: 16, borderRadius: 20, backgroundColor: night.paper, gap: 10 }}>
+        <T size={14} weight="600">Before you send, check it shows:</T>
+        <Check>The amount, <T mono weight="700" size={14}>{ticket ? rand(ticket.totalPrice) : '…'}</T></Check>
+        <Check>Your reference, <T mono weight="700" size={14}>{ticketId}</T></Check>
+        <Check>Nothing blurry or cut off</Check>
+      </View>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF', padding: 20 },
-  header: { fontSize: 22, fontWeight: 'bold', color: '#000000', marginBottom: 20 },
-  bankBox: {
-    backgroundColor: '#F4EBE1',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 24,
-  },
-  bankLabel: { fontSize: 14, fontWeight: '700', color: '#000000', marginBottom: 8 },
-  bankText: { fontSize: 14, color: '#3B2A22', marginBottom: 2 },
-  pickButton: {
-    borderWidth: 1,
-    borderColor: '#C1502E',
-    borderRadius: 8,
-    padding: 14,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  pickButtonText: { color: '#C1502E', fontWeight: '600' },
-  preview: { width: '100%', height: 200, borderRadius: 8, marginBottom: 20, backgroundColor: '#eee' },
-  submitButton: {
-    backgroundColor: '#C1502E',
-    padding: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  submitButtonDisabled: { backgroundColor: '#e0b3a3' },
-  submitButtonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
-});

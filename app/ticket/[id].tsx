@@ -1,103 +1,115 @@
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, Pressable, Share, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { getTicketById } from '../../src/services/ticketService';
-import AnimatedQRReveal from '../../src/components/AnimatedQRReveal';
-import { colors } from '../../src/styles/shared';
+import * as Clipboard from 'expo-clipboard';
+import { T, Screen, TopBar, IconButton, Amp, QR, Pill, PrimaryButton, IconName, CoachMark } from '../../src/components/night';
+import StatusBadge from '../../src/components/statusBadge';
+import { useTicket } from '../../src/hooks/useTicket';
+import { effectiveStatus } from '../../src/services/ticketService';
+import { bookingHref } from '../../src/lib/booking';
+import { shortDate, stamp } from '../../src/lib/dates';
+import { subBrandFor } from '../../src/lib/subbrands';
+import { night } from '../../src/theme/night';
 
-export default function TicketDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
-  const [ticket, setTicket] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!id) return;
-    getTicketById(id).then((t) => {
-      setTicket(t);
-      setLoading(false);
-    });
-  }, [id]);
-
-  if (loading) {
-    return <View style={styles.centered}><ActivityIndicator size="large" color="#1A1A1A" /></View>;
-  }
-
-  if (!ticket) {
-    return <View style={styles.centered}><Text style={styles.notFound}>Ticket not found.</Text></View>;
-  }
-
-  const isConfirmed = ticket.status === 'confirmed';
-
+function Action({ icon, label, onPress }: { icon: IconName; label: string; onPress: () => void }) {
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.headerButton}>
-          <Ionicons name="arrow-back" size={20} color="#1A1A1A" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>TICKET PASS</Text>
-        <TouchableOpacity style={styles.headerButton}>
-          <Ionicons name="share-outline" size={20} color="#1A1A1A" />
-        </TouchableOpacity>
-      </View>
+    <Pressable accessibilityRole="button" onPress={onPress} style={({ pressed }) => ({ flex: 1, height: 64, borderRadius: 18, backgroundColor: night.ink2, alignItems: 'center', justifyContent: 'center', gap: 4, opacity: pressed ? 0.7 : 1 })}>
+      <Ionicons name={icon} size={20} color={night.orange} />
+      <T size={13} weight="600" color={night.paper}>{label}</T>
+    </Pressable>
+  );
+}
 
-      <View style={styles.darkCard}>
-        <Text style={styles.tag}>{(ticket.tag ?? 'ACCESS').toUpperCase()}</Text>
-        <Text style={styles.eventTitle}>{ticket.eventTitle}</Text>
-        <Text style={styles.eventSubtitle}>{ticket.tier}</Text>
-
-        <View style={styles.divider} />
-
-        <View style={styles.grid}>
-          <View style={styles.gridItem}>
-            <Text style={styles.gridLabel}>HOLDER</Text>
-            <Text style={styles.gridValue}>{ticket.userName}</Text>
-          </View>
-          <View style={styles.gridItem}>
-            <Text style={styles.gridLabel}>DATE</Text>
-            <Text style={styles.gridValue}>{ticket.eventDate}</Text>
-          </View>
-          <View style={styles.gridItem}>
-            <Text style={styles.gridLabel}>TIME</Text>
-            <Text style={styles.gridValue}>{ticket.eventTime}</Text>
-          </View>
-          <View style={styles.gridItem}>
-            <Text style={styles.gridLabel}>VENUE</Text>
-            <Text style={styles.gridValue}>{ticket.eventLocation}</Text>
-          </View>
-        </View>
-
-        <View style={styles.qrSection}>
-          {isConfirmed ? (
-            <AnimatedQRReveal ticketId={ticket.id} />
-          ) : (
-            <Text style={styles.waitingText}>QR code unlocks once payment is confirmed.</Text>
-          )}
-          <Text style={styles.hint}>Present code at entrance for scanning.</Text>
-        </View>
-      </View>
+function Meta({ k, v }: { k: string; v?: string }) {
+  return (
+    <View style={{ flex: 1 }}>
+      <T mono weight="700" size={10}>{k}</T>
+      <T size={15} weight="600" numberOfLines={1}>{v || '—'}</T>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background, paddingTop: 50 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  notFound: { fontFamily: 'Inter', color: colors.textMuted },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, marginBottom: 16 },
-  headerButton: { backgroundColor: '#ECECEC', borderRadius: 20, padding: 10 },
-  headerTitle: { fontFamily: 'BebasNeue', fontSize: 18, letterSpacing: 1, color: colors.textPrimary },
-  darkCard: { backgroundColor: '#161616', marginHorizontal: 16, borderRadius: 20, padding: 20 },
-  tag: { fontFamily: 'Inter-SemiBold', fontSize: 11, letterSpacing: 1.5, color: '#8A8A8A' },
-  eventTitle: { fontFamily: 'BebasNeue', fontSize: 28, color: '#fff', marginTop: 6 },
-  eventSubtitle: { fontFamily: 'Inter', fontSize: 13, color: '#B0B0B0', marginTop: 4 },
-  divider: { height: 1, backgroundColor: '#333', marginVertical: 16 },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 16, marginBottom: 20 },
-  gridItem: { width: '45%' },
-  gridLabel: { fontFamily: 'Inter-SemiBold', fontSize: 10, letterSpacing: 1, color: '#8A8A8A' },
-  gridValue: { fontFamily: 'Inter-SemiBold', fontSize: 14, color: '#fff', marginTop: 4 },
-  qrSection: { alignItems: 'center', paddingTop: 8 },
-  waitingText: { fontFamily: 'Inter', fontSize: 13, color: '#B0B0B0', textAlign: 'center', paddingVertical: 20 },
-  hint: { fontFamily: 'Inter', fontSize: 11, color: '#8A8A8A', marginTop: 12 },
-});
+// Ticket pass with the QR. The QR only exists once payment is confirmed.
+export default function TicketDetailScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+  const { ticket, loading } = useTicket(id);
+
+  if (loading) return <View style={{ flex: 1, justifyContent: 'center', backgroundColor: night.ink }}><ActivityIndicator color={night.paper} /></View>;
+  if (!ticket) {
+    return (
+      <Screen header={<TopBar dark />} bg={night.ink} dark>
+        <T size={16} color={night.paper}>Ticket not found.</T>
+      </Screen>
+    );
+  }
+
+  const status = effectiveStatus(ticket);
+  const confirmed = status === 'confirmed';
+  const brand = subBrandFor(ticket.tag);
+  const transferPending = ticket.transfer?.status === 'pending';
+
+  return (
+    <Screen header={<TopBar
+        dark
+        center={confirmed ? <Pill label="SHOW THIS AT THE DOOR" bg={night.ink2} color={night.paper} mono /> : undefined}
+        right={<IconButton icon="share-outline" label="Share" tone="dark" onPress={() => Share.share({ message: `I'm going to ${ticket.eventTitle} · ${shortDate(ticket.eventDate, ticket.eventTime)} · ${ticket.eventLocation}` })} />}
+      />} bg={night.ink} dark>
+
+      <View style={{ borderRadius: 26, overflow: 'hidden', backgroundColor: night.paper }}>
+        <View style={{ backgroundColor: brand.color, padding: 18, gap: 16, overflow: 'hidden' }}>
+          <Amp size={240} color={brand.deep} style={{ right: -20, top: -30 }} />
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <T mono weight="700" size={11}>{`${ticket.quantity} × ${ticket.tier}`.toUpperCase()}</T>
+            <StatusBadge status={status} />
+          </View>
+          <T display size={52} lh={0.86}>{ticket.eventTitle}</T>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <Meta k="HOLDER" v={ticket.userName} />
+            <Meta k="DATE" v={shortDate(ticket.eventDate, ticket.eventTime)} />
+            <Meta k="DOORS" v={ticket.eventTime} />
+          </View>
+        </View>
+
+        {/* perforation */}
+        <View style={{ height: 22, justifyContent: 'center' }}>
+          <View style={{ position: 'absolute', left: -11, width: 22, height: 22, borderRadius: 99, backgroundColor: night.ink }} />
+          <View style={{ marginHorizontal: 18, borderTopWidth: 2, borderStyle: 'dashed', borderColor: night.handle }} />
+          <View style={{ position: 'absolute', right: -11, width: 22, height: 22, borderRadius: 99, backgroundColor: night.ink }} />
+        </View>
+
+        <View style={{ alignItems: 'center', padding: 20, paddingTop: 8, gap: 12 }}>
+          {confirmed ? (
+            <>
+              <CoachMark id="ticket-qr" tailAlign="center" radius={16} text="Your QR is ready 🎉 Show this at the door. It works without signal once opened">
+                <QR value={ticket.id} size={200} />
+              </CoachMark>
+              <Pressable accessibilityLabel="Copy ticket ID" onPress={() => Clipboard.setStringAsync(ticket.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <T mono weight="700" size={15}>{ticket.id}</T>
+                <Ionicons name="copy-outline" size={14} color={night.muted} />
+              </Pressable>
+              <T size={13} color={night.muted}>{ticket.quantity > 1 ? `Admits ${ticket.quantity}. Arrive together, or send a ticket on.` : 'Admits 1'}</T>
+              {ticket.checkedIn && <Pill label={`CHECKED IN ${stamp(ticket.checkedInAt).toUpperCase()}`} bg={night.successBg} color={night.success} mono />}
+            </>
+          ) : (
+            <View style={{ alignItems: 'center', gap: 12, paddingVertical: 20 }}>
+              <Ionicons name="lock-closed-outline" size={40} color={night.muted} />
+              <T size={15} center color={night.body} style={{ maxWidth: 260 }}>
+                {status === 'rejected' ? 'Your proof needs a fix before your QR unlocks.' : status === 'expired' ? 'This hold ran out before payment arrived.' : 'Your QR unlocks here once we have checked your payment.'}
+              </T>
+              <PrimaryButton label={status === 'pending_payment' ? 'Pay by EFT' : status === 'rejected' ? 'Fix my proof' : 'See status'} onPress={() => router.push(bookingHref(ticket) as any)} style={{ alignSelf: 'stretch' }} />
+            </View>
+          )}
+        </View>
+      </View>
+
+      {confirmed && (
+        <View style={{ flexDirection: 'row', gap: 10 }}>
+          <Action icon="paper-plane-outline" label={transferPending ? 'Pending' : 'Send'} onPress={() => router.push(transferPending ? `/ticket/transfer?ticketId=${ticket.id}` : `/ticket/send?ticketId=${ticket.id}`)} />
+          <Action icon="navigate-outline" label="Directions" onPress={() => router.push(`/directions/${ticket.eventId}`)} />
+          <Action icon="close-circle-outline" label="Can't go" onPress={() => router.push(`/ticket/cant-go?ticketId=${ticket.id}`)} />
+        </View>
+      )}
+    </Screen>
+  );
+}

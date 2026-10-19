@@ -1,6 +1,11 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+// getReactNativePersistence only exists in firebase/auth's React Native
+// build (which Metro picks); the default typings are the web ones.
+// @ts-ignore
+import { getAuth, initializeAuth, getReactNativePersistence, connectAuthEmulator } from 'firebase/auth';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 const firebaseConfig = {
@@ -14,9 +19,15 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+// Keep people logged in between app launches on phones.
+export const auth = Platform.OS === 'web' ? getAuth(app) : initializeAuth(app, { persistence: getReactNativePersistence(AsyncStorage) });
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-
-
+// Local practice database: start the app with EXPO_PUBLIC_FIREBASE_EMULATOR=1
+// (and `firebase emulators:start --only auth,firestore`) to use the
+// Firebase emulators on this computer instead of the live project.
+if (process.env.EXPO_PUBLIC_FIREBASE_EMULATOR === '1') {
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+  connectFirestoreEmulator(db, '127.0.0.1', 8085);
+}

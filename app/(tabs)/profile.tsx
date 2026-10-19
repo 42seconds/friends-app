@@ -1,134 +1,97 @@
-import { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../../src/context/AuthContext';
-import { getUserProfile, updateUserProfile } from '../../src/services/userService';
-import { logoutUser } from '../../src/services/authService';
-import SaveButton from '../../src/components/SaveButton';
-import TimedUndoRow from '../../src/components/TimedUndoRow';
-import { colors } from '../../src/styles/shared';
+import { T, H1, Amp, Screen, Hero, IconButton, Avatar, Pill, ListGroup, ListRow, EmptyState, PrimaryButton, TextLink } from '../../src/components/night';
+import { useProfile } from '../../src/hooks/useProfile';
+import { useBookings } from '../../src/hooks/useBookings';
+import { useUserRole } from '../../src/hooks/useUserRole';
+import { savedStore } from '../../src/store';
+import { effectiveStatus } from '../../src/services/ticketService';
+import { isPast } from '../../src/lib/dates';
+import { subBrandByKey } from '../../src/lib/subbrands';
+import { night } from '../../src/theme/night';
 
-function SettingsRow({ label, value, editing, onChangeText, onPressEdit }: any) {
+function Stat({ n, label }: { n: number | string; label: string }) {
   return (
-    <TouchableOpacity style={styles.row} activeOpacity={editing ? 1 : 0.6} onPress={!editing ? onPressEdit : undefined}>
-      <Text style={styles.rowLabel}>{label}</Text>
-      {editing ? (
-        <TextInput style={styles.rowInput} value={value} onChangeText={onChangeText} autoFocus />
-      ) : (
-        <Text style={styles.rowValue}>{value}</Text>
-      )}
-    </TouchableOpacity>
+    <View style={{ flex: 1, padding: 12, borderRadius: 16, backgroundColor: night.ink2, gap: 2 }}>
+      <T display size={32} color={night.paper}>{n}</T>
+      <T size={12} color={night.inkMuted}>{label}</T>
+    </View>
   );
 }
 
 export default function ProfileScreen() {
-  const { user } = useAuth();
   const router = useRouter();
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [editingField, setEditingField] = useState<string | null>(null);
-  const [draft, setDraft] = useState<any>({});
+  const { profile, user } = useProfile();
+  const { tickets } = useBookings();
+  const { isAdmin } = useUserRole();
+  const saved = savedStore.useStore().ids.length;
 
-  useEffect(() => {
-    if (!user) return;
-    getUserProfile(user.uid).then((data) => {
-      setProfile(data);
-      setDraft(data ?? {});
-      setLoading(false);
-    });
-  }, [user]);
-
-  const handleSave = async () => {
-    if (!user) return;
-    await updateUserProfile(user.uid, {
-      name: draft.name,
-      phone: draft.phone,
-      dob: draft.dob,
-    });
-    setProfile(draft);
-    setEditingField(null);
-  };
-
-  if (loading) {
-    return <View style={styles.centered}><ActivityIndicator size="large" color="#1A1A1A" /></View>;
+  if (!user) {
+    return (
+      <Screen tabBar fill contentStyle={{ justifyContent: 'center' }}>
+        <EmptyState icon="person-outline" tileBg={night.blue} title="Join &Friends" body="Book tickets, save events and keep your plans in one place.">
+          <PrimaryButton label="Create an account" onPress={() => router.push('/(auth)/register')} />
+          <TextLink label="I already have an account" onPress={() => router.push('/(auth)/login')} />
+        </EmptyState>
+      </Screen>
+    );
   }
 
-  const hasChanges = JSON.stringify(profile) !== JSON.stringify(draft);
+  const confirmed = tickets.filter((t) => effectiveStatus(t) === 'confirmed');
+  const been = new Set(confirmed.filter((t) => isPast(t.eventDate, t.eventTime) || t.checkedIn).map((t) => t.eventId)).size;
+  const upcoming = confirmed.filter((t) => !isPast(t.eventDate, t.eventTime)).length;
+  const pending = tickets.filter((t) => ['pending_payment', 'pending_verification', 'rejected'].includes(effectiveStatus(t))).length;
+  const since = profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-ZA', { month: 'long', year: 'numeric' }) : '';
+  const interests = (profile?.interests ?? []).map(subBrandByKey).filter(Boolean);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-      <Text style={styles.headline}>Profile</Text>
-
-      <Text style={styles.sectionLabel}>ACCOUNT</Text>
-      <View style={styles.card}>
-        <View style={styles.rowStatic}>
-          <Text style={styles.rowLabel}>Email</Text>
-          <Text style={styles.rowValueMuted}>{user?.email}</Text>
+    <Screen
+      tabBar
+      padTop={false}
+      headerBg={night.ink}
+      header={
+        <View style={{ alignItems: 'flex-end' }}>
+          <IconButton icon="settings-outline" label="Settings" tone="dark" onPress={() => router.push('/settings')} />
         </View>
-        <View style={styles.divider} />
-        <SettingsRow
-          label="Full Name"
-          value={draft.name}
-          editing={editingField === 'name'}
-          onChangeText={(t: string) => setDraft({ ...draft, name: t })}
-          onPressEdit={() => setEditingField('name')}
-        />
-        <View style={styles.divider} />
-        <SettingsRow
-          label="Phone"
-          value={draft.phone}
-          editing={editingField === 'phone'}
-          onChangeText={(t: string) => setDraft({ ...draft, phone: t })}
-          onPressEdit={() => setEditingField('phone')}
-        />
-        <View style={styles.divider} />
-        <SettingsRow
-          label="Date of Birth"
-          value={draft.dob}
-          editing={editingField === 'dob'}
-          onChangeText={(t: string) => setDraft({ ...draft, dob: t })}
-          onPressEdit={() => setEditingField('dob')}
-        />
-        <View style={styles.divider} />
-        <View style={styles.rowStatic}>
-          <Text style={styles.rowLabel}>Account Type</Text>
-          <Text style={styles.rowValueMuted}>{profile?.role}</Text>
-        </View>
-      </View>
-
-      {hasChanges && (
-        <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
-          <SaveButton onSave={handleSave} />
-        </View>
+      }
+      hero={
+        <Hero bg={night.ink} gap={16}>
+          <Amp size={300} color={night.ink2} style={{ right: -40, top: 20 }} />
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+            <Avatar name={profile?.name} size={64} color={night.blue} />
+            <View style={{ flex: 1 }}>
+              <H1 size={40} color={night.paper}>{profile?.name ?? user.email}</H1>
+              {!!since && <T size={13} color={night.inkMuted}>Member since {since}</T>}
+            </View>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 8 }}>
+            <Stat n={been} label="Events been to" />
+            <Stat n={upcoming} label="Upcoming" />
+            <Stat n={saved} label="Saved" />
+          </View>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+            {interests.map((b) => b && <Pill key={b.key} label={b.name} bg={b.color} />)}
+            <TextLink label={interests.length ? 'Edit' : 'Pick what you are into'} color={night.paper} size={13} onPress={() => router.push('/settings/edit-profile')} />
+          </View>
+        </Hero>
+      }
+    >
+      <ListGroup>
+        <ListRow icon="ticket-outline" iconBg={night.orange} title="My tickets" subtitle={`${upcoming} upcoming · ${pending} pending`} chevron onPress={() => router.push('/(tabs)/tickets')} />
+        <ListRow icon="receipt-outline" iconBg={night.yellow} title="Purchases" subtitle="Receipts and refunds" chevron onPress={() => router.push('/receipts')} />
+        <ListRow icon="people-outline" iconBg={night.blue} title="Friends" subtitle="Invite your people" chevron onPress={() => router.push('/friends')} />
+        <ListRow icon="heart-outline" iconBg={night.lime} title="Saved" subtitle={`${saved} event${saved === 1 ? '' : 's'}`} chevron onPress={() => router.push('/(tabs)/saved')} />
+      </ListGroup>
+      {isAdmin && (
+        <ListGroup>
+          <ListRow icon="scan-outline" iconBg={night.ink} iconColor={night.orange} title="Staff mode" subtitle="Door scanning and payment approvals" chevron onPress={() => router.push('/staff')} />
+        </ListGroup>
       )}
-
-      <Text style={styles.sectionLabel}>SESSION</Text>
-      <View style={styles.card}>
-        <TimedUndoRow
-          label="Sign Out"
-          countingLabel={(s) => `Signing out in ${s}s...`}
-          seconds={5}
-          onConfirm={logoutUser}
-        />
-      </View>
-    </ScrollView>
+      <ListGroup>
+        <ListRow icon="sparkles-outline" iconBg={night.ink} iconColor={night.lime} title="Host an event" subtitle="Bring your idea to our spaces" chevron onPress={() => router.push('/settings/host')} />
+        <ListRow icon="help-circle-outline" title="Help and FAQ" chevron onPress={() => router.push('/settings/help')} />
+        <ListRow icon="information-circle-outline" title="About &FRIENDS" chevron onPress={() => router.push('/settings/about')} />
+      </ListGroup>
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  headline: { fontFamily: 'BebasNeue', fontSize: 36, color: colors.textPrimary, paddingHorizontal: 16, paddingTop: 60, marginBottom: 16 },
-  sectionLabel: {
-    fontFamily: 'Inter-SemiBold', fontSize: 12, letterSpacing: 1,
-    color: colors.textMuted, marginHorizontal: 16, marginTop: 20, marginBottom: 8,
-  },
-  card: { backgroundColor: '#fff', borderRadius: 16, marginHorizontal: 16, overflow: 'hidden' },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16 },
-  rowStatic: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, paddingHorizontal: 16 },
-  rowLabel: { fontFamily: 'Inter', fontSize: 15, color: colors.textPrimary },
-  rowValue: { fontFamily: 'Inter-SemiBold', fontSize: 15, color: colors.textMuted },
-  rowValueMuted: { fontFamily: 'Inter', fontSize: 14, color: colors.textMuted },
-  rowInput: { fontFamily: 'Inter-SemiBold', fontSize: 15, color: colors.textPrimary, textAlign: 'right', flex: 1, marginLeft: 20 },
-  divider: { height: 1, backgroundColor: '#F0F0F0', marginLeft: 16 },
-});

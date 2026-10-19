@@ -1,0 +1,111 @@
+# &FRIENDS: Azure Pipelines (Build, Test and Release stages of the
+# DevOps life cycle). Mirrors .github/workflows/ci.yml.
+#
+# Setup: Azure DevOps > Pipelines > New pipeline > GitHub > 42seconds/friends-app
+# > "Existing Azure Pipelines YAML file" > /azure-pipelines.yml > Run.
+
+# Runs on pushes to master and on demand (Pipelines > Run pipeline).
+# The free tier has 1,800 minutes a month and a full run takes ~30-45,
+# so feature-branch pushes and PRs are left to GitHub Actions.
+trigger:
+  branches:
+    include: [master]
+
+pr: none
+
+pool:
+  vmImage: ubuntu-24.04
+
+stages:
+  - stage: Test
+    displayName: Typecheck and tests
+    jobs:
+      - job: unit
+        displayName: Typecheck and unit tests
+        steps:
+          - task: UseNode@1
+            inputs:
+              version: '22.x'
+            displayName: Use Node 22
+          - script: npm ci --legacy-peer-deps
+            displayName: Install dependencies
+          - script: npm run typecheck
+            displayName: Typecheck (TypeScript)
+          - script: npx jest --ci --reporters=default --reporters=jest-junit
+            displayName: Unit tests (Jest)
+            env:
+              JEST_JUNIT_OUTPUT_DIR: $(Build.ArtifactStagingDirectory)/test-results
+          - task: PublishTestResults@2
+            condition: succeededOrFailed()
+            displayName: Publish test results
+            inputs:
+              testResultsFormat: JUnit
+              testResultsFiles: '$(Build.ArtifactStagingDirectory)/test-results/*.xml'
+              testRunTitle: Unit tests
+
+      - job: rules
+        displayName: Firestore security rules tests
+        steps:
+          - task: UseNode@1
+            inputs:
+              version: '22.x'
+          - script: npm ci --legacy-peer-deps
+            displayName: Install dependencies
+          # The Firestore emulator needs Java 21 (preinstalled on the image).
+          - script: |
+              export JAVA_HOME=$JAVA_HOME_21_X64
+              export PATH=$JAVA_HOME/bin:$PATH
+              npm run test:rules
+            displayName: Rules tests (local emulator, never the live database)
+
+  - stage: Build
+    displayName: Build Android APK
+    dependsOn: Test
+    jobs:
+      - job: android
+        displayName: Android release APK
+        timeoutInMinutes: 60
+        steps:
+          - task: UseNode@1
+            inputs:
+              version: '22.x'
+          - script: npm ci --legacy-peer-deps
+            displayName: Install dependencies
+          - script: npx expo prebuild --platform android --no-install
+            displayName: Generate native Android project
+          - script: |
+              export JAVA_HOME=$JAVA_HOME_17_X64
+              cd android && ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
+            displayName: Build APK (Gradle)
+          - task: PublishPipelineArtifact@1
+            displayName: Publish APK
+            inputs:
+              targetPath: android/app/build/outputs/apk/release
+              artifact: friends-app-apk
+
+  # Deploy: publishes the web version (iPhone, Android and desktop browsers)
+  # to Azure Static Web Apps. Needs the secret pipeline variable
+  # SWA_DEPLOY_TOKEN (Static Web App > Manage deployment token); without it
+  # this stage skips itself. See docs/azure-devops/README.md.
+  - stage: Deploy
+    displayName: Deploy web app
+    dependsOn: Test
+    jobs:
+      - job: web
+        displayName: Azure Static Web Apps
+        steps:
+          - task: UseNode@1
+            inputs:
+              version: '22.x'
+          - script: npm ci --legacy-peer-deps
+            displayName: Install dependencies
+          - script: npx expo export --platform web
+            displayName: Build web version
+          - script: |
+              case "$SWA_TOKEN" in
+                ''|'$('*) echo "SWA_DEPLOY_TOKEN is not set, skipping the web deploy."; exit 0 ;;
+              esac
+              npx -y @azure/static-web-apps-cli@2 deploy ./dist --deployment-token "$SWA_TOKEN" --env production
+            displayName: Publish to Azure Static Web Apps
+            env:
+              SWA_TOKEN: $(SWA_DEPLOY_TOKEN)

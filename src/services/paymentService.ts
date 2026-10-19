@@ -1,6 +1,5 @@
 import * as ImageManipulator from 'expo-image-manipulator';
-import { doc, updateDoc } from 'firebase/firestore';
-import { db } from '../firebase/firebaseConfig';
+import { markProofUploaded } from './ticketService';
 
 // Converts a Blob into a base64 data URI string using FileReader.
 // This avoids expo-file-system entirely, sidestepping the EncodingType
@@ -43,11 +42,6 @@ export async function uploadProofOfPayment(ticketId: string, imageUri: string) {
     throw new Error('Image still too large after compression. Try a smaller screenshot.');
   }
 
-  const ticketRef = doc(db, 'tickets', ticketId);
-  await updateDoc(ticketRef, {
-    proofOfPayment: base64DataUri,
-    status: 'pending_verification',
-  });
-
+  await markProofUploaded(ticketId, base64DataUri);
   return base64DataUri;
 }

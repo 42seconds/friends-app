@@ -1,0 +1,130 @@
+# &FRIENDS continuous integration.
+# Every push and pull request is typechecked, unit tested, has its
+# Firestore rules tested against the emulator, and is built into an
+# Android APK that can be downloaded from the run's "Artifacts" section.
+name: CI
+
+# Pushes to master, and every pull request into master (which covers
+# pushes to its branch), so each commit is checked once.
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+    # "labeled" so adding the build-ios label starts an iOS build.
+    types: [opened, synchronize, reopened, labeled]
+  workflow_dispatch:
+
+# A newer push to the same branch cancels the run that's still going.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Typecheck and unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test -- --ci
+
+  rules:
+    name: Firestore rules tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      # The Firestore emulator runs on Java.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci --legacy-peer-deps
+      - name: Rules tests (local emulator, never the live database)
+        run: npm run test:rules
+
+  android:
+    name: Build Android APK
+    needs: [checks, rules]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: gradle/actions/setup-gradle@v5
+      - run: npm ci --legacy-peer-deps
+      - name: Generate the native Android project
+        run: npx expo prebuild --platform android --no-install
+      # Release build, signed with the debug key so it installs straight
+      # onto a phone. arm64 only: that covers modern Android phones and
+      # keeps the build fast.
+      - name: Build APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: friends-app-${{ github.sha }}
+          path: android/app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+  # iOS simulator build. macOS minutes cost 10x on private repos, so this
+  # runs on pushes to master, on manual runs (Actions → CI → Run workflow)
+  # and on pull requests labelled build-ios, not on every commit.
+  # A simulator build needs no Apple account; installing on a real
+  # iPhone needs an Apple Developer account to sign the app.
+  ios:
+    name: Build iOS app (simulator)
+    needs: [checks, rules]
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'build-ios')
+    runs-on: macos-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+      - run: npm ci --legacy-peer-deps
+      - name: Generate the native iOS project
+        run: npx expo prebuild --platform ios --no-install
+      - name: Install CocoaPods
+        working-directory: ios
+        run: pod install
+      - name: Build app
+        working-directory: ios
+        run: |
+          set -o pipefail
+          xcodebuild -workspace friendsapp.xcworkspace -scheme friendsapp \
+            -configuration Release -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO | tail -n 200
+      - name: Zip app
+        run: ditto -c -k --keepParent ios/build/Build/Products/Release-iphonesimulator/friendsapp.app friends-app-ios-simulator.zip
+      - name: Upload app
+        uses: actions/upload-artifact@v4
+        with:
+          name: friends-app-ios-simulator-${{ github.sha }}
+          path: friends-app-ios-simulator.zip
+          retention-days: 30
