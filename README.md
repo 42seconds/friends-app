@@ -1,5 +1,6 @@
 <p align="center">
-  <img src="assets/brand/andfriends-logo-lockup-black.png" alt="&FRIENDS" width="420">
+  
+  <img src="assets/brand/andfriends-logo-banner.png" alt="&FRIENDS" width="420">
 </p>
 
 <p align="center">
