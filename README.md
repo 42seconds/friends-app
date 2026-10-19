@@ -128,11 +128,11 @@ docs/           Azure DevOps setup, push notifications, website notes
 
 ## Team
 
-| Name | Student number | Role |
-|---|---|---|
-| Ivant Junior Kaptue Wambo | ST10448302 | |
-| | | |
-| | | |
+| Name | Student number 
+|---|---|
+| Ivant Junior Kaptue Wambo | ST10448302 |
+| Ayanda Magocoba | ST10351403| 
+| Kgahlisho Mokoala| ST10325173| 
 
 ## License
 
