@@ -17,9 +17,11 @@ interface AuthContextType {
   loading: boolean; // true while Firebase is still checking auth state on app start
   browsing: boolean; // "Just browsing for now": explore without an account
   setBrowsing: (b: boolean) => void;
+  emailVerified: boolean; // Google sign-ins count as verified
+  setEmailVerified: (v: boolean) => void;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true, browsing: false, setBrowsing: () => {} });
+const AuthContext = createContext<AuthContextType>({ user: null, loading: true, browsing: false, setBrowsing: () => {}, emailVerified: false, setEmailVerified: () => {} });
 
 // Wraps the ENTIRE app (see app/_layout.tsx): talks to Firebase once,
 // then hands the result down to everyone else.
@@ -28,6 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [browsing, setBrowsingState] = useState(false);
   const [browsingLoaded, setBrowsingLoaded] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
   const setBrowsing = (b: boolean) => {
     setBrowsingState(b);
     AsyncStorage.setItem(BROWSING_KEY, b ? 'true' : 'false').catch(() => {});
@@ -42,6 +45,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const unsub = onAuthStateChanged(auth, (u) => {
       answered = true;
       setUser(u);
+      setEmailVerified(!!u?.emailVerified);
       if (u) setBrowsing(false);
       setLoading(false);
     });
@@ -56,7 +60,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const saved = Platform.OS === 'web' ? null
         : parseSavedUser(await settleWithin(AsyncStorage.getItem(savedUserKey(auth.app.options.apiKey ?? '', auth.app.name)), 1500, null));
       if (answered) return;
-      if (saved) setUser(saved);
+      if (saved) {
+        setUser(saved);
+        setEmailVerified(!!saved.emailVerified);
+      }
       setLoading(false);
     }, STARTUP_WAIT_MS);
 
@@ -66,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  return <AuthContext.Provider value={{ user, loading: loading || !browsingLoaded, browsing, setBrowsing }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, loading: loading || !browsingLoaded, browsing, setBrowsing, emailVerified, setEmailVerified }}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => useContext(AuthContext);

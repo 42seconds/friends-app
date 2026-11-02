@@ -21,7 +21,7 @@ import { requireOnline, withTimeout, isOfflineError } from '../../src/lib/online
 export default function ReviewBookingScreen() {
   const params = useLocalSearchParams<{ eventId: string; tier: string; qty: string }>();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, emailVerified } = useAuth();
   const { profile } = useProfile();
   const { event } = useEvent(params.eventId);
   const promo = promoStore.useStore();
@@ -42,6 +42,10 @@ export default function ReviewBookingScreen() {
 
   const reserve = async () => {
     if (!user || !event || !tier) return;
+    if (!emailVerified) {
+      router.push('/verify-email?reason=book');
+      return;
+    }
     setSubmitting(true);
     setError('');
     try {

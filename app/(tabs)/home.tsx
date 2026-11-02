@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { T, H1, H2, Screen, IconButton, Chip, StatusBanner, FeaturedEventCard, EventListRow, EmptyState, PrimaryButton, OutlineButton, TextLink, CoachMark, FirstTicketIntro } from '../../src/components/night';
@@ -12,7 +12,7 @@ import { night } from '../../src/theme/night';
 
 export default function ExploreScreen() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, emailVerified } = useAuth();
   const { upcoming, loading, error } = useEvents();
   const { tickets } = useBookings();
   const [brand, setBrand] = useState<SubBrandKey | 'all'>('all');
@@ -52,6 +52,16 @@ export default function ExploreScreen() {
     >
 
       <StatusBanner tickets={tickets} />
+      {user && !emailVerified && (
+        <Pressable accessibilityRole="button" onPress={() => router.push('/verify-email')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: night.cream, borderWidth: 1.5, borderColor: '#F0DFA0' }}>
+          <Ionicons name="mail-unread-outline" size={22} color={night.ink} />
+          <View style={{ flex: 1 }}>
+            <T size={15} weight="700">Confirm your email</T>
+            <T size={13} color={night.body}>You need it to book tickets. Tap to resend the link.</T>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color={night.ink} />
+        </Pressable>
+      )}
       {guide && <FirstTicketIntro />}
 
       <View style={{ marginTop: 6 }}>

@@ -20,6 +20,7 @@ describe('where the app sends people', () => {
   it('stays put on normal screens', () => {
     expect(go({ segments: ['(tabs)', 'home'], loggedIn: true, hasSeenGuide: true })).toBeNull();
     expect(go({ segments: ['guide'], loggedIn: true })).toBeNull();
+    expect(go({ segments: ['verify-email'], loggedIn: true })).toBeNull();
     expect(go({ segments: ['(auth)', 'login'], hasSeenOnboarding: true })).toBeNull();
     expect(go({ segments: ['settings', 'help'] })).toBeNull();
     expect(go({ segments: ['event', '[id]'], browsing: true })).toBeNull();

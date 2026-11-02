@@ -31,7 +31,7 @@ export function redirectTarget({ segments, loggedIn, browsing, hasSeenOnboarding
   if (!loggedIn && !inAuth && !inOnboarding && !(browsing && BROWSABLE.has(group))) return browsing ? '/(tabs)/home' : '/(auth)/login';
   if (loggedIn && (inAuth || inOnboarding)) return hasSeenGuide ? '/(tabs)/home' : '/guide';
   // First login on this phone: show "How &FRIENDS works" once. The
-  // notifications step after sign-up comes first.
-  if (loggedIn && !hasSeenGuide && path !== 'guide' && path !== 'notifications-optin') return '/guide';
+  // confirm-email and notifications steps after sign-up come first.
+  if (loggedIn && !hasSeenGuide && path !== 'guide' && path !== 'notifications-optin' && path !== 'verify-email') return '/guide';
   return null;
 }

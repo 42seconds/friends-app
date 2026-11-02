@@ -1,5 +1,6 @@
 import {
   createUserWithEmailAndPassword,
+  sendEmailVerification,
   deleteUser,
   sendPasswordResetEmail,
   signInWithEmailAndPassword,
@@ -42,6 +43,10 @@ export async function registerUser(input: RegisterUserInput) {
   // Step 3: write that profile to Firestore at users/{uid}.
   await setDoc(doc(db, 'users', uid), profile);
 
+  // Step 4: email a link to confirm the address (not awaited for long, so
+  // a slow email service never blocks sign-up; it can be resent).
+  sendEmailVerification(userCredential.user).catch(() => {});
+
   return uid;
 }
 
@@ -77,6 +82,23 @@ export async function deleteAccount(reason?: string) {
   if (!user) return;
   await deleteUserProfile(user.uid, reason);
   await deleteUser(user);
+}
+
+// Sends (again) the "confirm your email" link to the logged-in user.
+export async function resendVerification() {
+  if (!auth.currentUser) throw new Error('Not logged in');
+  await sendEmailVerification(auth.currentUser);
+}
+
+// Asks Firebase whether the email has been confirmed since (the link is
+// opened in the browser, so the app has to check). Refreshes the login
+// token so the new status is used everywhere.
+export async function checkEmailVerified(): Promise<boolean> {
+  const u = auth.currentUser;
+  if (!u) return false;
+  await u.reload();
+  if (u.emailVerified) await u.getIdToken(true).catch(() => {});
+  return !!auth.currentUser?.emailVerified;
 }
 
 // Errors for the reset-password email. Firebase doesn't say whether an

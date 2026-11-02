@@ -57,7 +57,7 @@ export default function RegisterScreen() {
         password,
         interests,
       });
-      router.replace('/notifications-optin');
+      router.replace('/verify-email?reason=signup&next=/notifications-optin');
     } catch (err) {
       setErrors({ form: authErrorMessage(err) });
     } finally {

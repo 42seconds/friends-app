@@ -19,7 +19,7 @@ import { useOnline } from '../../src/hooks/useOnline';
 export default function EventDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, emailVerified } = useAuth();
   const { event, loading } = useEvent(id);
   const saved = savedStore.useStore().ids.includes(id ?? '');
   // One tier per booking: picking a quantity on one tier clears the others.
@@ -52,6 +52,10 @@ export default function EventDetailScreen() {
     }
     if (!user) {
       router.push('/(auth)/login');
+      return;
+    }
+    if (!emailVerified) {
+      router.push('/verify-email?reason=book');
       return;
     }
     router.push(`/purchase/tickets?${selectionParams(event.id, sel)}`);
