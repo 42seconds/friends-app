@@ -1,6 +1,7 @@
-import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, onSnapshot, query, setDoc, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, increment, onSnapshot, query, setDoc, updateDoc, where } from 'firebase/firestore';
 import { db } from '../firebase/firebaseConfig';
 import { byDate, normalizeDates } from '../lib/firestoreData';
+import { AccessCode, CodeType, cleanCode, codeProblem, isWellFormed, toAccessCode } from '../lib/accessCodes';
 
 // ---- Waitlist ------------------------------------------------------
 // One doc per (event, user): waitlist/{eventId}_{uid}. Position is how
@@ -76,17 +77,67 @@ export async function sendRating(input: { eventId: string; userId: string | null
 }
 
 // ---- Promo / access codes --------------------------------------------
-// promoCodes/{CODE} = { percentOff: number, active: boolean, eventId?: string }
+// promoCodes/{CODE}: see src/lib/accessCodes.ts. Guests look a code up
+// by its exact name; staff create, list and switch codes off.
 
-export async function lookupPromo(code: string, eventId: string): Promise<{ code: string; percentOff: number } | null> {
-  const clean = code.trim().toUpperCase();
-  // Codes are letters, digits, - and _ only. Anything else (a "/" would
-  // even break the document path) can't be a real code.
-  if (!/^[A-Z0-9_-]{1,30}$/.test(clean)) return null;
+// The code if it can be used for this event, or an error saying why not.
+export async function lookupPromo(code: string, eventId: string): Promise<{ code?: AccessCode; error?: string }> {
+  const clean = cleanCode(code);
+  if (!isWellFormed(clean)) return { error: "That code isn't valid." };
   const snap = await getDoc(doc(db, 'promoCodes', clean));
-  if (!snap.exists()) return null;
-  const data = snap.data() as { percentOff?: number; active?: boolean; eventId?: string };
-  if (data.active === false) return null;
-  if (data.eventId && data.eventId !== eventId) return null;
-  return { code: clean, percentOff: data.percentOff ?? 0 };
+  if (!snap.exists()) return { error: "That code isn't valid." };
+  const c = toAccessCode(clean, snap.data());
+  const problem = codeProblem(c, eventId);
+  return problem ? { error: problem } : { code: c };
+}
+
+// Counts one booking against the code (best effort: a booking is never
+// held up by it).
+export async function recordCodeUse(code: string) {
+  await updateDoc(doc(db, 'promoCodes', cleanCode(code)), { uses: increment(1) }).catch(() => {});
+}
+
+export interface NewAccessCode {
+  code: string;
+  type: CodeType;
+  percentOff: number;
+  label?: string;
+  eventId?: string;
+  maxUses?: number;
+  expiresAt?: string;
+  createdBy: string;
+}
+
+// Staff: creates a code. Fails if the code already exists.
+export async function createAccessCode(c: NewAccessCode) {
+  const ref = doc(db, 'promoCodes', cleanCode(c.code));
+  if ((await getDoc(ref)).exists()) throw new Error('That code already exists. Try another.');
+  const data: Record<string, unknown> = {
+    type: c.type,
+    percentOff: c.type === 'comp' ? 100 : c.percentOff,
+    uses: 0,
+    active: true,
+    createdBy: c.createdBy,
+    createdAt: new Date().toISOString(),
+  };
+  if (c.label) data.label = c.label;
+  if (c.eventId) data.eventId = c.eventId;
+  if (c.maxUses) data.maxUses = c.maxUses;
+  if (c.expiresAt) {
+    data.expiresAt = c.expiresAt;
+    data.expiresAtMs = Date.parse(c.expiresAt); // for the security rules
+  }
+  await setDoc(ref, data);
+}
+
+export function listenToAccessCodes(callback: (codes: AccessCode[]) => void) {
+  return onSnapshot(
+    collection(db, 'promoCodes'),
+    (snap) => callback(snap.docs.map((d) => toAccessCode(d.id, d.data())).sort((a, b) => byDate(b.createdAt, a.createdAt))),
+    () => callback([])
+  );
+}
+
+export async function setAccessCodeActive(code: string, active: boolean) {
+  await updateDoc(doc(db, 'promoCodes', cleanCode(code)), { active });
 }

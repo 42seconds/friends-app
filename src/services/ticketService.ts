@@ -49,26 +49,30 @@ interface CreateTicketInput {
   discount: number;
   promoCode?: string;
   totalPrice: number;
+  comp?: boolean; // free tickets from a guest-list code: confirmed straight away
 }
 
 function generateTicketId(): string {
   return 'TKT-' + Math.random().toString(36).slice(2, 10).toUpperCase();
 }
 
-export async function createTicket(input: CreateTicketInput) {
+export async function createTicket({ comp, ...input }: CreateTicketInput) {
   const ticketId = generateTicketId();
   const now = new Date();
 
+  // Comp tickets need a real comp code; the security rules check it.
   await setDoc(doc(db, 'tickets', ticketId), {
     ...input,
     promoCode: input.promoCode ?? '',
     total: input.totalPrice,
-    status: 'pending_payment',
-    proofOfPayment: '',
+    status: comp ? 'confirmed' : 'pending_payment',
+    proofOfPayment: comp ? 'comp' : '',
     qrCode: '',
     createdAt: now.toISOString(),
     purchasedAt: now.toISOString(),
-    holdExpiresAt: new Date(now.getTime() + HOLD_HOURS * 3600 * 1000).toISOString(),
+    ...(comp
+      ? { validated: true, validatedAt: now.toISOString(), totalPrice: 0, total: 0 }
+      : { holdExpiresAt: new Date(now.getTime() + HOLD_HOURS * 3600 * 1000).toISOString() }),
   });
 
   return ticketId;

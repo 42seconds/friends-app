@@ -4,6 +4,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { T, H2, Sheet, Field, PrimaryButton, KV } from '../../src/components/night';
 import { lookupPromo } from '../../src/services/communityService';
+import { describeCode } from '../../src/lib/accessCodes';
 import { promoStore } from '../../src/store';
 import { breakdown, rand } from '../../src/lib/pricing';
 import { night } from '../../src/theme/night';
@@ -15,7 +16,7 @@ export default function PromoSheet() {
   const router = useRouter();
   const current = promoStore.useStore();
   const [code, setCode] = useState(current.eventId === eventId ? current.code : '');
-  const [found, setFound] = useState<{ code: string; percentOff: number } | null>(current.eventId === eventId && current.code ? { code: current.code, percentOff: current.percentOff } : null);
+  const [found, setFound] = useState<{ code: string; percentOff: number; comp: boolean; label?: string } | null>(current.eventId === eventId && current.code ? { code: current.code, percentOff: current.percentOff, comp: current.comp } : null);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
 
@@ -24,9 +25,9 @@ export default function PromoSheet() {
     setError('');
     setFound(null);
     try {
-      const promo = await lookupPromo(code, eventId);
-      if (promo) setFound(promo);
-      else setError("That code isn't valid for this event.");
+      const res = await lookupPromo(code, eventId);
+      if (res.code) setFound({ code: res.code.code, percentOff: res.code.percentOff, comp: res.code.type === 'comp', label: res.code.label });
+      else setError(res.error ?? "That code isn't valid.");
     } catch {
       setError("Couldn't check that code. Try again.");
     } finally {
@@ -46,7 +47,7 @@ export default function PromoSheet() {
           <PrimaryButton
             label="Use this code"
             onPress={() => {
-              promoStore.set({ eventId, code: found.code, percentOff: found.percentOff });
+              promoStore.set({ eventId, code: found.code, percentOff: found.percentOff, comp: found.comp });
               safeBack(router);
             }}
           />
@@ -56,7 +57,7 @@ export default function PromoSheet() {
       }
     >
       <H2 size={36}>Promo or access code</H2>
-      <T size={14} lh={1.5} color={night.body}>Got a code from a host, a partner or the &amp;FRIENDS crew? Pop it in. Access codes can unlock hidden tickets too.</T>
+      <T size={14} lh={1.5} color={night.body}>Got a code from a host, a partner or the &amp;FRIENDS crew? Enter it here. Some codes give a discount, and guest-list codes make your tickets free.</T>
       <Field
         value={code}
         onChangeText={(t) => {
@@ -83,15 +84,16 @@ export default function PromoSheet() {
       {found && (
         <View style={{ padding: 16, borderRadius: 18, backgroundColor: night.ink, gap: 8 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <T size={15} weight="700" color={night.lime}>{found.percentOff}% off face value</T>
+            <T size={15} weight="700" color={night.lime}>{describeCode({ type: found.comp ? 'comp' : 'percent', percentOff: found.percentOff })}</T>
             <T mono weight="700" size={13} color={night.paper}>{found.code}</T>
           </View>
+          {!!found.label && <T size={13} color={night.inkMuted}>{found.label}</T>}
           <KV dark k="Was" v={rand(was)} />
           <KV dark k="You save" v={`−${rand(was - now)}`} />
           <KV dark k="New total" v={rand(now)} strong />
         </View>
       )}
-      <T size={12} color={night.muted}>One code per booking. Codes can't be swapped for cash.</T>
+      <T size={12} color={night.muted}>One code per booking. Codes can't be exchanged for cash.</T>
     </Sheet>
   );
 }

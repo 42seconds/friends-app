@@ -19,6 +19,19 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
+    // A comp (free ticket) code that exists, is switched on, isn't used up
+    // or expired, and is for this event (or any event).
+    function validComp(code, eventId) {
+      let path = /databases/$(database)/documents/promoCodes/$(code);
+      let c = get(path).data;
+      return code is string && code.size() > 0 && exists(path)
+        && c.get('type', 'percent') == 'comp'
+        && c.get('active', true) == true
+        && (!('maxUses' in c) || c.get('uses', 0) < c.maxUses)
+        && (!('expiresAtMs' in c) || c.expiresAtMs > request.time.toMillis())
+        && (!('eventId' in c) || c.eventId == eventId);
+    }
+
     function onlyChanges(fields) {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
     }
@@ -46,10 +59,19 @@ service cloud.firestore {
     match /tickets/{ticketId} {
       allow read: if (signedIn() && resource.data.userId == request.auth.uid) || isAdmin();
 
-      // A booking always starts as an unpaid hold owned by its creator.
+      // A booking starts as an unpaid hold owned by its creator, or as a
+      // free confirmed booking when it uses a real, active comp code.
       allow create: if signedIn()
         && request.resource.data.userId == request.auth.uid
-        && (!('status' in request.resource.data) || request.resource.data.status == 'pending_payment');
+        && (
+          !('status' in request.resource.data)
+          || request.resource.data.status == 'pending_payment'
+          || (
+            request.resource.data.status == 'confirmed'
+            && request.resource.data.totalPrice == 0
+            && validComp(request.resource.data.get('promoCode', ''), request.resource.data.eventId)
+          )
+        );
 
       // Owners may: upload proof (moves it to "checking"), send it to a
       // friend, release it to the waitlist or ask for a refund. They can
@@ -105,6 +127,10 @@ service cloud.firestore {
     match /promoCodes/{code} {
       allow get: if signedIn();
       allow list, write: if isAdmin();
+      // Anyone booking with a code counts one use, nothing else.
+      allow update: if signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uses'])
+        && request.resource.data.uses == resource.data.get('uses', 0) + 1;
     }
 
     // ---- Gallery and site content (footer): public, admins edit ---------

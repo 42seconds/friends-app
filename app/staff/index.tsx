@@ -95,6 +95,9 @@ export default function StaffHomeScreen() {
               <Link icon="list" label="Guest list" onPress={() => router.push('/staff/guestlist')} />
               <Link icon="checkmark-done" label="Approvals" onPress={() => router.push('/staff/approvals')} />
             </View>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Link icon="pricetag-outline" label="Access codes" onPress={() => router.push('/staff/codes')} />
+            </View>
           </>
         )}
       </Screen>

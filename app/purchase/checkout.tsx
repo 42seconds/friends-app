@@ -8,7 +8,8 @@ import { useEvent } from '../../src/hooks/useEvents';
 import { useAuth } from '../../src/context/AuthContext';
 import { useProfile } from '../../src/hooks/useProfile';
 import { createTicket } from '../../src/services/ticketService';
-import { promoStore } from '../../src/store';
+import { promoStore, NO_PROMO } from '../../src/store';
+import { recordCodeUse } from '../../src/services/communityService';
 import { findTier, quote } from '../../src/lib/booking';
 import { rand } from '../../src/lib/pricing';
 import { shortDate } from '../../src/lib/dates';
@@ -31,12 +32,14 @@ export default function ReviewBookingScreen() {
 
   // A code only applies to the event it was entered for.
   useEffect(() => {
-    if (promo.eventId && promo.eventId !== params.eventId) promoStore.set({ eventId: null, code: '', percentOff: 0 });
+    if (promo.eventId && promo.eventId !== params.eventId) promoStore.set(NO_PROMO);
   }, [params.eventId]);
 
   const qty = Math.max(1, Number(params.qty ?? 1));
   const tier = findTier(event, params.tier);
   const percentOff = promo.eventId === params.eventId ? promo.percentOff : 0;
+  // A comp (guest-list) code makes the tickets free: no EFT, QR straight away.
+  const comp = promo.eventId === params.eventId && promo.comp;
   const q = quote(tier, qty, percentOff);
   const name = profile?.name ?? user?.email ?? 'You';
 
@@ -69,10 +72,12 @@ export default function ReviewBookingScreen() {
         vat: q.vat,
         discount: q.discount,
         promoCode: percentOff ? promo.code : undefined,
-        totalPrice: q.total,
+        totalPrice: comp ? 0 : q.total,
+        comp,
       }));
-      promoStore.set({ eventId: null, code: '', percentOff: 0 });
-      router.replace(`/purchase/pay?ticketId=${ticketId}`);
+      if (percentOff) recordCodeUse(promo.code);
+      promoStore.set(NO_PROMO);
+      router.replace(comp ? `/purchase/confirmed?ticketId=${ticketId}` : `/purchase/pay?ticketId=${ticketId}`);
     } catch (e) {
       console.error('Failed to create ticket:', e);
       setError(isOfflineError(e) ? "You're offline. Reserving tickets needs an internet connection. Your selection is still here, so try again once you're connected." : "We couldn't reserve your tickets. Check your connection and try again.");
@@ -82,7 +87,7 @@ export default function ReviewBookingScreen() {
   };
 
   return (
-    <Screen header={<><TopBar />{guide ? <FirstTicketTracker step={2} /> : <StepProgress step={2} />}</>} footer={<PrimaryButton label="Reserve and pay by EFT" onPress={reserve} loading={submitting} disabled={!tier} />}>
+    <Screen header={<><TopBar />{guide ? <FirstTicketTracker step={2} /> : <StepProgress step={2} />}</>} footer={<PrimaryButton label={comp ? 'Get my free tickets' : 'Reserve and pay by EFT'} onPress={reserve} loading={submitting} disabled={!tier} />}>
       <H1 size={56}>Review{'\n'}booking</H1>
 
       {event && (

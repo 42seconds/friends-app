@@ -44,7 +44,7 @@ export const FAQ: HelpItem[] = [
   { topic: 'buy', q: 'What does "all-in" price mean?', a: "The price you see already includes the service fee and VAT. There's nothing extra at checkout, unless a promo code makes it cheaper." },
   { topic: 'buy', q: 'How many tickets can I buy?', a: `Up to ${MAX_TICKETS_PER_PERSON} per booking, so more people get a chance at popular nights. All the tickets on one booking share one QR code that admits everyone.` },
   { topic: 'buy', q: 'What happens when I tap Reserve?', a: `Your tickets are held for you for ${HOLD_HOURS} hours while you pay. Nobody else can take them. Reserving is free.` },
-  { topic: 'buy', q: 'How do promo or access codes work?', a: 'On the Review booking screen, tap "Add promo or access code" and type it in. A valid code shows the discount straight away. Access codes can also unlock hidden ticket types.' },
+  { topic: 'buy', q: 'How do promo or access codes work?', a: 'On the Review booking screen, tap "Add promo or access code" and type it in. A discount code shows the new price straight away. A guest-list code from the team makes your tickets free: tap "Get my free tickets" and your QR is ready, with no payment needed. Codes can be limited to one event, a number of bookings or a date.' },
   { topic: 'buy', q: 'The event says Sold out. Can I still go?', a: "Join the waitlist on the event page. If someone releases a ticket, the next person in line gets 30 minutes to claim it, and we'll tell you by notification (and WhatsApp if you turn it on)." },
 
   // EFT

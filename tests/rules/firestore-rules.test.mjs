@@ -13,6 +13,11 @@ await env.withSecurityRulesDisabled(async (c) => {
   await setDoc(doc(db, 'events/draft'), { status: 'draft' });
   await setDoc(doc(db, 'tickets/TKT-OTHER'), { userId: 'bob', status: 'pending_payment', eventId: 'e1' });
   await setDoc(doc(db, 'promoCodes/BRAAMFAM'), { percentOff: 10, active: true });
+  await setDoc(doc(db, 'promoCodes/COMP-GOOD'), { type: 'comp', percentOff: 100, active: true, uses: 0, maxUses: 5 });
+  await setDoc(doc(db, 'promoCodes/COMP-OFF'), { type: 'comp', percentOff: 100, active: false, uses: 0 });
+  await setDoc(doc(db, 'promoCodes/COMP-FULL'), { type: 'comp', percentOff: 100, active: true, uses: 2, maxUses: 2 });
+  await setDoc(doc(db, 'promoCodes/COMP-OLD'), { type: 'comp', percentOff: 100, active: true, uses: 0, expiresAtMs: 1000 });
+  await setDoc(doc(db, 'promoCodes/COMP-E2'), { type: 'comp', percentOff: 100, active: true, uses: 0, eventId: 'e2' });
   await setDoc(doc(db, 'config/app'), { minVersion: '1.0.0' });
 });
 const anon = env.unauthenticatedContext().firestore();
@@ -81,6 +86,22 @@ await t('send rating', assertSucceeds(addDoc(collection(jane, 'ratings'), { even
 await t('bad rating blocked', assertFails(addDoc(collection(jane, 'ratings'), { stars: 9 })));
 await t('look up promo', assertSucceeds(getDoc(doc(jane, 'promoCodes/BRAAMFAM'))));
 await t('cannot list promos', assertFails(getDocs(collection(jane, 'promoCodes'))));
+// access codes: comp bookings and counting uses
+const comp = (code, extra = {}) => ({ userId: 'jane', eventId: 'e1', status: 'confirmed', totalPrice: 0, promoCode: code, ...extra });
+await t('free booking with a comp code', assertSucceeds(setDoc(doc(jane, 'tickets/TKT-COMP1'), comp('COMP-GOOD'))));
+await t('no free booking without a code', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP2'), comp(''))));
+await t('no free booking with a discount code', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP3'), comp('BRAAMFAM'))));
+await t('no free booking with an unknown code', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP4'), comp('COMP-FAKE'))));
+await t('no free booking with a switched-off code', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP5'), comp('COMP-OFF'))));
+await t('no free booking with a used-up code', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP6'), comp('COMP-FULL'))));
+await t('no free booking with an expired code', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP7'), comp('COMP-OLD'))));
+await t('no free booking for another event', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP8'), comp('COMP-E2'))));
+await t('comp code cannot confirm a paid booking', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP9'), comp('COMP-GOOD', { totalPrice: 300 }))));
+await t('count one use of a code', assertSucceeds(updateDoc(doc(jane, 'promoCodes/COMP-GOOD'), { uses: 1 })));
+await t('cannot skip use counts', assertFails(updateDoc(doc(jane, 'promoCodes/COMP-GOOD'), { uses: 5 })));
+await t('cannot switch a code back on', assertFails(updateDoc(doc(jane, 'promoCodes/COMP-OFF'), { active: true })));
+await t('admin creates a code', assertSucceeds(setDoc(doc(admin, 'promoCodes/SAVE20-ABCDEF'), { type: 'percent', percentOff: 20, active: true, uses: 0 })));
+await t('admin lists codes', assertSucceeds(getDocs(collection(admin, 'promoCodes'))));
 await t('anon reads config', assertSucceeds(getDoc(doc(anon, 'config/app'))));
 await t('cannot write config', assertFails(setDoc(doc(jane, 'config/app'), { minVersion: '9' })));
 // delete account
