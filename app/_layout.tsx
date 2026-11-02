@@ -1,5 +1,6 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import { BebasNeue_400Regular } from '@expo-google-fonts/bebas-neue';
@@ -18,12 +19,7 @@ import OfflineBanner from '../src/components/night/OfflineBanner';
 import { useUpdateRequired } from '../src/hooks/useMinVersion';
 import { night } from '../src/theme/night';
 import { useTicketAlerts } from '../src/hooks/useTicketAlerts';
-
-// Routes a logged-out visitor may open while "just browsing".
-const BROWSABLE = new Set(['(tabs)', 'event', 'search', 'filters', 'brand', 'venue', 'past', 'offline']);
-
-// Info pages anyone can read, logged in or not (linked from sign-up).
-const PUBLIC = new Set(['settings/legal', 'settings/help', 'settings/about', 'settings/venue-info']);
+import { redirectTarget } from '../src/lib/redirect';
 
 // Routes presented as bottom sheets (transparent modals that draw their own backdrop).
 const SHEETS = ['filters', 'purchase/tickets', 'purchase/promo', 'waitlist/join', 'ticket/send', 'staff/reject'];
@@ -45,34 +41,30 @@ function RedirectGate() {
   // twice while navigation catches up.
   const path = segments.join('/');
   const pending = useRef<string | null>(null);
+  const [retries, setRetries] = useState(0);
 
   useEffect(() => {
     if (authLoading || hasSeenOnboarding === null || hasSeenGuide === null) return;
 
-    const group = segments[0] as string | undefined;
-    const inOnboardingGroup = group === '(onboarding)';
-    const inAuthGroup = group === '(auth)';
-
-    let target: string | null = null;
-    if (PUBLIC.has(path)) target = null;
-    // Onboarding is only for people who aren't logged in. A logged-in user
-    // who skipped it (e.g. tapped Log in on the first slide) would otherwise
-    // bounce between Welcome and Explore forever.
-    else if (!user && !hasSeenOnboarding && !inOnboardingGroup && !inAuthGroup && !browsing) target = '/(onboarding)/welcome';
-    else if (!user && !inAuthGroup && !inOnboardingGroup && !(browsing && group && BROWSABLE.has(group))) target = browsing ? '/(tabs)/home' : '/(auth)/login';
-    else if (user && (inAuthGroup || inOnboardingGroup)) target = hasSeenGuide ? '/(tabs)/home' : '/guide';
-    // First login on this phone: show "How &FRIENDS works" once (it can be
-    // skipped). The notifications step after sign-up comes first.
-    else if (user && !hasSeenGuide && path !== 'guide' && path !== 'notifications-optin') target = '/guide';
+    const target = redirectTarget({ segments: segments as string[], loggedIn: !!user, browsing, hasSeenOnboarding, hasSeenGuide });
 
     if (!target) {
       pending.current = null;
       return;
     }
-    if (pending.current === target) return;
-    pending.current = target;
-    router.replace(target as any);
-  }, [user, authLoading, hasSeenOnboarding, hasSeenGuide, path, browsing]);
+    if (pending.current !== target) {
+      pending.current = target;
+      router.replace(target as any);
+    }
+    // If navigation wasn't ready and the redirect was dropped, try again.
+    const retry = setTimeout(() => {
+      if (pending.current === target) {
+        pending.current = null;
+        setRetries((n) => n + 1);
+      }
+    }, 1500);
+    return () => clearTimeout(retry);
+  }, [user, authLoading, hasSeenOnboarding, hasSeenGuide, path, browsing, retries]);
 
   if (authLoading || hasSeenOnboarding === null || hasSeenGuide === null) return <Splash />;
   if (updateRequired) return <UpdateRequired />;
@@ -92,7 +84,7 @@ function RedirectGate() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     BebasNeue: BebasNeue_400Regular,
     InstrumentSans: InstrumentSans_400Regular,
     'InstrumentSans-Medium': InstrumentSans_500Medium,
@@ -102,7 +94,25 @@ export default function RootLayout() {
     'JetBrainsMono-Bold': JetBrainsMono_700Bold,
   });
 
-  if (!fontsLoaded) return <Splash />;
+  // Never wait on the fonts for long. If they fail to load (e.g. a damaged
+  // copy in the phone's cache) or are slow, the app still opens, using
+  // the system font until they arrive.
+  const [fontWaitOver, setFontWaitOver] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setFontWaitOver(true), 3000);
+    return () => clearTimeout(t);
+  }, []);
+  useEffect(() => {
+    if (fontError) console.warn('Fonts failed to load, using system fonts:', fontError.message);
+  }, [fontError]);
+
+  // Our own splash (below) looks the same as the native one, so hide the
+  // native one as soon as JavaScript runs.
+  useEffect(() => {
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
+
+  if (!fontsLoaded && !fontError && !fontWaitOver) return <Splash />;
 
   return (
     <SafeAreaProvider>

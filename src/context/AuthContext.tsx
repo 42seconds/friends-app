@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../firebase/firebaseConfig';
 import { parseSavedUser, savedUserKey } from '../lib/savedUser';
+import { settleWithin } from '../lib/settle';
 
 // How long the splash waits for Firebase before using the saved login.
 const STARTUP_WAIT_MS = 1500;
@@ -34,9 +35,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     let answered = false;
-    AsyncStorage.getItem(BROWSING_KEY)
+    settleWithin(AsyncStorage.getItem(BROWSING_KEY), 2000, null)
       .then((v) => v === 'true' && setBrowsingState(true))
-      .catch(() => {})
       .finally(() => setBrowsingLoaded(true));
     // Fires once Firebase knows who is logged in, then on every login/logout.
     const unsub = onAuthStateChanged(auth, (u) => {
@@ -54,7 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const timer = setTimeout(async () => {
       if (answered) return;
       const saved = Platform.OS === 'web' ? null
-        : parseSavedUser(await AsyncStorage.getItem(savedUserKey(auth.app.options.apiKey ?? '', auth.app.name)).catch(() => null));
+        : parseSavedUser(await settleWithin(AsyncStorage.getItem(savedUserKey(auth.app.options.apiKey ?? '', auth.app.name)), 1500, null));
       if (answered) return;
       if (saved) setUser(saved);
       setLoading(false);

@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { settleWithin } from '../lib/settle';
 
 // One key, one job: remember whether this device has seen the onboarding
 // slides before. This is a DEVICE flag, not a per-account flag — it lives
@@ -7,7 +8,8 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const ONBOARDING_KEY = 'hasSeenOnboarding';
 
 export async function getHasSeenOnboarding(): Promise<boolean> {
-  const value = await AsyncStorage.getItem(ONBOARDING_KEY);
+  // A slow or broken read counts as "seen", so startup never waits on it.
+  const value = await settleWithin(AsyncStorage.getItem(ONBOARDING_KEY), 2000, 'true');
   return value === 'true';
 }
 
@@ -18,7 +20,7 @@ export async function setHasSeenOnboarding(): Promise<void> {
 const GUIDE_KEY = 'hasSeenGuide';
 
 export async function getHasSeenGuide(): Promise<boolean> {
-  return (await AsyncStorage.getItem(GUIDE_KEY)) === 'true';
+  return (await settleWithin(AsyncStorage.getItem(GUIDE_KEY), 2000, 'true')) === 'true';
 }
 
 export async function setHasSeenGuide(): Promise<void> {
