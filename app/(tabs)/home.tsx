@@ -10,10 +10,12 @@ import { useAuth } from '../../src/context/AuthContext';
 import { SUB_BRANDS, SubBrandKey, subBrandFor } from '../../src/lib/subbrands';
 import { night } from '../../src/theme/night';
 
+const RECENT_COUNT = 5;
+
 export default function ExploreScreen() {
   const router = useRouter();
   const { user, emailVerified } = useAuth();
-  const { upcoming, loading, error } = useEvents();
+  const { upcoming, past, loading, error } = useEvents();
   const { tickets } = useBookings();
   const [brand, setBrand] = useState<SubBrandKey | 'all'>('all');
   const guide = useFirstTicketGuide();
@@ -21,6 +23,9 @@ export default function ExploreScreen() {
   const list = useMemo(() => (brand === 'all' ? upcoming : upcoming.filter((e) => subBrandFor(e.tag).key === brand)), [upcoming, brand]);
   const featured = list.find((e) => e.featured) ?? list[0];
   const rest = list.filter((e) => e !== featured);
+  // The latest few nights that already happened, so Explore never looks
+  // empty between events. Tapping one opens it (photos, no booking).
+  const recent = useMemo(() => (brand === 'all' ? past : past.filter((e) => subBrandFor(e.tag).key === brand)).slice(0, RECENT_COUNT), [past, brand]);
 
   // Offline: events couldn't load. Tickets still work from the cache.
   if (error && !upcoming.length) {
@@ -80,7 +85,6 @@ export default function ExploreScreen() {
       ) : !featured ? (
         <EmptyState icon="calendar-outline" tileBg={night.orange} title="Quiet week" body="Nothing on the calendar just yet. Follow the sub-brands you love and we'll tell you the moment something drops.">
           <PrimaryButton label="Follow sub-brands" onPress={() => router.push(`/brand/${brand === 'all' ? 'music' : brand}`)} />
-          <OutlineButton label="Look back at past events" onPress={() => router.push('/past')} />
         </EmptyState>
       ) : (
         <>
@@ -100,7 +104,20 @@ export default function ExploreScreen() {
               </View>
             </>
           )}
-          <TextLink label="Look back at past events" muted onPress={() => router.push('/past')} />
+        </>
+      )}
+
+      {!loading && recent.length > 0 && (
+        <>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 6 }}>
+            <H2>Recently</H2>
+            <TextLink label="All past events" onPress={() => router.push('/past')} />
+          </View>
+          <View style={{ gap: 10 }}>
+            {recent.map((e) => (
+              <EventListRow key={e.id} event={e} sub={e.gallery?.length ? `Happened · ${e.gallery.length} photos` : 'Happened'} />
+            ))}
+          </View>
         </>
       )}
     </Screen>

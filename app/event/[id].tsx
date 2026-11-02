@@ -10,7 +10,7 @@ import { savedStore, toggleSaved } from '../../src/store';
 import { subBrandFor } from '../../src/lib/subbrands';
 import { allIn, rand } from '../../src/lib/pricing';
 import { addToCalendar, quote, selectionParams } from '../../src/lib/booking';
-import { shortDate } from '../../src/lib/dates';
+import { isPast, shortDate } from '../../src/lib/dates';
 import { HOLD_HOURS, MAX_TICKETS_PER_PERSON } from '../../src/config/pricing';
 import { night } from '../../src/theme/night';
 import { safeBack } from '../../src/lib/nav';
@@ -43,6 +43,8 @@ export default function EventDetailScreen() {
   const tier = event.tickets?.find((t) => t.tier === sel?.tier);
   const q = quote(tier, sel?.qty ?? 0);
   const lineupCount = event.lineup?.length ?? 0;
+  // Already happened: show it, but no tickets or booking.
+  const over = isPast(event.date, event.time);
 
   const reserve = () => {
     if (!sel?.qty) return;
@@ -61,7 +63,9 @@ export default function EventDetailScreen() {
     router.push(`/purchase/tickets?${selectionParams(event.id, sel)}`);
   };
 
-  const footer = event.soldOut ? (
+  const footer = over ? (
+    <PrimaryButton label={event.gallery?.length ? 'See the photos' : 'See what\'s on next'} onPress={() => (event.gallery?.length ? router.push(`/gallery/${event.id}`) : router.replace('/(tabs)/home'))} />
+  ) : event.soldOut ? (
     <PrimaryButton label="Sold out · join the waitlist" onPress={() => router.push(`/waitlist/${event.id}`)} />
   ) : available.length === 0 ? null : (
     <CoachMark id="event-reserve" after="event-stepper" show={!!sel?.qty} placement="above" tailAlign="right" number={2} text="Then tap Reserve. Reserving is free.">
@@ -102,12 +106,17 @@ export default function EventDetailScreen() {
         </View>
       }
     >
-      {guide && !event.soldOut && <FirstTicketTracker step={2} />}
+      {guide && !over && !event.soldOut && <FirstTicketTracker step={2} />}
+      {over && (
+        <Note icon="time-outline" tone="cream">
+          <T size={13} lh={1.5}>This event has already happened, so tickets are closed.</T>
+        </Note>
+      )}
       <View style={{ flexDirection: 'row', gap: 10 }}>
         <Card style={{ flex: 1, gap: 4 }} pad={14}>
           <T mono weight="700" size={11} color={night.muted}>WHEN</T>
           <T size={15} weight="600">{[shortDate(event.date, event.time), event.time].filter(Boolean).join(', ')}</T>
-          <TextLink label="Add to calendar" size={13} onPress={() => addToCalendar(event)} />
+          {!over && <TextLink label="Add to calendar" size={13} onPress={() => addToCalendar(event)} />}
         </Card>
         <Card style={{ flex: 1, gap: 4 }} pad={14}>
           <T mono weight="700" size={11} color={night.muted}>WHERE</T>
@@ -131,7 +140,7 @@ export default function EventDetailScreen() {
         </Pressable>
       )}
 
-      {!event.soldOut && !!event.tickets?.length && (
+      {!over && !event.soldOut && !!event.tickets?.length && (
         <View style={{ gap: 10 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <H2>Tickets</H2>
@@ -157,11 +166,11 @@ export default function EventDetailScreen() {
         </View>
       )}
 
-      <Note icon="time-outline">
+      {!over && <Note icon="time-outline">
         <T size={14} lh={1.5} color={night.paper}>
           <T size={14} weight="700" color={night.paper}>We hold your tickets for {HOLD_HOURS} hours</T> while you pay by EFT. No card, no 3D Secure, no OTP drama.
         </T>
-      </Note>
+      </Note>}
 
       {!!event.description && (
         <View style={{ gap: 6 }}>

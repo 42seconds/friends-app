@@ -6,7 +6,7 @@ import { night } from '../../theme/night';
 import { Event } from '../../types';
 import { subBrandFor } from '../../lib/subbrands';
 import { allIn, fromPrice, rand } from '../../lib/pricing';
-import { shortDate } from '../../lib/dates';
+import { isPast, shortDate } from '../../lib/dates';
 
 export function isFree(e: Event) {
   return !e.tickets?.length || Math.min(...e.tickets.map((t) => t.price)) === 0;
@@ -66,7 +66,7 @@ export function EventListRow({ event, sub, highlight }: { event: Event; sub?: st
       time={event.time}
       highlight={highlight}
       onPress={() => router.push(eventHref(event) as any)}
-      right={event.soldOut ? <Pill label="Waitlist" bg={night.ink} color={night.paper} /> : undefined}
+      right={event.soldOut && !isPast(event.date, event.time) ? <Pill label="Waitlist" bg={night.ink} color={night.paper} /> : undefined}
     />
   );
 }
