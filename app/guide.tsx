@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from 'react';
+import { ComponentRef, ReactNode, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Pressable, ScrollView, useWindowDimensions, View, ViewStyle } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -333,7 +333,7 @@ export default function GuideScreen() {
   const { markGuideSeen, markOnboardingSeen } = useOnboarding();
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
-  const scroller = useRef<ScrollView>(null);
+  const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
   const [i, setI] = useState(0);
   const scale = Math.min(1, (width - 40) / CW, (height - 470) / CH);
 

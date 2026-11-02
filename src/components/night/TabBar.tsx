@@ -15,7 +15,7 @@ const ICONS: Record<string, [IconName, IconName]> = {
 
 // Floating ink pill tab bar from the designs. `badges` puts a yellow dot
 // on a tab (e.g. Tickets while a payment is being checked).
-export default function NightTabBar({ state, descriptors, navigation, badges = {} }: BottomTabBarProps & { badges?: Record<string, boolean> }) {
+export default function NightTabBar({ state, descriptors, emitter, navigateToTab, badges = {} }: BottomTabBarProps & { badges?: Record<string, boolean> }) {
   const insets = useSafeAreaInsets();
   return (
     <View style={{ position: 'absolute', left: 16, right: 16, bottom: Math.max(insets.bottom, 12) + 8, height: 68, borderRadius: 24, backgroundColor: night.ink, flexDirection: 'row', alignItems: 'center' }}>
@@ -34,8 +34,8 @@ export default function NightTabBar({ state, descriptors, navigation, badges = {
             accessibilityState={{ selected: focused }}
             accessibilityLabel={label}
             onPress={() => {
-              const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-              if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
+              const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+              if (!focused && !event.defaultPrevented) navigateToTab(route.key);
             }}
             style={{ flex: 1, alignItems: 'center', gap: 4, height: '100%', justifyContent: 'center' }}
           >
