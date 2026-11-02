@@ -93,7 +93,8 @@ export function resetErrorMessage(err: any): string {
 // Friendly copy for Firebase auth errors.
 export function authErrorMessage(err: any): string {
   const code: string = err?.code ?? '';
-  if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return "That email and password don't match. Forgot your password? Tap the link above to reset it.";
+  if (code.includes('invalid-credential') || code.includes('wrong-password') || code.includes('user-not-found')) return "That email and password don't match. Check for typos, or tap Forgot password? to reset it.";
+  if (code.includes('user-disabled')) return 'This account has been switched off. Contact us if you think this is a mistake.';
   if (code.includes('email-already-in-use')) return 'There is already an account with that email. Try logging in.';
   if (code.includes('invalid-email')) return "That email doesn't look right.";
   if (code.includes('weak-password')) return 'Use at least 8 characters.';

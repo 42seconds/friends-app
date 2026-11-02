@@ -8,7 +8,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { night } from '../../src/theme/night';
 import { LIMITS, checkEmail } from '../../src/lib/validation';
 import { safeBack } from '../../src/lib/nav';
-import { requireOnline } from '../../src/lib/online';
+import { requireOnline, withTimeout } from '../../src/lib/online';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -19,24 +19,29 @@ export default function LoginScreen() {
   const [show, setShow] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [done, setDone] = useState(false);
 
   const emailOk = !checkEmail(email);
 
   // AuthContext picks up the login and the RedirectGate sends the user
   // on to Explore — nothing to navigate here.
   const handleLogin = async () => {
+    if (loading || done) return;
     setError('');
-    if (!emailOk || !password) {
-      setError(!email.trim() && !password ? 'Enter your email and password.' : !emailOk ? (checkEmail(email) as string) : 'Enter your password.');
-      return;
-    }
+    setEmailError('');
+    if (!email.trim()) return setEmailError('Enter your email.');
+    if (!emailOk) return setEmailError(checkEmail(email) as string);
+    if (!password) return setError('Enter your password.');
     setLoading(true);
     try {
       await requireOnline();
-      await loginUser(email.trim(), password);
+      await withTimeout(loginUser(email.trim(), password), 20000);
+      // Keep the button in its "done" state while the app moves on to
+      // Explore, so it never looks like nothing happened.
+      setDone(true);
     } catch (e) {
       setError(authErrorMessage(e));
-    } finally {
       setLoading(false);
     }
   };
@@ -65,11 +70,11 @@ export default function LoginScreen() {
         </View>
       }
     >
-      <Field label="EMAIL" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" maxLength={LIMITS.email} placeholder="you@example.com" right={emailOk ? <Ionicons name="checkmark-circle" size={20} color={night.success} /> : undefined} />
+      <Field label="EMAIL" value={email} onChangeText={(v) => { setEmail(v); setEmailError(''); setError(''); }} keyboardType="email-address" autoCapitalize="none" maxLength={LIMITS.email} placeholder="you@example.com" right={emailOk ? <Ionicons name="checkmark-circle" size={20} color={night.success} /> : undefined} error={emailError} />
       <Field
         label="PASSWORD"
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(v) => { setPassword(v); setError(''); }}
         secure={!show}
         autoCapitalize="none"
         onSubmitEditing={handleLogin}
@@ -85,7 +90,7 @@ export default function LoginScreen() {
         }
         error={error}
       />
-      <PrimaryButton label="Log in" onPress={handleLogin} loading={loading} style={{ marginTop: 6 }} />
+      <PrimaryButton label={done ? 'Logged in, opening the app…' : 'Log in'} icon={done ? 'checkmark-circle' : undefined} arrow={!done} onPress={handleLogin} loading={loading && !done} disabled={done} style={{ marginTop: 6 }} />
       <GoogleButton />
       <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
         <T size={15} color={night.muted}>New here?</T>
