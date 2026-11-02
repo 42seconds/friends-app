@@ -68,7 +68,7 @@ export default function PayScreen() {
         </View>
       </View>
 
-      <CoachMark id="pay-reference" text="Copy this reference and use it exactly in your banking app. It's how we find your payment">
+      <CoachMark id="pay-reference" text="Copy this reference and use it exactly in your banking app. It's how we find your payment.">
         <View style={{ paddingHorizontal: 16, paddingVertical: 6, borderRadius: 18, backgroundColor: night.cream, borderWidth: 1.5, borderColor: '#F0DFA0' }}>
           <CopyRow label="Reference · use exactly this" value={ticket.id} />
         </View>

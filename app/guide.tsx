@@ -241,7 +241,7 @@ function Art7() {
     <Card style={{ left: 22, top: 20, width: 296, height: 320, transform: [{ rotate: '-2deg' }], paddingHorizontal: 24, justifyContent: 'center', gap: 38 }}>
       {step('Tickets reserved', 'done')}
       {step('Proof received', 'done')}
-      {step('Team is checking', 'now')}
+      {step('Our team is checking', 'now')}
       {step('QR ticket ready', 'todo')}
     </Card>
   );
@@ -302,7 +302,7 @@ function Art9() {
 // ---- copy -----------------------------------------------------------------------------
 interface Step { bg: string; title: string; body: ReactNode; art: () => ReactNode; extra?: ReactNode; arrow?: string }
 const STEPS: Step[] = [
-  { bg: night.orange, title: 'Welcome to &Friends', body: "Braamfontein's events, all in one place. Here's how to get your first ticket, it takes 1 minute.", art: Art1, arrow: night.lime },
+  { bg: night.orange, title: 'Welcome to &FRIENDS', body: "Braamfontein's events, all in one place. Here's how to get your first ticket. It takes about a minute.", art: Art1, arrow: night.lime },
   { bg: night.blue, title: 'Find a night out', body: 'Everything on in Braam this week. Tap an event that looks good.', art: Art2 },
   { bg: night.lime, title: 'Pick your tickets', body: 'Choose the ticket type and how many. What you see is what you pay.', art: Art3 },
   { bg: night.yellow, title: `We hold them for ${HOLD_HOURS} hours`, body: `Once you reserve, your tickets are kept for you for ${HOLD_HOURS} hours while you pay. No one else can take them.`, art: Art4,
@@ -396,7 +396,7 @@ export default function GuideScreen() {
                 </Pressable>
               </View>
               {n === 0 && !replay && <Pressable onPress={finish} style={{ alignSelf: 'center', paddingTop: 4 }}><T size={14} weight="600" style={{ textDecorationLine: 'underline' }}>Skip for now</T></Pressable>}
-              {last && !replay && <T size={13} weight="600" center style={{ textDecorationLine: 'underline' }}>Replay this guide anytime in Help</T>}
+              {last && !replay && <T size={13} weight="600" center style={{ textDecorationLine: 'underline' }}>Replay this guide any time in Help</T>}
             </View>
           </View>
         );

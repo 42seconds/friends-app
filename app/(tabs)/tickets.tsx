@@ -118,7 +118,7 @@ export default function TicketsScreen() {
           <View style={{ width: 10, height: 10, borderRadius: 99, backgroundColor: effectiveStatus(nudge) === 'rejected' ? night.danger : night.yellow }} />
           <T size={14} style={{ flex: 1 }}>
             <T size={14} weight="700">{nudge.eventTitle}</T>{' '}
-            {effectiveStatus(nudge) === 'rejected' ? 'needs a new proof' : effectiveStatus(nudge) === 'pending_payment' ? 'is waiting for your EFT' : 'is waiting on payment check'}
+            {effectiveStatus(nudge) === 'rejected' ? 'needs a new proof' : effectiveStatus(nudge) === 'pending_payment' ? 'is waiting for your EFT' : 'is waiting for its payment check'}
           </T>
           <Ionicons name="chevron-forward" size={18} color={night.muted} />
         </Pressable>

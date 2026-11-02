@@ -52,7 +52,7 @@ export default function StaffHomeScreen() {
           }
         />} bg={night.ink} dark footerDark footer={event ? <PrimaryButton tone="orange" icon="scan" label="Start scanning" onPress={() => router.push('/staff/scanner')} /> : undefined}>
         {!event ? (
-          <EmptyState dark icon="calendar-outline" tileBg={night.ink2} iconColor={night.orange} title="No event tonight" body="There are no upcoming published events to work." />
+          <EmptyState dark icon="calendar-outline" tileBg={night.ink2} iconColor={night.orange} title="No event tonight" body="There are no upcoming published events." />
         ) : (
           <>
             <Pressable accessibilityRole="button" onPress={() => router.push('/staff/door')} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>

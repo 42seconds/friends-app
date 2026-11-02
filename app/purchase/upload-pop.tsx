@@ -82,7 +82,7 @@ export default function UploadProofScreen() {
       footerDark
     >
       {guide && <FirstTicketTracker step={4} />}
-      <CoachMark id="upload-pick" radius={99} text="Pick the screenshot of your payment. It's usually the newest one in Photos">
+      <CoachMark id="upload-pick" radius={99} text="Pick the screenshot of your payment. It's usually the newest one in Photos.">
         <Segmented
           dark
           value={source}

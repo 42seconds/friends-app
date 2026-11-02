@@ -47,7 +47,7 @@ export default function RejectedScreen() {
             <T mono weight="700" size={11} color={night.paper}>ACTION NEEDED</T>
           </View>
           <H1 size={56} color={night.paper}>Your proof{'\n'}needs a fix</H1>
-          <T size={15} lh={1.5} color={night.paper}>{held ? 'No stress. Your tickets are still held, you just need to send a clearer proof.' : "We couldn't match your payment. Upload a clearer proof and we'll take another look."}</T>
+          <T size={15} lh={1.5} color={night.paper}>{held ? 'No stress. Your tickets are still held. You just need to send a clearer proof.' : "We couldn't match your payment. Upload a clearer proof and we'll take another look."}</T>
         </Hero>
       }
     >

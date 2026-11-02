@@ -46,7 +46,7 @@ export default function ApprovalsScreen() {
           </Hero>
         }
       >
-        <SectionLabel right={<T size={12} color={night.muted}>Guests wait on these</T>}>OLDEST FIRST</SectionLabel>
+        <SectionLabel right={<T size={12} color={night.muted}>Guests are waiting on these</T>}>OLDEST FIRST</SectionLabel>
         {!list.length && <EmptyState icon="checkmark-done-outline" tileBg={night.lime} title="All clear" body="Nothing in this queue right now." />}
         {list.map((t, i) => (
           <Pressable key={t.id} accessibilityRole="button" onPress={() => router.push(`/staff/review/${t.id}`)} style={{ flexDirection: 'row', gap: 12, alignItems: 'center', padding: 12, borderRadius: 18, backgroundColor: night.card, borderWidth: 1.5, borderColor: night.line }}>

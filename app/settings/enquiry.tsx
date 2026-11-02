@@ -26,7 +26,7 @@ export default function EnquirySentScreen() {
         <Timeline
           steps={[
             { label: 'Received', sub: 'Just now', state: 'done' },
-            { label: 'Team is reviewing', sub: 'Checking dates and the space', state: 'current' },
+            { label: 'Our team is reviewing', sub: 'Checking dates and the space', state: 'current' },
             { label: 'Chat and quote', sub: 'We call or email you', state: 'todo' },
             { label: 'Booked', sub: 'Your event goes on &FRIENDS', state: 'todo' },
           ]}

@@ -72,7 +72,7 @@ export default function RegisterScreen() {
         <Hero bg={night.ink} gap={14}>
           <Amp size={220} color={night.lime} style={{ right: -20, top: 40 }} />
           <View style={{ marginTop: 28 }}>
-            <H1 size={66} color={night.paper}>Join{'\n'}&amp;Friends</H1>
+            <H1 size={66} color={night.paper}>Join{'\n'}&amp;FRIENDS</H1>
           </View>
           <T size={15} color={night.inkMuted}>Takes about a minute.</T>
         </Hero>

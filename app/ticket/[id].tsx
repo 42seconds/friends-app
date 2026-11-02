@@ -108,14 +108,14 @@ export default function TicketDetailScreen() {
         <View style={{ alignItems: 'center', padding: 20, paddingTop: 8, gap: 12 }}>
           {confirmed ? (
             <>
-              <CoachMark id="ticket-qr" tailAlign="center" radius={16} text="Your QR is ready 🎉 Show this at the door. It works without signal once opened">
+              <CoachMark id="ticket-qr" tailAlign="center" radius={16} text="Your QR is ready 🎉 Show it at the door. Once opened, it works without signal.">
                 <QR value={ticket.id} size={200} />
               </CoachMark>
               <Pressable accessibilityLabel="Copy ticket ID" onPress={() => Clipboard.setStringAsync(ticket.id)} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <T mono weight="700" size={15}>{ticket.id}</T>
                 <Ionicons name="copy-outline" size={14} color={night.muted} />
               </Pressable>
-              <T size={13} color={night.muted}>{ticket.quantity > 1 ? `Admits ${ticket.quantity}. Arrive together, or send a ticket on.` : 'Admits 1'}</T>
+              <T size={13} color={night.muted}>{ticket.quantity > 1 ? `Admits ${ticket.quantity} people. Arrive together, or send a ticket to a friend.` : 'Admits 1 person'}</T>
             </>
           ) : (
             <View style={{ alignItems: 'center', gap: 12, paddingVertical: 20 }}>

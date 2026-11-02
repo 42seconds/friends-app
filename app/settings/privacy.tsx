@@ -51,7 +51,7 @@ export default function PrivacyScreen() {
       </ListGroup>
       <SectionLabel>YOUR DATA</SectionLabel>
       <ListGroup>
-        <ListRow icon="download-outline" title="Download my data" subtitle="A copy of everything we hold on you" chevron onPress={download} />
+        <ListRow icon="download-outline" title="Download my data" subtitle="A copy of everything we hold about you" chevron onPress={download} />
         <ListRow icon="trash-outline" title="Delete account" danger chevron onPress={() => router.push('/settings/delete')} />
       </ListGroup>
     </Screen>

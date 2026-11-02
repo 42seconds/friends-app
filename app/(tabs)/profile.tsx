@@ -29,7 +29,7 @@ export default function ProfileScreen() {
   if (!user) {
     return (
       <Screen tabBar fill contentStyle={{ justifyContent: 'center' }}>
-        <EmptyState icon="person-outline" tileBg={night.blue} title="Join &Friends" body="Book tickets, save events and keep your plans in one place.">
+        <EmptyState icon="person-outline" tileBg={night.blue} title="Join &FRIENDS" body="Book tickets, save events and keep your plans in one place.">
           <PrimaryButton label="Create an account" onPress={() => router.push('/(auth)/register')} />
           <TextLink label="I already have an account" onPress={() => router.push('/(auth)/login')} />
         </EmptyState>
@@ -65,13 +65,13 @@ export default function ProfileScreen() {
             </View>
           </View>
           <View style={{ flexDirection: 'row', gap: 8 }}>
-            <Stat n={been} label="Events been to" />
+            <Stat n={been} label="Events attended" />
             <Stat n={upcoming} label="Upcoming" />
             <Stat n={saved} label="Saved" />
           </View>
           <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
             {interests.map((b) => b && <Pill key={b.key} label={b.name} bg={b.color} />)}
-            <TextLink label={interests.length ? 'Edit' : 'Pick what you are into'} color={night.paper} size={13} onPress={() => router.push('/settings/edit-profile')} />
+            <TextLink label={interests.length ? 'Edit' : "Pick what you're into"} color={night.paper} size={13} onPress={() => router.push('/settings/edit-profile')} />
           </View>
         </Hero>
       }

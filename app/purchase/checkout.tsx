@@ -118,7 +118,7 @@ export default function ReviewBookingScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <T size={15} weight="600">{qty === 2 ? `Ticket 2 · ${params.tier}` : `Tickets 2–${qty} · ${params.tier}`}</T>
-                <T size={13} color={night.muted}>Bring friends along on your QR, or send one on once it's confirmed</T>
+                <T size={13} color={night.muted}>Bring friends in on your QR, or send them a ticket once it's confirmed</T>
               </View>
             </View>
           )}

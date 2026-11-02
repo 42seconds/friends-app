@@ -43,7 +43,7 @@ export default function SubBrandScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <T size={15} weight="600" color={night.paper}>{following ? `Following ${brand.name}` : `Follow ${brand.name}`}</T>
-              <T size={13} color={night.inkMuted}>{following ? 'Tap to stop following' : 'Get told first about new events'}</T>
+              <T size={13} color={night.inkMuted}>{following ? 'Tap to stop following' : 'Be the first to hear about new events'}</T>
             </View>
           </Pressable>
         </Hero>

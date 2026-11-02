@@ -15,7 +15,7 @@ const PRIVACY = [
 
 const TERMS = [
   { q: 'Prices', a: 'Every price you see includes the service fee and VAT. What you see is what you pay.' },
-  { q: 'Holds and payment', a: `Reserved tickets are held for ${HOLD_HOURS} hours while you pay by EFT. Unpaid holds are released back on sale.` },
+  { q: 'Holds and payment', a: `Reserved tickets are held for ${HOLD_HOURS} hours while you pay by EFT. Unpaid holds go back on sale.` },
   { q: 'Transfers', a: 'You can send a ticket to a friend at face value. It stays yours until they accept.' },
   { q: 'Refunds', a: 'Refunds apply when an event is cancelled or moved. Otherwise you can release your ticket to the waitlist.' },
   { q: 'At the door', a: 'One QR admits the people on that booking. Night events are 18+ and ID is required.' },
@@ -42,7 +42,7 @@ export default function LegalScreen() {
         <T display size={24} color={night.lime}>In short</T>
         <T size={14} lh={1.5} color={night.paper}>
           {tab === 'privacy'
-            ? "We collect what we need to sell you tickets and get you in the door. We don't sell your data. You can see it, fix it or delete it anytime."
+            ? "We collect what we need to sell you tickets and get you in the door. We don't sell your data. You can see it, fix it or delete it any time."
             : 'All-in prices, a fair hold while you pay by EFT, transfers at face value, and nothing irreversible on a single tap.'}
         </T>
       </View>

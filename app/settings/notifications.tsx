@@ -18,7 +18,7 @@ export default function NotificationPrefsScreen() {
         <ToggleRow title="WhatsApp" subtitle={maskedPhone} value={p.whatsapp} onChange={(v) => set({ whatsapp: v })} />
         <ToggleRow title="Email" subtitle={user?.email ?? ''} value={p.email} onChange={(v) => set({ email: v })} />
       </ListGroup>
-      <SectionLabel>WHAT ABOUT</SectionLabel>
+      <SectionLabel>WHAT FOR</SectionLabel>
       <ListGroup>
         <ListRow title="Ticket and payment updates" subtitle="Approved, needs a fix, transfers" right={<Pill label="Always on" />} />
         <ToggleRow title="Waitlist offers" subtitle="Your 30-minute claim window" value={p.waitlistOffers} onChange={(v) => set({ waitlistOffers: v })} />

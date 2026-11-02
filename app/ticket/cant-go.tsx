@@ -14,7 +14,7 @@ type Option = 'send' | 'release' | 'refund';
 const OPTIONS: { key: Option; title: string; body: string; badge?: string }[] = [
   { key: 'send', title: 'Send to a friend', body: 'They get it straight away on WhatsApp. You sort out payment between you.', badge: 'Fastest' },
   { key: 'release', title: 'Release to the waitlist', body: 'When someone claims it, you get a refund to your bank.' },
-  { key: 'refund', title: 'Ask for a refund', body: 'Only if the event is cancelled or moved. Otherwise, releasing is the way.' },
+  { key: 'refund', title: 'Ask for a refund', body: 'Only if the event is cancelled or moved. Otherwise, release it to the waitlist.' },
 ];
 
 // "Can't make it?" — every option explained before anything happens.

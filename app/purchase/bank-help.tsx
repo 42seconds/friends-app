@@ -42,7 +42,7 @@ export default function BankHelpScreen() {
         Every bank looks a bit different, but the boxes are the same. Choose <T size={15} weight="700">Pay once-off</T>, so you don't have to save us as a beneficiary.
       </T>
 
-      <CoachMark id="bank-their-ref" radius={26} text={"Your reference goes in Their reference (or Recipient reference), not My reference. This is the one people mix up"}>
+      <CoachMark id="bank-their-ref" radius={26} text={"Your reference goes in \"Their reference\" (or \"Recipient reference\"), not \"My reference\". This is the one people mix up."}>
         <View style={{ padding: 10, borderRadius: 26, backgroundColor: night.ink }}>
           <View style={{ padding: 12, borderRadius: 18, backgroundColor: night.card, gap: 8 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>

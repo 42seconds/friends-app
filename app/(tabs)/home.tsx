@@ -84,7 +84,7 @@ export default function ExploreScreen() {
         </EmptyState>
       ) : (
         <>
-          <CoachMark id="explore-card" number={guide ? 1 : undefined} text={guide ? 'Start here. Tap any event that looks good' : 'Tap an event to see tickets'} radius={24}>
+          <CoachMark id="explore-card" number={guide ? 1 : undefined} text={guide ? 'Start here. Tap any event that looks good.' : 'Tap an event to see its tickets.'} radius={24}>
             <FeaturedEventCard event={featured} />
           </CoachMark>
           {rest.length > 0 && (

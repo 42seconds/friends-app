@@ -57,13 +57,13 @@ export default function PaymentStatusScreen() {
         </Hero>
       }
     >
-      <CoachMark id="awaiting-timeline" radius={20} text="That was the hard part. We'll notify you the moment your QR is ready">
+      <CoachMark id="awaiting-timeline" radius={20} text="That was the hard part. We'll notify you the moment your QR is ready.">
       <Card>
         <Timeline
           steps={[
             { label: 'Tickets reserved', sub: clock(ticket.createdAt), state: 'done' },
             { label: 'Proof received', sub: proofIn ? clock(ticket.proofUploadedAt) : 'Waiting for your upload', state: proofIn ? 'done' : 'current' },
-            { label: 'Team is verifying', sub: 'Usually within a few hours', state: proofIn ? 'current' : 'todo' },
+            { label: 'Our team is checking it', sub: 'Usually within a few hours', state: proofIn ? 'current' : 'todo' },
             { label: 'QR ticket ready', state: 'todo' },
           ]}
         />

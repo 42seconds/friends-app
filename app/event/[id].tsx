@@ -64,7 +64,7 @@ export default function EventDetailScreen() {
   const footer = event.soldOut ? (
     <PrimaryButton label="Sold out · join the waitlist" onPress={() => router.push(`/waitlist/${event.id}`)} />
   ) : available.length === 0 ? null : (
-    <CoachMark id="event-reserve" after="event-stepper" show={!!sel?.qty} placement="above" tailAlign="right" number={2} text="Then tap Reserve. Reserving is free">
+    <CoachMark id="event-reserve" after="event-stepper" show={!!sel?.qty} placement="above" tailAlign="right" number={2} text="Then tap Reserve. Reserving is free.">
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
         <View style={{ minWidth: 96 }}>
           <T size={13} color={night.muted}>{sel?.qty ? `${sel.qty} × ${sel.tier}` : 'Pick tickets'}</T>
@@ -142,7 +142,7 @@ export default function EventDetailScreen() {
             const soldOut = !t.available;
             const first = event.tickets!.findIndex((x) => x.available) === i;
             return (
-              <CoachMark key={t.tier} id="event-stepper" show={first} number={1} tailAlign="right" text="Choose how many with + and −. The price already includes fees and VAT">
+              <CoachMark key={t.tier} id="event-stepper" show={first} number={1} tailAlign="right" text="Choose how many with + and −. The price already includes fees and VAT.">
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: night.card, borderWidth: qty ? 2 : 1.5, borderColor: qty ? night.ink : night.line, opacity: soldOut ? 0.55 : 1 }}>
                 <View style={{ flex: 1, gap: 2 }}>
                   <T size={16} weight="600" style={soldOut ? { textDecorationLine: 'line-through' } : undefined}>{t.tier}</T>

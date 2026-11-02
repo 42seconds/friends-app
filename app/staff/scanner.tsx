@@ -148,7 +148,7 @@ export default function ScannerScreen() {
                   <T size={14} lh={1.45} color={look.fg}>
                     {result.kind === 'valid' && `${result.t.id} · admits ${result.t.quantity}${result.queued ? ' · saved offline, will sync' : ' · first scan'}`}
                     {result.kind === 'invalid' && "This code isn't an &FRIENDS ticket. It could be a screenshot of something else."}
-                    {result.kind === 'wrong' && `${result.t.eventTitle} · ${shortDate(result.t.eventDate, result.t.eventTime)}. Nicely point them to the right date.`}
+                    {result.kind === 'wrong' && `${result.t.eventTitle} · ${shortDate(result.t.eventDate, result.t.eventTime)}. Kindly point them to the right date.`}
                     {result.kind === 'unpaid' && 'Reserved, but proof isn\'t approved. Check approvals, it might just need a tap.'}
                     {result.kind === 'already' && `${result.t.userName ?? 'Guest'} · ${result.t.tier} · ${result.t.id}. First scanned ${result.t.checkedInAt ? clock(result.t.checkedInAt) : 'earlier'}${result.t.checkedInDoor ? ` at ${result.t.checkedInDoor}` : ''}${result.t.checkedInBy ? ` by ${result.t.checkedInBy.split(' ')[0]}` : ''}.`}
                   </T>

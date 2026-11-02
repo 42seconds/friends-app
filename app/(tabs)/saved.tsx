@@ -65,7 +65,7 @@ export default function SavedScreen() {
         </EmptyState>
       ) : (
         <>
-          <Note icon="heart-outline">Saved events stay on this phone. Book early, popular nights sell out.</Note>
+          <Note icon="heart-outline">Saved events stay on this phone. Book early: popular nights sell out.</Note>
           <View style={{ gap: 10 }}>
             {list.map((e) => (
               <SavedCard key={e.id} e={e} />

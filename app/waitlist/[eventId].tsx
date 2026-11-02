@@ -13,7 +13,7 @@ import { night } from '../../src/theme/night';
 const STEPS = [
   'Someone can\'t make it and releases their ticket at face value.',
   'It\'s offered to the next person in line. You get 30 minutes to reserve it.',
-  'Pay by EFT like normal. No resale mark-ups, ever.',
+  'Pay by EFT as usual. No resale mark-ups, ever.',
 ];
 
 // Sold-out event: join the waitlist, or see your place in line.
