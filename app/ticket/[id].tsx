@@ -1,10 +1,11 @@
-import { ActivityIndicator, Pressable, Share, View } from 'react-native';
+import { ActivityIndicator, Animated, Pressable, Share, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
 import { T, Screen, TopBar, IconButton, Amp, QR, Pill, PrimaryButton, IconName, CoachMark } from '../../src/components/night';
 import StatusBadge from '../../src/components/statusBadge';
 import { useTicket } from '../../src/hooks/useTicket';
+import { useTicketRip } from '../../src/hooks/useTicketRip';
 import { effectiveStatus } from '../../src/services/ticketService';
 import { bookingHref } from '../../src/lib/booking';
 import { shortDate, stamp } from '../../src/lib/dates';
@@ -34,6 +35,7 @@ export default function TicketDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { ticket, loading } = useTicket(id);
+  const rip = useTicketRip(ticket?.id, !!ticket?.checkedIn);
 
   if (loading) return <View style={{ flex: 1, justifyContent: 'center', backgroundColor: night.ink }}><ActivityIndicator color={night.paper} /></View>;
   if (!ticket) {
@@ -52,11 +54,13 @@ export default function TicketDetailScreen() {
   return (
     <Screen header={<TopBar
         dark
-        center={confirmed ? <Pill label="SHOW THIS AT THE DOOR" bg={night.ink2} color={night.paper} mono /> : undefined}
+        center={confirmed && !ticket.checkedIn ? <Pill label="SHOW THIS AT THE DOOR" bg={night.ink2} color={night.paper} mono /> : undefined}
         right={<IconButton icon="share-outline" label="Share" tone="dark" onPress={() => Share.share({ message: `I'm going to ${ticket.eventTitle} · ${shortDate(ticket.eventDate, ticket.eventTime)} · ${ticket.eventLocation}` })} />}
       />} bg={night.ink} dark>
 
-      <View style={{ borderRadius: 26, overflow: 'hidden', backgroundColor: night.paper }}>
+      <View>
+      {/* Top of the ticket: stays when the stub is torn off at the door. */}
+      <View style={{ borderTopLeftRadius: 26, borderTopRightRadius: 26, overflow: 'hidden', backgroundColor: night.paper }}>
         <View style={{ backgroundColor: brand.color, padding: 18, gap: 16, overflow: 'hidden' }}>
           <Amp size={240} color={brand.deep} style={{ right: -20, top: -30 }} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -71,11 +75,34 @@ export default function TicketDetailScreen() {
           </View>
         </View>
 
-        {/* perforation */}
-        <View style={{ height: 22, justifyContent: 'center' }}>
-          <View style={{ position: 'absolute', left: -11, width: 22, height: 22, borderRadius: 99, backgroundColor: night.ink }} />
+        {/* top half of the perforation */}
+        <View style={{ height: 11, overflow: 'hidden' }}>
+          <View style={{ position: 'absolute', left: -11, top: 0, width: 22, height: 22, borderRadius: 99, backgroundColor: night.ink }} />
+          <View style={{ position: 'absolute', right: -11, top: 0, width: 22, height: 22, borderRadius: 99, backgroundColor: night.ink }} />
+        </View>
+      </View>
+
+      <View>
+      {/* Under the stub: the "Admitted" stamp, revealed as the stub tears off. */}
+      {rip.phase !== 'whole' && (
+        <View style={{ borderBottomLeftRadius: 26, borderBottomRightRadius: 26, backgroundColor: night.paper, alignItems: 'center', paddingTop: 10, paddingBottom: 22 }}>
+          <Animated.View style={[{ alignItems: 'center', gap: 4 }, rip.stampStyle]} accessibilityLabel={`Admitted${ticket.checkedInAt ? ` at ${stamp(ticket.checkedInAt)}` : ''}`}>
+            <View style={{ borderWidth: 3, borderColor: night.success, borderRadius: 12, paddingHorizontal: 16, paddingTop: 6, paddingBottom: 2 }}>
+              <T display size={40} color={night.success}>Admitted</T>
+            </View>
+            <T mono weight="700" size={11} color={night.success}>{[stamp(ticket.checkedInAt).toUpperCase(), ticket.checkedInDoor?.toUpperCase()].filter(Boolean).join(' · ')}</T>
+            <T size={13} color={night.muted} style={{ marginTop: 6 }}>Enjoy the night.</T>
+          </Animated.View>
+        </View>
+      )}
+
+      {/* The stub with the QR: tears off when the door scans the ticket. */}
+      {rip.phase !== 'ripped' && (
+      <Animated.View style={[{ borderBottomLeftRadius: 26, borderBottomRightRadius: 26, overflow: 'hidden', backgroundColor: night.paper }, rip.phase === 'ripping' && { position: 'absolute', top: 0, left: 0, right: 0, zIndex: 2 }, rip.stubStyle]}>
+        <View style={{ height: 11, justifyContent: 'flex-start' }}>
+          <View style={{ position: 'absolute', left: -11, top: -11, width: 22, height: 22, borderRadius: 99, backgroundColor: night.ink }} />
           <View style={{ marginHorizontal: 18, borderTopWidth: 2, borderStyle: 'dashed', borderColor: night.handle }} />
-          <View style={{ position: 'absolute', right: -11, width: 22, height: 22, borderRadius: 99, backgroundColor: night.ink }} />
+          <View style={{ position: 'absolute', right: -11, top: -11, width: 22, height: 22, borderRadius: 99, backgroundColor: night.ink }} />
         </View>
 
         <View style={{ alignItems: 'center', padding: 20, paddingTop: 8, gap: 12 }}>
@@ -89,7 +116,6 @@ export default function TicketDetailScreen() {
                 <Ionicons name="copy-outline" size={14} color={night.muted} />
               </Pressable>
               <T size={13} color={night.muted}>{ticket.quantity > 1 ? `Admits ${ticket.quantity}. Arrive together, or send a ticket on.` : 'Admits 1'}</T>
-              {ticket.checkedIn && <Pill label={`CHECKED IN ${stamp(ticket.checkedInAt).toUpperCase()}`} bg={night.successBg} color={night.success} mono />}
             </>
           ) : (
             <View style={{ alignItems: 'center', gap: 12, paddingVertical: 20 }}>
@@ -101,9 +127,12 @@ export default function TicketDetailScreen() {
             </View>
           )}
         </View>
+      </Animated.View>
+      )}
+      </View>
       </View>
 
-      {confirmed && (
+      {confirmed && !ticket.checkedIn && (
         <View style={{ flexDirection: 'row', gap: 10 }}>
           <Action icon="paper-plane-outline" label={transferPending ? 'Pending' : 'Send'} onPress={() => router.push(transferPending ? `/ticket/transfer?ticketId=${ticket.id}` : `/ticket/send?ticketId=${ticket.id}`)} />
           <Action icon="navigate-outline" label="Directions" onPress={() => router.push(`/directions/${ticket.eventId}`)} />

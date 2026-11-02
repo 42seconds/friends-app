@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { ActivityIndicator, Linking, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { T, H1, Screen, Hero, TopBar, StepProgress, Timeline, ListGroup, ToggleRow, TextLink, Card, Pill, CoachMark, FirstTicketTracker } from '../../src/components/night';
+import { T, H1, Screen, Hero, TopBar, StepProgress, Timeline, ListGroup, ToggleRow, TextLink, Card, Pill, CoachMark, FirstTicketTracker, PrimaryButton, OutlineButton } from '../../src/components/night';
 import { useFirstTicketGuide } from '../../src/hooks/useFirstTicketGuide';
 import { useTicket } from '../../src/hooks/useTicket';
 import { prefsStore } from '../../src/store';
@@ -40,6 +40,12 @@ export default function PaymentStatusScreen() {
   return (
     <Screen header={<TopBar dark onBack={() => router.replace('/(tabs)/home')} />} headerBg={night.ink}
       padTop={false}
+      footer={
+        <View style={{ gap: 10 }}>
+          <PrimaryButton label="Back to home" icon="home-outline" onPress={() => router.replace('/(tabs)/home')} />
+          <OutlineButton label="See my tickets" onPress={() => router.replace('/(tabs)/tickets')} />
+        </View>
+      }
       hero={
         <Hero bg={night.ink} gap={16}>
           {guide ? <FirstTicketTracker step={5} /> : <StepProgress step={4} dark label={`STEP 4 OF 4 · REF ${ticket.id}`} />}
