@@ -50,3 +50,4 @@ serviceAccount*.json
 
 # test reports
 junit.xml
+pages-dist/

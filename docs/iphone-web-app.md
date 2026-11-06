@@ -6,7 +6,10 @@ full screen from its own icon, like an installed app. It uses the same
 live database and logins as the Android app, and nothing has to run on
 anyone's laptop.
 
-**Link:** https://andfriends-c5552.web.app
+**Link:** https://42seconds.github.io/friends-app/
+
+(Also on Firebase Hosting at https://andfriends-c5552.web.app once that is
+set up, see below. Both are the same app.)
 
 ## For iPhone users
 
@@ -29,11 +32,14 @@ What's different from the Android app:
 ## Publishing updates
 
 The web app is published automatically: every push to `master` that passes
-CI runs the **Publish web app (iPhone)** job in GitHub Actions, which builds
-the app and puts it on Firebase Hosting. People get the new version the
-next time they open the app.
+CI runs the **Publish web app to GitHub Pages** job in GitHub Actions, which
+builds the app and puts it on GitHub Pages. No keys or setup are needed.
+People get the new version the next time they open the app.
 
-### One-time setup: let GitHub publish to Firebase
+GitHub Pages is switched on under the repository's **Settings → Pages**
+with Source set to **GitHub Actions**.
+
+### Optional: also publish to Firebase Hosting
 
 The job needs a key that lets GitHub publish to Firebase Hosting. It is
 stored as a GitHub secret, never in the code.

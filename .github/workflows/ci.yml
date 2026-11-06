@@ -175,3 +175,52 @@ jobs:
       - name: Publishing skipped
         if: env.FIREBASE_SA == ''
         run: echo "::notice::Web app built but not published. Add the FIREBASE_SERVICE_ACCOUNT_ANDFRIENDS_C5552 secret (docs/iphone-web-app.md) to publish automatically."
+
+  # The same web app on GitHub Pages: https://42seconds.github.io/friends-app/
+  # Published on every push to master that passes the checks. Free, and
+  # needs no keys (it uses the repository's own GitHub token).
+  pages:
+    name: Publish web app to GitHub Pages
+    needs: [checks, rules]
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - name: Build web app for /friends-app/
+        run: npx expo export --platform web --output-dir pages-dist
+        env:
+          WEB_BASE_URL: /friends-app
+      - name: Prepare for GitHub Pages
+        run: node scripts/prepare-pages.mjs pages-dist /friends-app
+      # Fails until Pages is switched on (Settings → Pages → Source:
+      # GitHub Actions); then the publish steps are skipped, not failed.
+      - name: Check GitHub Pages is switched on
+        id: configure
+        uses: actions/configure-pages@v5
+        continue-on-error: true
+      - name: Pages is off
+        if: steps.configure.outcome != 'success'
+        run: echo "::warning::GitHub Pages is switched off. Turn it on in Settings, Pages, Source set to GitHub Actions, then re-run this job."
+      - uses: actions/upload-pages-artifact@v3
+        if: steps.configure.outcome == 'success'
+        with:
+          path: pages-dist
+      - name: Publish
+        id: deploy
+        if: steps.configure.outcome == 'success'
+        uses: actions/deploy-pages@v4
