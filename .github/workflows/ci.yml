@@ -128,3 +128,43 @@ jobs:
           name: friends-app-ios-simulator-${{ github.sha }}
           path: friends-app-ios-simulator.zip
           retention-days: 30
+
+  # The web version, which is how iPhone users get the app (Safari →
+  # Share → Add to Home Screen). Every push to master that passes the
+  # checks is published to https://andfriends-c5552.web.app.
+  # Needs the FIREBASE_SERVICE_ACCOUNT_ANDFRIENDS_C5552 repository secret
+  # (see docs/iphone-web-app.md); without it the build still runs and the
+  # publish step is skipped.
+  web:
+    name: Publish web app (iPhone)
+    needs: [checks, rules]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ANDFRIENDS_C5552 }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --legacy-peer-deps
+      - name: Build web app
+        run: npx expo export --platform web
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: friends-app-web-${{ github.sha }}
+          path: dist
+          retention-days: 14
+      - name: Publish to Firebase Hosting
+        if: env.FIREBASE_SA != '' && github.ref == 'refs/heads/master'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ANDFRIENDS_C5552 }}
+          projectId: andfriends-c5552
+          channelId: live
+      - name: Publishing skipped
+        if: env.FIREBASE_SA == ''
+        run: echo "::notice::Web app built but not published. Add the FIREBASE_SERVICE_ACCOUNT_ANDFRIENDS_C5552 secret (docs/iphone-web-app.md) to publish automatically."

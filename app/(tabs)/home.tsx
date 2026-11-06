@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { T, H1, H2, Screen, IconButton, Chip, StatusBanner, FeaturedEventCard, EventListRow, EmptyState, PrimaryButton, OutlineButton, TextLink, CoachMark, FirstTicketIntro } from '../../src/components/night';
+import { T, H1, H2, Screen, IconButton, Chip, StatusBanner, FeaturedEventCard, EventListRow, EmptyState, PrimaryButton, OutlineButton, TextLink, CoachMark, FirstTicketIntro, InstallHint } from '../../src/components/night';
 import { useFirstTicketGuide } from '../../src/hooks/useFirstTicketGuide';
 import { useEvents, retryEvents } from '../../src/hooks/useEvents';
 import { useBookings } from '../../src/hooks/useBookings';
@@ -57,6 +57,7 @@ export default function ExploreScreen() {
     >
 
       <StatusBanner tickets={tickets} />
+      <InstallHint />
       {user && !emailVerified && (
         <Pressable accessibilityRole="button" onPress={() => router.push('/verify-email')} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: night.cream, borderWidth: 1.5, borderColor: '#F0DFA0' }}>
           <Ionicons name="mail-unread-outline" size={22} color={night.ink} />
