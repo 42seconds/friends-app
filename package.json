@@ -55,7 +55,8 @@
     "typecheck": "tsc --noEmit",
     "test:rules": "npx -y firebase-tools@15 emulators:exec --only firestore --project demo-friends \"node tests/rules/firestore-rules.test.mjs\"",
     "seed": "node scripts/seed.mjs",
-    "deploy:web": "expo export --platform web && npx -y firebase-tools@15 deploy --only hosting --project andfriends-c5552"
+    "build:web": "expo export --platform web && node scripts/build-sw.mjs dist",
+    "deploy:web": "npm run build:web && npx -y firebase-tools@15 deploy --only hosting --project andfriends-c5552"
   },
   "private": true,
   "jest": {

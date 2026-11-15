@@ -21,6 +21,7 @@ import { night } from '../src/theme/night';
 import { useTicketAlerts } from '../src/hooks/useTicketAlerts';
 import { redirectTarget } from '../src/lib/redirect';
 import '../src/lib/netinfoSetup';
+import '../src/lib/pwa';
 
 // Routes presented as bottom sheets (transparent modals that draw their own backdrop).
 const SHEETS = ['filters', 'purchase/tickets', 'purchase/promo', 'waitlist/join', 'ticket/send', 'staff/reject'];

@@ -157,7 +157,7 @@ jobs:
           cache: npm
       - run: npm ci --legacy-peer-deps
       - name: Build web app
-        run: npx expo export --platform web
+        run: npm run build:web
       - name: Upload build
         uses: actions/upload-artifact@v4
         with:
@@ -207,6 +207,8 @@ jobs:
           WEB_BASE_URL: /friends-app
       - name: Prepare for GitHub Pages
         run: node scripts/prepare-pages.mjs pages-dist /friends-app
+      - name: Add offline support
+        run: node scripts/build-sw.mjs pages-dist
       # Fails until Pages is switched on (Settings → Pages → Source:
       # GitHub Actions); then the publish steps are skipped, not failed.
       - name: Check GitHub Pages is switched on
