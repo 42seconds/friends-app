@@ -9,6 +9,7 @@ import { night } from '../../src/theme/night';
 import { safeBack } from '../../src/lib/nav';
 import { LIMITS, checkName, checkEmail, checkPassword, checkPhone, normalizePhone, collectErrors } from '../../src/lib/validation';
 import { requireOnline } from '../../src/lib/online';
+import { setSigningUp } from '../../src/lib/signupFlow';
 
 // 0-4 bars: length, mixed case, digit, symbol.
 function strength(pw: string) {
@@ -48,6 +49,7 @@ export default function RegisterScreen() {
     if (Object.keys(e).length) return;
 
     setLoading(true);
+    setSigningUp(true);
     try {
       await requireOnline();
       await registerUser({
@@ -62,6 +64,8 @@ export default function RegisterScreen() {
       setErrors({ form: authErrorMessage(err) });
     } finally {
       setLoading(false);
+      // Let the new screen settle before the redirect gate looks again.
+      setTimeout(() => setSigningUp(false), 1500);
     }
   };
 

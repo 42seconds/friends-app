@@ -16,11 +16,16 @@ export interface RedirectState {
   // Admin 2-step: true = an admin who still has to enter the emailed
   // code on this device, false = not needed / done, null = still checking.
   adminCodeNeeded?: boolean | null;
+  // The sign-up screen is creating the account and will move on itself.
+  signingUp?: boolean;
 }
 
-export function redirectTarget({ segments, loggedIn, browsing, hasSeenOnboarding, hasSeenGuide, adminCodeNeeded = false }: RedirectState): string | null {
+export function redirectTarget({ segments, loggedIn, browsing, hasSeenOnboarding, hasSeenGuide, adminCodeNeeded = false, signingUp = false }: RedirectState): string | null {
   const group = segments[0];
   const path = segments.join('/');
+  // Just created an account: the sign-up screen goes to "Confirm your
+  // email" next; don't jump to the guide or Explore first.
+  if (loggedIn && signingUp) return null;
   const inOnboarding = group === '(onboarding)';
   const inAuth = group === '(auth)';
 

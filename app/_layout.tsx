@@ -23,6 +23,7 @@ import { redirectTarget } from '../src/lib/redirect';
 import { useUserRole } from '../src/hooks/useUserRole';
 import { useAdminTrusted } from '../src/lib/adminTrust';
 import { EMAIL_CODES_ON } from '../src/config/emailCodes';
+import { useSigningUp } from '../src/lib/signupFlow';
 import '../src/lib/netinfoSetup';
 import '../src/lib/pwa';
 
@@ -43,6 +44,7 @@ function RedirectGate() {
   // Admin 2-step: admins enter an emailed code before using the app.
   const { isAdmin, loading: roleLoading } = useUserRole();
   const adminTrusted = useAdminTrusted(user?.uid);
+  const signingUp = useSigningUp();
   const adminCodeNeeded = !EMAIL_CODES_ON || !user ? false : roleLoading ? null : !isAdmin ? false : adminTrusted === null ? null : !adminTrusted;
 
   // The route as a string (useSegments() returns a new array every render),
@@ -55,7 +57,7 @@ function RedirectGate() {
   useEffect(() => {
     if (authLoading || hasSeenOnboarding === null || hasSeenGuide === null) return;
 
-    const target = redirectTarget({ segments: segments as string[], loggedIn: !!user, browsing, hasSeenOnboarding, hasSeenGuide, adminCodeNeeded });
+    const target = redirectTarget({ segments: segments as string[], loggedIn: !!user, browsing, hasSeenOnboarding, hasSeenGuide, adminCodeNeeded, signingUp });
 
     if (!target) {
       pending.current = null;
@@ -73,7 +75,7 @@ function RedirectGate() {
       }
     }, 1500);
     return () => clearTimeout(retry);
-  }, [user, authLoading, hasSeenOnboarding, hasSeenGuide, path, browsing, retries, adminCodeNeeded]);
+  }, [user, authLoading, hasSeenOnboarding, hasSeenGuide, path, browsing, retries, adminCodeNeeded, signingUp]);
 
   if (authLoading || hasSeenOnboarding === null || hasSeenGuide === null) return <Splash />;
   if (updateRequired) return <UpdateRequired />;

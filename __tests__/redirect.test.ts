@@ -58,4 +58,9 @@ describe('where the app sends people', () => {
   it('logged-in people can use the forgot-password screen to change their password', () => {
     expect(go({ segments: ['(auth)', 'forgot'], loggedIn: true, hasSeenGuide: true })).toBeNull();
   });
+  it('creating an account goes to "Confirm your email", not the guide first', () => {
+    expect(go({ segments: ['(auth)', 'register'], loggedIn: true, hasSeenOnboarding: true, signingUp: true })).toBeNull();
+    expect(go({ segments: ['verify-email'], loggedIn: true, hasSeenOnboarding: true, signingUp: true })).toBeNull();
+    expect(go({ segments: ['verify-email'], loggedIn: true, hasSeenOnboarding: true })).toBeNull();
+  });
 });
