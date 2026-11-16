@@ -14,12 +14,15 @@ import Constants from 'expo-constants';
 //   "firebase"  The secure version: the Cloud Functions in functions/
 //               (needs Firebase's Blaze plan). Also does forgot password.
 //   "https://…" The same functions hosted somewhere else.
-const extra = (Constants.expoConfig?.extra ?? {}) as { emailCodes?: string; emailjs?: { serviceId?: string; templateId?: string; publicKey?: string } };
+const extra = (Constants.expoConfig?.extra ?? {}) as { emailCodes?: string; emailjs?: { serviceId?: string; templateId?: string; bookingTemplateId?: string; publicKey?: string } };
 const setting = String(extra.emailCodes ?? 'off').trim();
 
 export const EMAILJS = {
   serviceId: extra.emailjs?.serviceId?.trim() ?? '',
   templateId: extra.emailjs?.templateId?.trim() ?? '',
+  // Second template: the booking emails (held / you're in / needs a fix).
+  // Empty = no booking emails.
+  bookingTemplateId: extra.emailjs?.bookingTemplateId?.trim() ?? '',
   publicKey: extra.emailjs?.publicKey?.trim() ?? '',
 };
 const emailjsReady = !!(EMAILJS.serviceId && EMAILJS.templateId && EMAILJS.publicKey);

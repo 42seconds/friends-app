@@ -16,6 +16,7 @@ import { byDate } from '../lib/firestoreData';
 import { toTicket, holdEndsAt, effectiveStatus } from '../lib/tickets';
 import { alertFor } from '../lib/ticketAlerts';
 import { pushToUser } from '../lib/push';
+import { sendBookingEmail } from './bookingEmails';
 
 // Re-exported so screens can keep importing them from here.
 export { toTicket, holdEndsAt, effectiveStatus };
@@ -158,9 +159,20 @@ export async function approveTicket(ticketId: string, adminUid: string) {
 function notifyOwner(ticketId: string) {
   getTicketById(ticketId)
     .then((t) => {
+      // Email too: "You're in!" or "Quick fix needed".
+      if (t?.status === 'confirmed') sendBookingEmail('confirmed', t);
+      else if (t?.status === 'rejected') sendBookingEmail('fix', t);
       const a = t && alertFor(t, undefined);
       if (t?.userId && a) return pushToUser(t.userId, a);
     })
+    .catch(() => {});
+}
+
+// After reserving: "Held for you" with the EFT details, or "You're in!"
+// for free guest-list bookings. In the background, never blocking.
+export function emailNewBooking(ticketId: string) {
+  getTicketById(ticketId)
+    .then((t) => t && sendBookingEmail(t.status === 'confirmed' ? 'confirmed' : 'held', t))
     .catch(() => {});
 }
 

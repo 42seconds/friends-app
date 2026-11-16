@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { doc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebaseConfig';
 import { EMAILJS } from '../config/emailCodes';
+import { EmailSendError, sendEmailJs } from './emailjs';
 import { ADMIN_TRUST_MS, CODE_TTL_MS, CodeRecord, checkCode, checkMessage, newCode, newRecord, RESEND_MS, sendBlocked } from '../lib/codeRules';
 
 // Demo mode for email codes (emailCodes: "emailjs" in app.json): no server.
@@ -45,36 +46,25 @@ const write = (purpose: Purpose, uid: string, rec: CodeRecord | null) =>
   (rec ? AsyncStorage.setItem(key(purpose, uid), JSON.stringify(rec)) : AsyncStorage.removeItem(key(purpose, uid))).catch(() => {});
 
 async function emailCode(to: string, purpose: Purpose, code: string) {
-  const res = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      service_id: EMAILJS.serviceId,
-      template_id: EMAILJS.templateId,
-      user_id: EMAILJS.publicKey,
+  try {
+    await sendEmailJs(EMAILJS.templateId, {
       // Our own names, plus the ones EmailJS's ready-made "One-Time
       // Password" template uses (passcode, email, time), so that template
       // works without editing.
-      template_params: {
-        to_email: to,
-        email: to,
-        subject: SUBJECTS[purpose],
-        message: LINES[purpose],
-        code: `${code.slice(0, 3)} ${code.slice(3)}`,
-        passcode: code,
-        time: new Date(Date.now() + CODE_TTL_MS).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' }),
-        company_name: '&FRIENDS',
-        heading: LOOK[purpose].heading,
-        header_bg: LOOK[purpose].bg,
-        header_fg: LOOK[purpose].fg,
-      },
-    }),
-  }).catch(() => null);
-  if (!res) throw fail('unavailable', "You're offline. Connect to the internet and try again.");
-  if (!res.ok) {
-    const why = await res.text().catch(() => '');
-    console.warn('EmailJS refused the email:', res.status, why);
-    throw fail('unavailable', "We couldn't send the email. Please try again in a minute.");
+      to_email: to,
+      email: to,
+      subject: SUBJECTS[purpose],
+      message: LINES[purpose],
+      code: `${code.slice(0, 3)} ${code.slice(3)}`,
+      passcode: code,
+      time: new Date(Date.now() + CODE_TTL_MS).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' }),
+      company_name: '&FRIENDS',
+      heading: LOOK[purpose].heading,
+      header_bg: LOOK[purpose].bg,
+      header_fg: LOOK[purpose].fg,
+    });
+  } catch (e) {
+    throw fail('unavailable', e instanceof EmailSendError && e.message === 'offline' ? "You're offline. Connect to the internet and try again." : "We couldn't send the email. Please try again in a minute.");
   }
 }
 

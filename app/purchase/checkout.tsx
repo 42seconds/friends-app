@@ -7,7 +7,7 @@ import { useFirstTicketGuide } from '../../src/hooks/useFirstTicketGuide';
 import { useEvent } from '../../src/hooks/useEvents';
 import { useAuth } from '../../src/context/AuthContext';
 import { useProfile } from '../../src/hooks/useProfile';
-import { createTicket } from '../../src/services/ticketService';
+import { createTicket, emailNewBooking } from '../../src/services/ticketService';
 import { promoStore, NO_PROMO } from '../../src/store';
 import { recordCodeUse } from '../../src/services/communityService';
 import { cartFromParams, cartLines, linesSummary, quoteLines } from '../../src/lib/booking';
@@ -79,6 +79,7 @@ export default function ReviewBookingScreen() {
         totalPrice: comp ? 0 : q.total,
         comp,
       }));
+      emailNewBooking(ticketId);
       if (percentOff) recordCodeUse(promo.code);
       promoStore.set(NO_PROMO);
       router.replace(comp ? `/purchase/confirmed?ticketId=${ticketId}` : `/purchase/pay?ticketId=${ticketId}`);

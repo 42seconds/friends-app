@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="x-apple-disable-message-reformatting">
+<title>{{subject}}</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Instrument+Sans:wght@400;600;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<style>
+  body, table, td { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+  td { word-break: break-word; overflow-wrap: anywhere; }
+  @media only screen and (max-width: 480px) {
+    .outer { padding: 12px 8px !important; }
+    .pad { padding-left: 16px !important; padding-right: 16px !important; }
+    .heading { font-size: 38px !important; }
+    .amp { font-size: 64px !important; }
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background:#E8E3D7;width:100%;">
+<!-- &FRIENDS booking emails (EmailJS template): "Held for you", "You're in!"
+     and "Quick fix needed", from the "Emails" designs in the &FRIENDS App
+     Redesign canvas. The app fills in: {{subject}}, {{heading}},
+     {{header_bg}}, {{header_fg}}, {{{body_html}}} (the details, already laid
+     out), {{button_label}}, {{button_url}}, {{footer}}. -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#E8E3D7;width:100%;table-layout:fixed;">
+  <tr>
+    <td class="outer" align="center" style="padding:32px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:480px;table-layout:fixed;background:#FFFFFF;border:1.5px solid #DDD7C9;border-radius:18px;overflow:hidden;">
+        <!-- Header band -->
+        <tr>
+          <td class="pad" style="background:{{header_bg}};color:{{header_fg}};padding:22px 24px 24px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;table-layout:fixed;">
+              <tr>
+                <td valign="top" style="font-family:'Bebas Neue',Impact,'Arial Narrow',Arial,sans-serif;font-size:18px;letter-spacing:0.5px;color:{{header_fg}};padding-bottom:12px;">&amp;FRIENDS</td>
+                <td class="amp" width="64" rowspan="2" align="right" valign="top" style="width:64px;font-family:'Bebas Neue',Impact,'Arial Narrow',Arial,sans-serif;font-size:96px;line-height:0.8;color:{{header_fg}};opacity:0.18;overflow:hidden;">&amp;</td>
+              </tr>
+              <tr>
+                <td class="heading" valign="bottom" style="font-family:'Bebas Neue',Impact,'Arial Narrow',Arial,sans-serif;font-size:48px;line-height:0.9;color:{{header_fg}};text-transform:uppercase;">{{heading}}</td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <!-- Details (written by the app) -->
+        <tr>
+          <td class="pad" style="padding:22px 24px 8px;">{{{body_html}}}</td>
+        </tr>
+        <!-- Button -->
+        <tr>
+          <td class="pad" style="padding:12px 24px 4px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;">
+              <tr>
+                <td align="center" bgcolor="#15130F" style="border-radius:14px;background:#15130F;">
+                  <a href="{{button_url}}" style="display:block;padding:16px 12px;font-family:'Instrument Sans',Helvetica,Arial,sans-serif;font-size:15px;font-weight:700;color:#F3F0E8;text-decoration:none;border-radius:14px;">{{button_label}}</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <!-- Footer -->
+        <tr>
+          <td class="pad" style="padding:14px 24px 24px;font-family:'Instrument Sans',Helvetica,Arial,sans-serif;font-size:12px;line-height:1.5;color:#8F887A;">{{footer}}</td>
+        </tr>
+      </table>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:480px;">
+        <tr>
+          <td align="center" style="padding:16px 8px 0;font-family:'Instrument Sans',Helvetica,Arial,sans-serif;font-size:12px;color:#8F887A;">&amp;FRIENDS · Braamfontein, Johannesburg</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</body>
+</html>
