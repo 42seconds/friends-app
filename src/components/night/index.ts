@@ -16,3 +16,4 @@ export { default as GoogleButton } from './GoogleButton';
 export { CoachMark, FirstTicketTracker, FirstTicketIntro, HideGuideLink } from './Coach';
 export { default as InstallHint } from './InstallHint';
 export { default as CodeInput } from './CodeInput';
+export { PasswordRules, NewPasswordFields } from './NewPassword';

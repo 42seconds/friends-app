@@ -162,8 +162,8 @@ await t('forgot password: a weak new password is refused before the code is used
   await expectError(verifyCode({ purpose: 'reset-password', email: jane, code: lastCodeFor(jane), newPassword: 'short' }), 'invalid-argument', '8 characters');
 });
 await t('forgot password: the code sets the new password', async () => {
-  await verifyCode({ purpose: 'reset-password', email: 'JANE@example.com ', code: lastCodeFor(jane), newPassword: 'newpass22' });
-  await signInWithEmailAndPassword(auth, jane, 'newpass22');
+  await verifyCode({ purpose: 'reset-password', email: 'JANE@example.com ', code: lastCodeFor(jane), newPassword: 'NewPass22!' });
+  await signInWithEmailAndPassword(auth, jane, 'NewPass22!');
   await signOut(auth);
   const old = await signInWithEmailAndPassword(auth, jane, 'goodpass1').then(() => 'worked', (e) => e.code);
   assert(String(old).startsWith('auth/'), `old password: ${old}`);

@@ -53,11 +53,17 @@ function checkCode(record, code, now) {
   return { ok: false, reason: 'wrong', attemptsLeft: MAX_ATTEMPTS - record.attempts - 1 };
 }
 
-// New passwords set with a reset code follow the app's sign-up rule.
+// New passwords set with a reset code follow the app's rules
+// (src/lib/validation.ts PASSWORD_RULES).
 function passwordProblem(pw) {
-  if (typeof pw !== 'string' || pw.length < 8) return 'Use at least 8 characters.';
+  if (typeof pw !== 'string' || !pw) return 'Choose a password.';
   if (pw.length > 128) return 'That password is too long.';
-  if (!/[A-Za-z]/.test(pw) || !/\d/.test(pw)) return 'Use at least one letter and one number.';
+  if (pw.length < 8) return 'Use at least 8 characters.';
+  if (!/[A-Z]/.test(pw)) return 'Add an uppercase letter (A–Z).';
+  if (!/[a-z]/.test(pw)) return 'Add a lowercase letter (a–z).';
+  if (!/\d/.test(pw)) return 'Add a number (0–9).';
+  if (!/[^A-Za-z0-9\s]/.test(pw)) return 'Add a symbol, like ! @ # ? or *.';
+  if (/\s/.test(pw)) return 'Take out the spaces.';
   return null;
 }
 

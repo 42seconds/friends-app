@@ -29,10 +29,29 @@ export function checkEmail(v: string): Check {
   return null;
 }
 
+// The password rules, shown as a checklist under every "choose a
+// password" box (sign-up, reset) and checked again on the server
+// (functions/otp.js). Logging in with an older password still works.
+export const PASSWORD_RULES: { key: string; label: string; fix: string; test: (v: string) => boolean }[] = [
+  { key: 'length', label: 'At least 8 characters', fix: 'Use at least 8 characters', test: (v) => v.length >= 8 },
+  { key: 'upper', label: 'An uppercase letter (A–Z)', fix: 'Add an uppercase letter (A–Z)', test: (v) => /[A-Z]/.test(v) },
+  { key: 'lower', label: 'A lowercase letter (a–z)', fix: 'Add a lowercase letter (a–z)', test: (v) => /[a-z]/.test(v) },
+  { key: 'number', label: 'A number (0–9)', fix: 'Add a number (0–9)', test: (v) => /\d/.test(v) },
+  { key: 'symbol', label: 'A symbol, like ! @ # ? or *', fix: 'Add a symbol, like ! @ # ? or *', test: (v) => /[^A-Za-z0-9\s]/.test(v) },
+  { key: 'spaces', label: 'No spaces', fix: 'Take out the spaces', test: (v) => !/\s/.test(v) },
+];
+
 export function checkPassword(v: string): Check {
-  if (v.length < 8) return 'Use at least 8 characters';
+  if (!v) return 'Choose a password';
   if (v.length > LIMITS.password) return `Keep it under ${LIMITS.password} characters`;
-  if (!/[A-Za-z]/.test(v) || !/\d/.test(v)) return 'Use at least one letter and one number';
+  const failed = PASSWORD_RULES.find((r) => !r.test(v));
+  return failed ? failed.fix : null;
+}
+
+// "Confirm password" must be typed exactly the same.
+export function checkPasswordMatch(password: string, confirm: string): Check {
+  if (!confirm) return 'Type your password again';
+  if (confirm !== password) return "The passwords don't match";
   return null;
 }
 

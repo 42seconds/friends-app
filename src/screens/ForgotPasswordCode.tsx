@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { T, H1, Amp, TopBar, Field, PrimaryButton, OutlineButton, TextLink, Screen, Note, CodeInput } from '../components/night';
+import { T, H1, Amp, TopBar, Field, PrimaryButton, OutlineButton, TextLink, Screen, Note, CodeInput, NewPasswordFields } from '../components/night';
 import { resetPassword, confirmPasswordReset, logoutUser } from '../services/authService';
 import { codeErrorMessage, retryIn } from '../services/otpService';
 import { useAuth } from '../context/AuthContext';
 import { night } from '../theme/night';
-import { LIMITS, checkEmail, checkPassword } from '../lib/validation';
+import { LIMITS, checkEmail, checkPassword, checkPasswordMatch } from '../lib/validation';
 import { safeBack } from '../lib/nav';
 import { requireOnline } from '../lib/online';
 
@@ -28,6 +28,8 @@ export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState(params.email ?? '');
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
+  const [again, setAgain] = useState('');
+  const [againError, setAgainError] = useState('');
   const [error, setError] = useState('');
   const [codeError, setCodeError] = useState('');
   const [busy, setBusy] = useState(false);
@@ -74,10 +76,12 @@ export default function ForgotPasswordScreen() {
 
   const confirm = async () => {
     const pwProblem = checkPassword(password);
+    const matchProblem = checkPasswordMatch(password, again);
+    setAgainError(matchProblem ?? '');
     const codeProblem = code.length === 6 ? null : 'Enter the 6-digit code from the email.';
     setCodeError(codeProblem ?? '');
     setError(pwProblem ?? '');
-    if (pwProblem || codeProblem) return;
+    if (pwProblem || codeProblem || matchProblem) return;
     setBusy(true);
     try {
       await requireOnline();
@@ -158,19 +162,14 @@ export default function ForgotPasswordScreen() {
             <CodeInput value={code} onChange={(v) => { setCode(v); if (codeError) setCodeError(''); }} error={!!codeError} />
             {!!codeError && <T size={13} weight="600" color={night.danger}>{codeError}</T>}
           </View>
-          <Field
+          <NewPasswordFields
             label="NEW PASSWORD"
-            value={password}
-            onChangeText={(v) => {
-              setPassword(v);
-              if (error) setError('');
-            }}
-            secure
-            autoCapitalize="none"
-            maxLength={LIMITS.password}
-            placeholder="8+ characters, a letter and a number"
-            onSubmitEditing={confirm}
-            error={error}
+            password={password}
+            onPassword={(v) => { setPassword(v); if (error) setError(''); }}
+            confirm={again}
+            onConfirm={(v) => { setAgain(v); if (againError) setAgainError(''); }}
+            errors={{ password: error, confirm: againError }}
+            onSubmit={confirm}
           />
           <PrimaryButton label="Set new password" onPress={confirm} loading={busy} />
           <OutlineButton label={wait ? `Send a new code in ${wait}s` : 'Send a new code'} icon="refresh" disabled={!!wait || busy} onPress={send} />

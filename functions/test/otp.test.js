@@ -52,10 +52,13 @@ test('one email a minute, five an hour', () => {
 });
 
 test('new password rules match sign-up', () => {
-  assert.equal(otp.passwordProblem('short1'), 'Use at least 8 characters.');
-  assert.equal(otp.passwordProblem('onlyletters'), 'Use at least one letter and one number.');
-  assert.equal(otp.passwordProblem('12345678'), 'Use at least one letter and one number.');
-  assert.equal(otp.passwordProblem('goodpass1'), null);
+  assert.equal(otp.passwordProblem('Ab1!'), 'Use at least 8 characters.');
+  assert.equal(otp.passwordProblem('braamfun9!'), 'Add an uppercase letter (A–Z).');
+  assert.equal(otp.passwordProblem('BRAAMFUN9!'), 'Add a lowercase letter (a–z).');
+  assert.equal(otp.passwordProblem('Braamfun!!'), 'Add a number (0–9).');
+  assert.equal(otp.passwordProblem('Braamfun99'), 'Add a symbol, like ! @ # ? or *.');
+  assert.equal(otp.passwordProblem('Braam fun9!'), 'Take out the spaces.');
+  assert.equal(otp.passwordProblem('Braamfun9!'), null);
 });
 
 test('emails show the code and never leak HTML', () => {

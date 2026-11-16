@@ -2,24 +2,14 @@ import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { T, H1, Amp, TopBar, Field, PrimaryButton, TextLink, Screen, Hero, SectionLabel, GoogleButton } from '../../src/components/night';
+import { T, H1, Amp, TopBar, Field, PrimaryButton, TextLink, Screen, Hero, SectionLabel, GoogleButton, NewPasswordFields } from '../../src/components/night';
 import { registerUser, authErrorMessage } from '../../src/services/authService';
 import { SUB_BRANDS } from '../../src/lib/subbrands';
 import { night } from '../../src/theme/night';
 import { safeBack } from '../../src/lib/nav';
-import { LIMITS, checkName, checkEmail, checkPassword, checkPhone, normalizePhone, collectErrors } from '../../src/lib/validation';
+import { LIMITS, checkName, checkEmail, checkPassword, checkPasswordMatch, checkPhone, normalizePhone, collectErrors } from '../../src/lib/validation';
 import { requireOnline } from '../../src/lib/online';
 import { setSigningUp } from '../../src/lib/signupFlow';
-
-// 0-4 bars: length, mixed case, digit, symbol.
-function strength(pw: string) {
-  if (!pw) return 0;
-  let s = pw.length >= 8 ? 1 : 0;
-  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) s++;
-  if (/\d/.test(pw)) s++;
-  if (/[^A-Za-z0-9]/.test(pw)) s++;
-  return s;
-}
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -28,13 +18,13 @@ export default function RegisterScreen() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [interests, setInterests] = useState<string[]>([]);
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const toggle = (k: string) => setInterests((xs) => (xs.includes(k) ? xs.filter((x) => x !== k) : [...xs, k]));
-  const bars = strength(password);
 
   const handleRegister = async () => {
     const e = collectErrors({
@@ -43,6 +33,7 @@ export default function RegisterScreen() {
       email: checkEmail(email),
       phone: checkPhone(phone),
       password: checkPassword(password),
+      confirm: checkPasswordMatch(password, confirm),
       terms: agreed ? null : 'Please accept the Terms and Privacy Policy',
     });
     setErrors(e);
@@ -107,14 +98,13 @@ export default function RegisterScreen() {
         }
         hint="For ticket updates on WhatsApp, if you turn them on"
       />
-      <View style={{ gap: 8 }}>
-        <Field label="PASSWORD" value={password} onChangeText={setPassword} placeholder="8+ characters, a letter and a number" secure autoCapitalize="none" maxLength={LIMITS.password} error={errors.password} />
-        <View style={{ flexDirection: 'row', gap: 4 }} accessibilityLabel={`Password strength ${bars} of 4`}>
-          {[0, 1, 2, 3].map((i) => (
-            <View key={i} style={{ flex: 1, height: 4, borderRadius: 9, backgroundColor: i < bars ? (bars < 2 ? night.orange : bars < 4 ? night.yellow : night.success) : night.border }} />
-          ))}
-        </View>
-      </View>
+      <NewPasswordFields
+        password={password}
+        onPassword={(v) => { setPassword(v); if (errors.password) setErrors((e) => ({ ...e, password: '' })); }}
+        confirm={confirm}
+        onConfirm={(v) => { setConfirm(v); if (errors.confirm) setErrors((e) => ({ ...e, confirm: '' })); }}
+        errors={{ password: errors.password, confirm: errors.confirm }}
+      />
 
       <View style={{ gap: 10, marginTop: 4 }}>
         <SectionLabel>WHAT ARE YOU INTO?</SectionLabel>

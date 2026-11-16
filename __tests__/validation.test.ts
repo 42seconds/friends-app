@@ -1,4 +1,4 @@
-import { checkName, checkEmail, checkPassword, checkPhone, normalizePhone, checkAccountNumber, checkBranchCode, checkGuests, checkText, collectErrors } from '../src/lib/validation';
+import { checkName, checkEmail, checkPassword, checkPasswordMatch, PASSWORD_RULES, checkPhone, normalizePhone, checkAccountNumber, checkBranchCode, checkGuests, checkText, collectErrors } from '../src/lib/validation';
 
 describe('names', () => {
   it('accepts real names, including accents, hyphens and apostrophes', () => {
@@ -30,11 +30,23 @@ describe('email', () => {
 });
 
 describe('password', () => {
-  it('needs 8+ characters with a letter and a number', () => {
-    expect(checkPassword('short1')).toMatch(/8 characters/);
-    expect(checkPassword('allletters')).toMatch(/letter and one number/);
-    expect(checkPassword('12345678')).toMatch(/letter and one number/);
-    expect(checkPassword('braamfontein1')).toBeNull();
+  it('passwords follow every written rule', () => {
+    expect(checkPassword('')).toBe('Choose a password');
+    expect(checkPassword('Ab1!')).toMatch(/8 characters/);
+    expect(checkPassword('braamfun9!')).toMatch(/uppercase/);
+    expect(checkPassword('BRAAMFUN9!')).toMatch(/lowercase/);
+    expect(checkPassword('Braamfun!!')).toMatch(/number/);
+    expect(checkPassword('Braamfun99')).toMatch(/symbol/);
+    expect(checkPassword('Braam fun9!')).toMatch(/spaces/);
+    expect(checkPassword('Braamfun9!')).toBeNull();
+  });
+  it('the rules list matches the check', () => {
+    for (const r of PASSWORD_RULES) expect(r.test('Braamfun9!')).toBe(true);
+  });
+  it('confirm password must match exactly', () => {
+    expect(checkPasswordMatch('Braamfun9!', '')).toMatch(/again/);
+    expect(checkPasswordMatch('Braamfun9!', 'braamfun9!')).toMatch(/don't match/);
+    expect(checkPasswordMatch('Braamfun9!', 'Braamfun9!')).toBeNull();
   });
 });
 
