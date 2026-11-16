@@ -14,7 +14,7 @@ const MAX = 2;
 
 // Sheet: how many you need + WhatsApp alerts, then join.
 export default function JoinWaitlistSheet() {
-  const { eventId } = useLocalSearchParams<{ eventId: string }>();
+  const { eventId, tier } = useLocalSearchParams<{ eventId: string; tier?: string }>();
   const router = useRouter();
   const { event } = useEvent(eventId);
   const { profile, user } = useProfile();
@@ -22,13 +22,15 @@ export default function JoinWaitlistSheet() {
   const [wa, setWa] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const price = event?.tickets?.length ? allIn(Math.min(...event.tickets.map((t) => t.price))) : 0;
+  // Waiting for one sold-out ticket type, or (no tier) the event in general.
+  const wanted = event?.tickets?.find((t) => t.tier === tier);
+  const price = wanted ? allIn(wanted.price) : event?.tickets?.length ? allIn(Math.min(...event.tickets.map((t) => t.price))) : 0;
 
   const join = async () => {
     if (!user) return;
     setSaving(true);
     try {
-      await joinWaitlist({ eventId, userId: user.uid, userName: profile?.name ?? '', quantity: qty, whatsappAlerts: wa });
+      await joinWaitlist({ eventId, userId: user.uid, userName: profile?.name ?? '', quantity: qty, whatsappAlerts: wa, ...(wanted ? { tier: wanted.tier } : {}) });
       safeBack(router);
     } catch {
       setError("Couldn't join right now. Try again.");
@@ -41,6 +43,7 @@ export default function JoinWaitlistSheet() {
     <Sheet footer={<PrimaryButton label="Join waitlist" loading={saving} onPress={join} />}>
       <T mono size={12} color={night.muted}>{`${shortDate(event?.date, event?.time)} · ${event?.location ?? ''}`.toUpperCase()}</T>
       <H2 size={40}>Join the waitlist</H2>
+      {wanted && <T size={15} weight="700">For: {wanted.tier}</T>}
       <T size={14} lh={1.5} color={night.body}>If someone can't make it, their ticket goes to the next person in line. Always at face value.</T>
       <View style={{ flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 18, backgroundColor: night.card, borderWidth: 1.5, borderColor: night.line }}>
         <View style={{ flex: 1 }}>

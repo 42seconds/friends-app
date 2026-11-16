@@ -7,7 +7,7 @@ import StatusBadge from '../../src/components/statusBadge';
 import { useTicket } from '../../src/hooks/useTicket';
 import { useTicketRip } from '../../src/hooks/useTicketRip';
 import { effectiveStatus } from '../../src/services/ticketService';
-import { bookingHref } from '../../src/lib/booking';
+import { bookingHref, bookingLabel } from '../../src/lib/booking';
 import { shortDate, stamp } from '../../src/lib/dates';
 import { subBrandFor } from '../../src/lib/subbrands';
 import { night } from '../../src/theme/night';
@@ -64,7 +64,7 @@ export default function TicketDetailScreen() {
         <View style={{ backgroundColor: brand.color, padding: 18, gap: 16, overflow: 'hidden' }}>
           <Amp size={240} color={brand.deep} style={{ right: -20, top: -30 }} />
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-            <T mono weight="700" size={11}>{`${ticket.quantity} × ${ticket.tier}`.toUpperCase()}</T>
+            <T mono weight="700" size={11}>{bookingLabel(ticket).toUpperCase()}</T>
             <StatusBadge status={status} />
           </View>
           <T display size={52} lh={0.86}>{ticket.eventTitle}</T>

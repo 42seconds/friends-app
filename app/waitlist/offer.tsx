@@ -29,7 +29,8 @@ export default function WaitlistOfferScreen() {
   const left = Math.max(0, ends - now);
   const mm = String(Math.floor(left / 60000)).padStart(2, '0');
   const ss = String(Math.floor((left % 60000) / 1000)).padStart(2, '0');
-  const tier = event?.tickets?.[0];
+  // The ticket type they waited for, else the first one.
+  const tier = event?.tickets?.find((t) => t.tier === entry?.tier) ?? event?.tickets?.[0];
   const qty = entry?.quantity ?? 1;
 
   return (

@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { T, H1, Screen, TopBar, SectionLabel, KV, Pill, ListGroup, ListRow, OutlineButton, TextLink, EmptyState, PrimaryButton } from '../src/components/night';
 import { useBookings } from '../src/hooks/useBookings';
 import { effectiveStatus } from '../src/services/ticketService';
-import { bookingHref } from '../src/lib/booking';
+import { bookingHref, bookingLabel } from '../src/lib/booking';
 import { breakdown, rand } from '../src/lib/pricing';
 import { shortDate, stamp } from '../src/lib/dates';
 import { support } from '../src/config/payment';
@@ -28,7 +28,7 @@ function lines(t: PurchasedTicket) {
 
 function receiptText(t: PurchasedTicket) {
   const b = lines(t);
-  return [`&FRIENDS receipt · ${t.id}`, `${t.eventTitle} · ${shortDate(t.eventDate, t.eventTime)}`, `${t.quantity} × ${t.tier}: ${rand(b.subtotal)}`, b.discount ? `Discount: −${rand(b.discount)}` : '', `Service fee: ${rand(b.serviceFee)}`, `VAT: ${rand(b.vat)}`, `Total: ${rand(t.totalPrice)}`, `Paid by EFT · ref ${t.id}`, t.validatedAt ? `Approved ${stamp(t.validatedAt)}` : ''].filter(Boolean).join('\n');
+  return [`&FRIENDS receipt · ${t.id}`, `${t.eventTitle} · ${shortDate(t.eventDate, t.eventTime)}`, `${bookingLabel(t)}: ${rand(b.subtotal)}`, b.discount ? `Discount: −${rand(b.discount)}` : '', `Service fee: ${rand(b.serviceFee)}`, `VAT: ${rand(b.vat)}`, `Total: ${rand(t.totalPrice)}`, `Paid by EFT · ref ${t.id}`, t.validatedAt ? `Approved ${stamp(t.validatedAt)}` : ''].filter(Boolean).join('\n');
 }
 
 export default function PurchasesScreen() {
@@ -62,7 +62,7 @@ export default function PurchasesScreen() {
                   const b = lines(latest);
                   return (
                     <>
-                      <KV k={`${latest.quantity} × ${latest.tier}`} v={rand(b.subtotal)} />
+                      <KV k={bookingLabel(latest)} v={rand(b.subtotal)} />
                       {b.discount > 0 && <KV k={`Code ${latest.promoCode ?? ''}`} v={`−${rand(b.discount)}`} />}
                       <KV k="Service fee" v={rand(b.serviceFee)} />
                       <KV k="VAT (15%)" v={rand(b.vat)} />

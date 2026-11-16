@@ -12,6 +12,7 @@ import { rand } from '../../../src/lib/pricing';
 import { night } from '../../../src/theme/night';
 import { PurchasedTicket } from '../../../src/types';
 import { REJECT_REASONS } from '../../../src/lib/staff';
+import { bookingLabel } from '../../../src/lib/booking';
 
 
 function CheckRow({ on, onToggle, label, value }: { on: boolean; onToggle: () => void; label: string; value: string }) {
@@ -82,7 +83,7 @@ export default function ProofReviewScreen() {
         hero={
           <Hero bg={night.ink} gap={12}>
             <H1 size={40} color={night.paper}>{t.userName ?? 'Guest'}</H1>
-            <T size={14} color={night.inkMuted}>{t.eventTitle} · {t.quantity} × {t.tier} · uploaded {ago(t.proofUploadedAt ?? t.createdAt)} ago</T>
+            <T size={14} color={night.inkMuted}>{t.eventTitle} · {bookingLabel(t)} · uploaded {ago(t.proofUploadedAt ?? t.createdAt)} ago</T>
           </Hero>
         }
       >

@@ -63,7 +63,7 @@ export default function WaitlistScreen() {
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <View style={{ gap: 2 }}>
               <T size={15} weight="600" color={night.paper}>You're on the waitlist</T>
-              <T size={13} color={night.inkMuted}>{entry.quantity} × ticket · {rand(price)} all-in each</T>
+              <T size={13} color={night.inkMuted}>{entry.quantity} × {entry.tier ?? 'ticket'} · {rand(price)} all-in each</T>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
               <T display size={56} color={brand.color}>#{position}</T>

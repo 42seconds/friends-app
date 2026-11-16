@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { T, H1, Amp, IconButton, PrimaryButton, OutlineButton, QR } from '../../src/components/night';
 import { useTicket } from '../../src/hooks/useTicket';
-import { addToCalendar } from '../../src/lib/booking';
+import { addToCalendar, bookingLabel } from '../../src/lib/booking';
 import { shortDate } from '../../src/lib/dates';
 import { night } from '../../src/theme/night';
 
@@ -48,7 +48,7 @@ export default function ConfirmedScreen() {
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <T display size={26} lh={1} color={night.paper}>{ticket.eventTitle}</T>
-          <T size={13} color={night.inkMuted}>{shortDate(ticket.eventDate, ticket.eventTime)} · {ticket.quantity} × {ticket.tier}</T>
+          <T size={13} color={night.inkMuted}>{shortDate(ticket.eventDate, ticket.eventTime)} · {bookingLabel(ticket)}</T>
         </View>
         <Ionicons name="arrow-forward" size={20} color={night.orange} />
       </Pressable>

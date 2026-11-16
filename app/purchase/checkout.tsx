@@ -10,7 +10,7 @@ import { useProfile } from '../../src/hooks/useProfile';
 import { createTicket } from '../../src/services/ticketService';
 import { promoStore, NO_PROMO } from '../../src/store';
 import { recordCodeUse } from '../../src/services/communityService';
-import { findTier, quote } from '../../src/lib/booking';
+import { cartFromParams, cartLines, linesSummary, quoteLines } from '../../src/lib/booking';
 import { rand } from '../../src/lib/pricing';
 import { shortDate } from '../../src/lib/dates';
 import { HOLD_HOURS, SERVICE_FEE_RATE, VAT_RATE } from '../../src/config/pricing';
@@ -20,7 +20,7 @@ import { requireOnline, withTimeout, isOfflineError } from '../../src/lib/online
 // Step 2 of 4: Review booking. Tapping Reserve creates the booking and
 // starts the EFT hold.
 export default function ReviewBookingScreen() {
-  const params = useLocalSearchParams<{ eventId: string; tier: string; qty: string }>();
+  const params = useLocalSearchParams<{ eventId: string; items?: string; tier?: string; qty?: string }>();
   const router = useRouter();
   const { user, emailVerified } = useAuth();
   const { profile } = useProfile();
@@ -35,16 +35,18 @@ export default function ReviewBookingScreen() {
     if (promo.eventId && promo.eventId !== params.eventId) promoStore.set(NO_PROMO);
   }, [params.eventId]);
 
-  const qty = Math.max(1, Number(params.qty ?? 1));
-  const tier = findTier(event, params.tier);
+  // Every ticket type in this booking that's still on sale.
+  const lines = cartLines(event, cartFromParams(params));
+  const qty = lines.reduce((n, l) => n + l.qty, 0);
+  const summary = linesSummary(lines);
   const percentOff = promo.eventId === params.eventId ? promo.percentOff : 0;
   // A comp (guest-list) code makes the tickets free: no EFT, QR straight away.
   const comp = promo.eventId === params.eventId && promo.comp;
-  const q = quote(tier, qty, percentOff);
+  const q = quoteLines(lines, percentOff);
   const name = profile?.name ?? user?.email ?? 'You';
 
   const reserve = async () => {
-    if (!user || !event || !tier) return;
+    if (!user || !event || !lines.length) return;
     if (!emailVerified) {
       router.push('/verify-email?reason=book');
       return;
@@ -64,9 +66,11 @@ export default function ReviewBookingScreen() {
         eventLocation: event.location,
         eventImage: event.image ?? '',
         tag: event.tag,
-        tier: tier.tier,
-        price: tier.price,
+        // One type: its name, as before. Several: "1 × General, 2 × VIP".
+        tier: lines.length === 1 ? lines[0].tier.tier : summary,
+        ...(lines.length === 1 ? { price: lines[0].tier.price } : {}),
         quantity: qty,
+        items: lines.map((l) => ({ tier: l.tier.tier, qty: l.qty, price: l.tier.price })),
         subtotal: q.subtotal,
         serviceFee: q.serviceFee,
         vat: q.vat,
@@ -87,7 +91,7 @@ export default function ReviewBookingScreen() {
   };
 
   return (
-    <Screen header={<><TopBar />{guide ? <FirstTicketTracker step={2} /> : <StepProgress step={2} />}</>} footer={<PrimaryButton label={comp ? 'Get my free tickets' : 'Reserve and pay by EFT'} onPress={reserve} loading={submitting} disabled={!tier} />}>
+    <Screen header={<><TopBar />{guide ? <FirstTicketTracker step={2} /> : <StepProgress step={2} />}</>} footer={<PrimaryButton label={comp ? 'Get my free tickets' : 'Reserve and pay by EFT'} onPress={reserve} loading={submitting} disabled={!lines.length} />}>
       <H1 size={56}>Review{'\n'}booking</H1>
 
       {event && (
@@ -108,7 +112,7 @@ export default function ReviewBookingScreen() {
             <Avatar name={name} size={38} ring={night.card} />
             <View>
               <T size={15} weight="600">You · {name}</T>
-              <T size={13} color={night.muted}>Ticket 1 · {params.tier}</T>
+              <T size={13} color={night.muted}>Ticket 1 · {lines[0]?.tier.tier ?? ''}</T>
             </View>
           </View>
           {qty > 1 && (
@@ -117,7 +121,7 @@ export default function ReviewBookingScreen() {
                 <T size={18} color={night.muted}>+{qty - 1}</T>
               </View>
               <View style={{ flex: 1 }}>
-                <T size={15} weight="600">{qty === 2 ? `Ticket 2 · ${params.tier}` : `Tickets 2–${qty} · ${params.tier}`}</T>
+                <T size={15} weight="600">{qty === 2 ? 'Ticket 2' : `Tickets 2–${qty}`} · {summary}</T>
                 <T size={13} color={night.muted}>Bring friends in on your QR, or send them a ticket once it's confirmed</T>
               </View>
             </View>
@@ -126,7 +130,9 @@ export default function ReviewBookingScreen() {
       </View>
 
       <Card>
-        <KV k={`${qty} × ${params.tier} (face value)`} v={rand(q.subtotal)} />
+        {lines.map((l) => (
+          <KV key={l.tier.tier} k={`${l.qty} × ${l.tier.tier} (face value)`} v={rand(l.tier.price * l.qty)} />
+        ))}
         {q.discount > 0 && <KV k={`Code ${promo.code}`} v={`−${rand(q.discount)}`} />}
         <KV k={`Service fee (${Math.round(SERVICE_FEE_RATE * 100)}%)`} v={rand(q.serviceFee)} />
         <KV k={`VAT (${Math.round(VAT_RATE * 100)}%)`} v={rand(q.vat)} />

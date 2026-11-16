@@ -17,3 +17,4 @@ export { CoachMark, FirstTicketTracker, FirstTicketIntro, HideGuideLink } from '
 export { default as InstallHint } from './InstallHint';
 export { default as CodeInput } from './CodeInput';
 export { PasswordRules, NewPasswordFields } from './NewPassword';
+export { default as TierRow } from './TierRow';

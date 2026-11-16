@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { T, H1, Amp, Screen, TopBar, Note, Card, PrimaryButton, OutlineButton } from '../../src/components/night';
 import { useTicket } from '../../src/hooks/useTicket';
 import { useEvent } from '../../src/hooks/useEvents';
-import { selectionParams } from '../../src/lib/booking';
+import { selectionParams, bookingLabel } from '../../src/lib/booking';
 import { subBrandFor } from '../../src/lib/subbrands';
 import { HOLD_HOURS } from '../../src/config/pricing';
 import { night } from '../../src/theme/night';
@@ -39,7 +39,7 @@ export default function HoldExpiredScreen() {
       </View>
       <H1 size={56}>Your hold{'\n'}ran out</H1>
       <T size={15} lh={1.5} color={night.body}>
-        We held {ticket.quantity} {ticket.tier} ticket{ticket.quantity > 1 ? 's' : ''} for {HOLD_HOURS} hours, but didn't get a proof of payment, so they went back on sale.
+        We held your tickets ({bookingLabel(ticket)}) for {HOLD_HOURS} hours, but didn't get a proof of payment, so they went back on sale.
       </T>
       <Note icon="information-circle-outline">
         <T size={14} lh={1.5} color={night.paper}>

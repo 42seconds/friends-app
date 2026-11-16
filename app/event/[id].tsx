@@ -2,14 +2,15 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, Image, Pressable, Share, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { T, H1, H2, Amp, Screen, IconButton, Stepper, Note, Card, Pill, PrimaryButton, EmptyState, TextLink, CoachMark, FirstTicketTracker } from '../../src/components/night';
+import { T, H1, H2, Amp, Screen, IconButton, Stepper, Note, Card, Pill, PrimaryButton, EmptyState, TextLink, CoachMark, FirstTicketTracker, TierRow } from '../../src/components/night';
 import { useFirstTicketGuide } from '../../src/hooks/useFirstTicketGuide';
 import { useEvent } from '../../src/hooks/useEvents';
 import { useAuth } from '../../src/context/AuthContext';
 import { savedStore, toggleSaved } from '../../src/store';
 import { subBrandFor } from '../../src/lib/subbrands';
 import { allIn, rand } from '../../src/lib/pricing';
-import { addToCalendar, quote, selectionParams } from '../../src/lib/booking';
+import { addToCalendar, Cart, cartCount, cartLines, cartParams, linesSummary, cartShort, maxFor, quoteLines, setCartQty } from '../../src/lib/booking';
+import { allSoldOut, tierState } from '../../src/lib/tiers';
 import { isPast, shortDate } from '../../src/lib/dates';
 import { HOLD_HOURS, MAX_TICKETS_PER_PERSON } from '../../src/config/pricing';
 import { night } from '../../src/theme/night';
@@ -22,8 +23,9 @@ export default function EventDetailScreen() {
   const { user, emailVerified } = useAuth();
   const { event, loading } = useEvent(id);
   const saved = savedStore.useStore().ids.includes(id ?? '');
-  // One tier per booking: picking a quantity on one tier clears the others.
-  const [sel, setSel] = useState<{ tier: string; qty: number } | null>(null);
+  // Several ticket types can go in one booking (e.g. 2 General + 1 VIP),
+  // up to the per-person limit in total.
+  const [cart, setCart] = useState<Cart>({});
   const guide = useFirstTicketGuide();
   const online = useOnline();
 
@@ -39,15 +41,18 @@ export default function EventDetailScreen() {
   }
 
   const brand = subBrandFor(event.tag);
-  const available = event.tickets?.filter((t) => t.available) ?? [];
-  const tier = event.tickets?.find((t) => t.tier === sel?.tier);
-  const q = quote(tier, sel?.qty ?? 0);
+  const available = event.tickets?.filter((t) => tierState(t) === 'on_sale') ?? [];
+  const lines = cartLines(event, cart);
+  const count = cartCount(cart);
+  const q = quoteLines(lines);
+  // Sold out on the website, or every ticket type is gone.
+  const soldOut = !!event.soldOut || allSoldOut(event.tickets);
   const lineupCount = event.lineup?.length ?? 0;
   // Already happened: show it, but no tickets or booking.
   const over = isPast(event.date, event.time);
 
   const reserve = () => {
-    if (!sel?.qty) return;
+    if (!count) return;
     if (!online) {
       Alert.alert("You're offline", 'You can keep browsing, but reserving tickets needs an internet connection.');
       return;
@@ -60,21 +65,21 @@ export default function EventDetailScreen() {
       router.push('/verify-email?reason=book');
       return;
     }
-    router.push(`/purchase/tickets?${selectionParams(event.id, sel)}`);
+    router.push(`/purchase/tickets?${cartParams(event.id, cart)}`);
   };
 
   const footer = over ? (
     <PrimaryButton label={event.gallery?.length ? 'See the photos' : 'See what\'s on next'} onPress={() => (event.gallery?.length ? router.push(`/gallery/${event.id}`) : router.replace('/(tabs)/home'))} />
-  ) : event.soldOut ? (
+  ) : soldOut ? (
     <PrimaryButton label="Sold out · join the waitlist" onPress={() => router.push(`/waitlist/${event.id}`)} />
   ) : available.length === 0 ? null : (
-    <CoachMark id="event-reserve" after="event-stepper" show={!!sel?.qty} placement="above" tailAlign="right" number={2} text="Then tap Reserve. Reserving is free.">
+    <CoachMark id="event-reserve" after="event-stepper" show={!!count} placement="above" tailAlign="right" number={2} text="Then tap Reserve. Reserving is free.">
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-        <View style={{ minWidth: 96 }}>
-          <T size={13} color={night.muted}>{sel?.qty ? `${sel.qty} × ${sel.tier}` : 'Pick tickets'}</T>
-          <T display size={28}>{sel?.qty ? rand(q.total) : '—'}</T>
+        <View style={{ minWidth: 96, maxWidth: 150 }}>
+          <T size={13} color={night.muted} numberOfLines={2}>{count ? cartShort(lines) : 'Pick tickets'}</T>
+          <T display size={28}>{count ? rand(q.total) : '—'}</T>
         </View>
-        <PrimaryButton label="Reserve tickets" disabled={!sel?.qty} onPress={reserve} style={{ flex: 1 }} />
+        <PrimaryButton label="Reserve tickets" disabled={!count} onPress={reserve} style={{ flex: 1 }} />
       </View>
     </CoachMark>
   );
@@ -106,7 +111,7 @@ export default function EventDetailScreen() {
         </View>
       }
     >
-      {guide && !over && !event.soldOut && <FirstTicketTracker step={2} />}
+      {guide && !over && !soldOut && <FirstTicketTracker step={2} />}
       {over && (
         <Note icon="time-outline" tone="cream">
           <T size={13} lh={1.5}>This event has already happened, so tickets are closed.</T>
@@ -140,29 +145,27 @@ export default function EventDetailScreen() {
         </Pressable>
       )}
 
-      {!over && !event.soldOut && !!event.tickets?.length && (
+      {!over && !soldOut && !!event.tickets?.length && (
         <View style={{ gap: 10 }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <H2>Tickets</H2>
             <T size={12} color={night.muted}>Prices include fees + VAT</T>
           </View>
           {event.tickets.map((t, i) => {
-            const qty = sel?.tier === t.tier ? sel.qty : 0;
-            const soldOut = !t.available;
-            const first = event.tickets!.findIndex((x) => x.available) === i;
+            const first = event.tickets!.findIndex((x) => tierState(x) === 'on_sale') === i;
             return (
-              <CoachMark key={t.tier} id="event-stepper" show={first} number={1} tailAlign="right" text="Choose how many with + and −. The price already includes fees and VAT.">
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: night.card, borderWidth: qty ? 2 : 1.5, borderColor: qty ? night.ink : night.line, opacity: soldOut ? 0.55 : 1 }}>
-                <View style={{ flex: 1, gap: 2 }}>
-                  <T size={16} weight="600" style={soldOut ? { textDecorationLine: 'line-through' } : undefined}>{t.tier}</T>
-                  {!!t.description && <T size={13} color={night.muted}>{t.description}</T>}
-                  <T mono weight="700" size={14} style={{ marginTop: 4 }}>{t.price === 0 ? 'Free' : rand(allIn(t.price))}</T>
-                </View>
-                {soldOut ? <Pill label="Sold out" /> : <Stepper value={qty} max={MAX_TICKETS_PER_PERSON} onChange={(n) => setSel(n ? { tier: t.tier, qty: n } : null)} />}
-              </View>
+              <CoachMark key={t.tier} id="event-stepper" show={first} number={1} tailAlign="right" text="Choose how many with + and −. You can mix ticket types. The price already includes fees and VAT.">
+                <TierRow
+                  tier={t}
+                  qty={cart[t.tier] ?? 0}
+                  max={maxFor(cart, t.tier, MAX_TICKETS_PER_PERSON, t.remaining)}
+                  onChange={(n) => setCart((c) => setCartQty(c, t.tier, n))}
+                  onWaitlist={() => router.push(`/waitlist/join?eventId=${event.id}&tier=${encodeURIComponent(t.tier)}`)}
+                />
               </CoachMark>
             );
           })}
+          <T size={12} color={night.muted}>Mix ticket types if you like · max {MAX_TICKETS_PER_PERSON} per person</T>
         </View>
       )}
 

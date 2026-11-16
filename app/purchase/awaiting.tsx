@@ -8,7 +8,7 @@ import { prefsStore } from '../../src/store';
 import { enablePushNotifications } from '../../src/lib/notifications';
 import { clock } from '../../src/lib/dates';
 import { rand } from '../../src/lib/pricing';
-import { whatsappLink } from '../../src/lib/booking';
+import { whatsappLink, bookingLabel } from '../../src/lib/booking';
 import { support } from '../../src/config/payment';
 import { night } from '../../src/theme/night';
 
@@ -78,7 +78,7 @@ export default function PaymentStatusScreen() {
         </View>
         <View style={{ flex: 1, gap: 2 }}>
           <T display size={24}>{ticket.eventTitle}</T>
-          <T size={13}>{ticket.quantity} × {ticket.tier} · {rand(ticket.totalPrice)}</T>
+          <T size={13}>{bookingLabel(ticket)} · {rand(ticket.totalPrice)}</T>
           <T size={13} weight="600">Your QR unlocks here</T>
         </View>
       </View>

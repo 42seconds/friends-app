@@ -12,6 +12,7 @@ export interface WaitlistEntry {
   userId: string;
   userName: string;
   quantity: number;
+  tier?: string; // the sold-out ticket type they're waiting for (none = any)
   whatsappAlerts: boolean;
   joinedAt: string;
   // Set by staff/backend when a released ticket is offered to this person.

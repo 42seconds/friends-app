@@ -10,6 +10,7 @@ import { bankDetails } from '../../src/config/payment';
 import { countdown } from '../../src/lib/dates';
 import { rand } from '../../src/lib/pricing';
 import { night } from '../../src/theme/night';
+import { bookingLabel } from '../../src/lib/booking';
 
 // Step 3 of 4: tap-to-copy bank details, hold timer, then upload proof.
 export default function PayScreen() {
@@ -51,7 +52,7 @@ export default function PayScreen() {
           <T display size={38} color={night.lime} accessibilityLabel={`Hold ends in ${countdown(holdEndsAt(ticket), now)}`}>{countdown(holdEndsAt(ticket), now)}</T>
         </View>
         <View style={{ alignItems: 'flex-end', flexShrink: 1 }}>
-          <T size={14} weight="600" color={night.paper}>{ticket.quantity} × {ticket.tier}</T>
+          <T size={14} weight="600" color={night.paper}>{bookingLabel(ticket)}</T>
           <T size={13} color={night.inkMuted} numberOfLines={1}>{ticket.eventTitle}</T>
         </View>
       </View>

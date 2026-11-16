@@ -9,6 +9,7 @@ import { subBrandFor } from '../../src/lib/subbrands';
 import { night } from '../../src/theme/night';
 import { PurchasedTicket, TicketStatus } from '../../src/types';
 import { safeBack } from '../../src/lib/nav';
+import { bookingLabel } from '../../src/lib/booking';
 
 const TABS: { key: TicketStatus; label: string }[] = [
   { key: 'pending_verification', label: 'To review' },
@@ -61,7 +62,7 @@ export default function ApprovalsScreen() {
                 <T size={15} weight="600" numberOfLines={1} style={{ flexShrink: 1 }}>{t.userName ?? 'Guest'}</T>
                 {i === 0 && list.length > 1 && <Pill label="Oldest" bg={night.pink} color={night.pinkText} />}
               </View>
-              <T size={13} color={night.muted} numberOfLines={1}>{t.eventTitle} · {t.quantity > 1 ? `${t.quantity} × ` : ''}{t.tier}</T>
+              <T size={13} color={night.muted} numberOfLines={1}>{t.eventTitle} · {bookingLabel(t)}</T>
             </View>
             <View style={{ alignItems: 'flex-end', gap: 3 }}>
               <T mono weight="700" size={14}>{rand(t.totalPrice)}</T>

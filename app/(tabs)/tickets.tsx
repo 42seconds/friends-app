@@ -7,7 +7,7 @@ import StatusBadge from '../../src/components/statusBadge';
 import { useBookings } from '../../src/hooks/useBookings';
 import { useAuth } from '../../src/context/AuthContext';
 import { effectiveStatus } from '../../src/services/ticketService';
-import { bookingHref } from '../../src/lib/booking';
+import { bookingHref, bookingLabel } from '../../src/lib/booking';
 import { isPast, relativeDay, shortDate } from '../../src/lib/dates';
 import { subBrandFor } from '../../src/lib/subbrands';
 import { night } from '../../src/theme/night';
@@ -151,7 +151,7 @@ export default function TicketsScreen() {
             <EventRow
               key={t.id}
               title={t.eventTitle ?? 'Booking'}
-              subtitle={`${t.quantity} × ${t.tier} · ${shortDate(t.eventDate, t.eventTime)}`}
+              subtitle={`${bookingLabel(t)} · ${shortDate(t.eventDate, t.eventTime)}`}
               image={t.eventImage}
               tag={t.tag}
               date={t.eventDate}

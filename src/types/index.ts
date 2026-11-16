@@ -3,6 +3,17 @@ export interface TicketTier {
   price: number; // face value, excl. fees + VAT
   available: boolean;
   description?: string;
+  // Optional, set on the website when a ticket type has them:
+  earlyBird?: boolean; // also detected from names like "Early Bird"
+  salesEnd?: string; // last day/time it can be bought, e.g. "2026-11-20" or "Fri, 20 November 2026 18:00"
+  remaining?: number; // tickets left of this type ("Only 8 left"); 0 = sold out
+}
+
+// One line of a booking: a ticket type and how many.
+export interface BookingItem {
+  tier: string;
+  qty: number;
+  price?: number; // face value each
 }
 
 // Lineup entries can be plain names or timed slots.
@@ -55,9 +66,10 @@ export interface PurchasedTicket {
   eventLocation?: string;
   eventImage?: string;
   tag?: string;
-  tier: string;
+  tier: string; // e.g. "General Admission", or "1 × General, 2 × VIP" for several types
   price?: number;
-  quantity: number;
+  quantity: number; // all tickets in the booking
+  items?: BookingItem[]; // each ticket type and how many (newer bookings)
   subtotal?: number;
   serviceFee?: number;
   vat?: number;

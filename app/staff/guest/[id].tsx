@@ -8,6 +8,7 @@ import { staffStore } from '../../../src/store';
 import { checkInTicket, saveStaffNote, undoCheckIn } from '../../../src/services/ticketService';
 import { clock, shortDate, stamp } from '../../../src/lib/dates';
 import { night } from '../../../src/theme/night';
+import { bookingLabel } from '../../../src/lib/booking';
 
 export default function GuestDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -35,7 +36,7 @@ export default function GuestDetailScreen() {
           {t.checkedIn ? <Pill label="CHECKED IN" bg={night.lime} mono /> : t.status === 'confirmed' ? <Pill label="NOT IN YET" bg={night.ink2} color={night.paper} mono /> : <Pill label="NOT PAID" bg={night.amber} mono />}
         </View>
         <View style={{ padding: 16, borderRadius: 20, backgroundColor: night.ink3, gap: 10 }}>
-          <KV dark k="Ticket" v={`${t.quantity > 1 ? `${t.quantity} × ` : ''}${t.tier} · ${t.id}`} />
+          <KV dark k="Ticket" v={`${bookingLabel(t)} · ${t.id}`} />
           <KV dark k="Event" v={`${t.eventTitle ?? ''} · ${shortDate(t.eventDate, t.eventTime)}`} mono={false} />
           {t.checkedIn && <KV dark k="Checked in" v={[clock(t.checkedInAt), t.checkedInDoor, t.checkedInBy].filter(Boolean).join(' · ')} />}
           <KV dark k="Bought by" v={t.userName ?? ''} mono={false} />

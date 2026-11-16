@@ -10,7 +10,7 @@ import {
   where,
   deleteField,
 } from 'firebase/firestore';
-import { PurchasedTicket, TicketStatus } from '../types';
+import { PurchasedTicket, TicketStatus, BookingItem } from '../types';
 import { HOLD_HOURS } from '../config/pricing';
 import { byDate } from '../lib/firestoreData';
 import { toTicket, holdEndsAt, effectiveStatus } from '../lib/tickets';
@@ -41,8 +41,9 @@ interface CreateTicketInput {
   eventImage: string;
   tag: string;
   tier: string;
-  price: number;
+  price?: number; // face value each, when the booking is one ticket type
   quantity: number;
+  items: BookingItem[]; // each ticket type and how many
   subtotal: number;
   serviceFee: number;
   vat: number;

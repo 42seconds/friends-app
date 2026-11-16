@@ -8,6 +8,7 @@ import { useProfile } from '../../src/hooks/useProfile';
 import { checkInTicket } from '../../src/services/ticketService';
 import { clock } from '../../src/lib/dates';
 import { fonts, night } from '../../src/theme/night';
+import { bookingLabel } from '../../src/lib/booking';
 
 type Filter = 'all' | 'in' | 'out';
 
@@ -57,7 +58,7 @@ export default function GuestListScreen() {
               <Avatar name={t.userName} size={40} ring={night.ink3} />
               <View style={{ flex: 1 }}>
                 <T size={15} weight="600" color={night.paper}>{t.userName ?? 'Guest'}</T>
-                <T size={12} mono color={night.inkMuted}>{t.quantity > 1 ? `${t.quantity} × ` : ''}{t.tier} · {t.id}</T>
+                <T size={12} mono color={night.inkMuted}>{bookingLabel(t)} · {t.id}</T>
               </View>
               {t.checkedIn ? (
                 <T size={13} weight="600" color={night.lime}>In · {clock(t.checkedInAt)}</T>
