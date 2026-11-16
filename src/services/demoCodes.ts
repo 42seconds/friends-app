@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { doc, updateDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebaseConfig';
 import { EMAILJS } from '../config/emailCodes';
-import { ADMIN_TRUST_MS, CodeRecord, checkCode, checkMessage, newCode, newRecord, RESEND_MS, sendBlocked } from '../lib/codeRules';
+import { ADMIN_TRUST_MS, CODE_TTL_MS, CodeRecord, checkCode, checkMessage, newCode, newRecord, RESEND_MS, sendBlocked } from '../lib/codeRules';
 
 // Demo mode for email codes (emailCodes: "emailjs" in app.json): no server.
 // The code is made on the phone, emailed through EmailJS's free plan, and
@@ -47,11 +47,18 @@ async function emailCode(to: string, purpose: Purpose, code: string) {
       service_id: EMAILJS.serviceId,
       template_id: EMAILJS.templateId,
       user_id: EMAILJS.publicKey,
+      // Our own names, plus the ones EmailJS's ready-made "One-Time
+      // Password" template uses (passcode, email, time), so that template
+      // works without editing.
       template_params: {
         to_email: to,
+        email: to,
         subject: SUBJECTS[purpose],
         message: LINES[purpose],
         code: `${code.slice(0, 3)} ${code.slice(3)}`,
+        passcode: code,
+        time: new Date(Date.now() + CODE_TTL_MS).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' }),
+        company_name: '&FRIENDS',
       },
     }),
   }).catch(() => null);
