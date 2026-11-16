@@ -56,7 +56,7 @@
     "test:otp": "node tests/functions/run.mjs",
     "test:rules": "npx -y firebase-tools@15 emulators:exec --only firestore --project demo-friends \"node tests/rules/firestore-rules.test.mjs\"",
     "seed": "node scripts/seed.mjs",
-    "build:web": "expo export --platform web && node scripts/build-sw.mjs dist",
+    "build:web": "expo export --platform web --clear && node scripts/build-sw.mjs dist",
     "deploy:web": "npm run build:web && npx -y firebase-tools@15 deploy --only hosting --project andfriends-c5552"
   },
   "private": true,

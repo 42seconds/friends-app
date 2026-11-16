@@ -1,6 +1,62 @@
 # Email codes: confirm email, forgot password, admin 2-step
 
-&friends emails 6-digit one-time codes (OTP) for:
+## Which version is switched on
+
+`app.json` → `expo.extra.emailCodes` picks how codes work:
+
+| Setting | Confirm email | Forgot password | Admin 2-step | Needs |
+|---|---|---|---|---|
+| `"off"` | Firebase link | Firebase link | off | nothing |
+| **`"emailjs"`** (current) | 6-digit code | Firebase link | 6-digit code | free EmailJS account |
+| `"firebase"` | 6-digit code | 6-digit code | 6-digit code | Firebase Blaze plan |
+
+`"emailjs"` is **demo mode**: the code is made, emailed (through EmailJS's
+free plan, 200 emails a month) and checked inside the app. It looks and
+works like real one-time codes, but someone technical who modifies the app
+could get around it. Forgot password stays a Firebase link, because only a
+server can change a password with a code. Until the three EmailJS values
+below are filled in, the app behaves as `"off"`.
+
+## Switch on demo codes (EmailJS, free, about 10 minutes)
+
+1. Sign up at **emailjs.com** (free).
+2. **Email Services → Add New Service → Gmail**, connect the Gmail account
+   the codes should come from. Copy the **Service ID**.
+3. **Email Templates → Create New Template**:
+   - **Subject:** `{{subject}}`
+   - **Content:**
+     ```
+     {{message}}
+
+     Your code: {{code}}
+
+     It works for 10 minutes. If you didn't ask for this, you can ignore
+     this email; your account is safe.
+
+     &FRIENDS, Braamfontein
+     ```
+   - On the right, **To Email:** `{{to_email}}`, **From Name:** `&FRIENDS`.
+   - Save, and copy the **Template ID**.
+4. **Account → General**: copy the **Public Key**.
+5. **Account → Security**: tick **"Allow EmailJS API for non-browser
+   applications"** (the Android/iPhone app needs it).
+6. Put the three values in `app.json`:
+   ```json
+   "emailCodes": "emailjs",
+   "emailjs": { "serviceId": "service_…", "templateId": "template_…", "publicKey": "…" }
+   ```
+   They are public by design (EmailJS keys are meant to be in apps), so
+   it's fine to commit them. Push to master: CI builds the new APK and
+   updates the web app.
+
+Confirmations are saved on the person's profile (`emailConfirmed`), so they
+stay confirmed on every device.
+
+## The secure version (Firebase Blaze plan)
+
+
+With `"firebase"`, the codes are made and checked on the server instead,
+and forgot password uses a code too:
 
 | When | What happens |
 |---|---|

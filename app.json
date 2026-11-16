@@ -49,7 +49,12 @@
       "eas": {
         "projectId": "3e28e595-008b-4c98-93ce-bb5fe55f9506"
       },
-      "emailCodes": "off"
+      "emailCodes": "emailjs",
+      "emailjs": {
+        "serviceId": "",
+        "templateId": "",
+        "publicKey": ""
+      }
     },
     "owner": "wamboxs-team"
   }

@@ -5,6 +5,8 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '../firebase/firebaseConfig';
 import { parseSavedUser, savedUserKey } from '../lib/savedUser';
 import { settleWithin } from '../lib/settle';
+import { EMAIL_CODES_MODE } from '../config/emailCodes';
+import { getUserProfile } from '../services/userService';
 
 // How long the splash waits for Firebase before using the saved login.
 const STARTUP_WAIT_MS = 1500;
@@ -46,6 +48,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       answered = true;
       setUser(u);
       setEmailVerified(!!u?.emailVerified);
+      // Demo email codes keep the confirmation on the profile instead.
+      if (u && !u.emailVerified && EMAIL_CODES_MODE === 'emailjs') {
+        getUserProfile(u.uid)
+          .then((p) => p?.emailConfirmed && auth.currentUser?.uid === u.uid && setEmailVerified(true))
+          .catch(() => {});
+      }
       if (u) setBrowsing(false);
       setLoading(false);
     });

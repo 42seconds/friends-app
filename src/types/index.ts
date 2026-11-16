@@ -99,4 +99,7 @@ export interface UserProfile {
   createdAt: string;
   interests?: string[];
   refundBank?: RefundBank;
+  // Confirmed with an emailed code in demo mode (src/services/demoCodes.ts).
+  emailConfirmed?: boolean;
+  emailConfirmedAt?: string;
 }

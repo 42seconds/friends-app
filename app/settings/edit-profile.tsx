@@ -65,7 +65,7 @@ export default function EditProfileScreen() {
         value={user?.email ?? ''}
         editable={false}
         right={
-          user?.emailVerified ? (
+          user?.emailVerified || profile?.emailConfirmed ? (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Ionicons name="checkmark-circle" size={16} color={night.success} />
               <T size={12} weight="700" color={night.success}>Verified</T>

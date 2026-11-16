@@ -13,7 +13,7 @@ import { deleteUserProfile } from './userService';
 import { signOutOfGoogle } from './googleAuth';
 import { sendCode, verifyCode } from './otpService';
 import { clearAdminTrust } from '../lib/adminTrust';
-import { EMAIL_CODES_ON } from '../config/emailCodes';
+import { EMAIL_CODES_MODE, EMAIL_CODES_ON } from '../config/emailCodes';
 
 interface RegisterUserInput {
   name: string;
@@ -118,6 +118,8 @@ export async function sendVerificationCode() {
 // Checks the code; the server then marks the email as confirmed.
 export async function confirmEmailCode(code: string) {
   await verifyCode('verify-email', code);
+  // Demo mode marks the profile instead of Firebase's flag (demoCodes.ts).
+  if (EMAIL_CODES_MODE === 'emailjs') return true;
   return checkEmailVerified();
 }
 

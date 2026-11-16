@@ -1,10 +1,12 @@
 import { httpsCallable, httpsCallableFromURL } from 'firebase/functions';
 import { functions } from '../firebase/firebaseConfig';
-import { EMAIL_CODES_URL } from '../config/emailCodes';
+import { EMAIL_CODES_MODE, EMAIL_CODES_URL } from '../config/emailCodes';
+import { sendDemoCode, verifyDemoCode } from './demoCodes';
 
-// One-time 6-digit codes sent by email. The codes are made, emailed and
-// checked by the Cloud Functions in functions/index.js; the app only asks
-// for one and passes on what the person typed.
+// One-time 6-digit codes sent by email. With the server ("firebase" or a
+// URL), the Cloud Functions in functions/index.js make, email and check
+// them; in demo mode ("emailjs") src/services/demoCodes.ts does it on the
+// phone. See src/config/emailCodes.ts.
 export type CodePurpose = 'verify-email' | 'admin-login' | 'reset-password';
 
 type SendResult = { sent: boolean; resendIn: number };
@@ -17,10 +19,12 @@ const sendFn = callable<{ purpose: CodePurpose; email?: string }, SendResult>('s
 const verifyFn = callable<{ purpose: CodePurpose; code: string; email?: string; newPassword?: string }, VerifyResult>('verifyCode');
 
 export async function sendCode(purpose: CodePurpose, email?: string): Promise<SendResult> {
+  if (EMAIL_CODES_MODE === 'emailjs' && purpose !== 'reset-password') return sendDemoCode(purpose);
   return (await sendFn({ purpose, email })).data;
 }
 
 export async function verifyCode(purpose: CodePurpose, code: string, extra: { email?: string; newPassword?: string } = {}): Promise<VerifyResult> {
+  if (EMAIL_CODES_MODE === 'emailjs' && purpose !== 'reset-password') return verifyDemoCode(purpose, code);
   return (await verifyFn({ purpose, code: code.replace(/\D/g, ''), ...extra })).data;
 }
 

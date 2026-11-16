@@ -6,7 +6,7 @@ import { useBookings } from '../../src/hooks/useBookings';
 import { prefsStore } from '../../src/store';
 import { night } from '../../src/theme/night';
 import { resetPasswordLink, authErrorMessage } from '../../src/services/authService';
-import { EMAIL_CODES_ON } from '../../src/config/emailCodes';
+import { RESET_BY_CODE } from '../../src/config/emailCodes';
 
 export default function PrivacyScreen() {
   const router = useRouter();
@@ -18,7 +18,7 @@ export default function PrivacyScreen() {
   // server), or Firebase's reset link.
   const changePassword = async () => {
     if (!user?.email) return;
-    if (EMAIL_CODES_ON) {
+    if (RESET_BY_CODE) {
       router.push({ pathname: '/(auth)/forgot', params: { email: user.email, send: '1' } });
       return;
     }
@@ -46,7 +46,7 @@ export default function PrivacyScreen() {
       <H1 size={52}>Privacy &amp;{'\n'}security</H1>
       <SectionLabel>SECURITY</SectionLabel>
       <ListGroup>
-        <ListRow icon="key-outline" title="Change password" subtitle={EMAIL_CODES_ON ? "We'll email you a 6-digit code" : "We'll email you a secure link"} chevron onPress={changePassword} />
+        <ListRow icon="key-outline" title="Change password" subtitle={RESET_BY_CODE ? "We'll email you a 6-digit code" : "We'll email you a secure link"} chevron onPress={changePassword} />
       </ListGroup>
       <SectionLabel>PRIVACY</SectionLabel>
       <ListGroup>
