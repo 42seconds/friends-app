@@ -1,5 +1,6 @@
-import { httpsCallable } from 'firebase/functions';
+import { httpsCallable, httpsCallableFromURL } from 'firebase/functions';
 import { functions } from '../firebase/firebaseConfig';
+import { EMAIL_CODES_URL } from '../config/emailCodes';
 
 // One-time 6-digit codes sent by email. The codes are made, emailed and
 // checked by the Cloud Functions in functions/index.js; the app only asks
@@ -9,8 +10,11 @@ export type CodePurpose = 'verify-email' | 'admin-login' | 'reset-password';
 type SendResult = { sent: boolean; resendIn: number };
 type VerifyResult = { verified: boolean; until?: number };
 
-const sendFn = httpsCallable<{ purpose: CodePurpose; email?: string }, SendResult>(functions, 'sendCode');
-const verifyFn = httpsCallable<{ purpose: CodePurpose; code: string; email?: string; newPassword?: string }, VerifyResult>(functions, 'verifyCode');
+// Firebase Cloud Functions by name, or the same functions hosted elsewhere
+// (EMAIL_CODES_URL, see src/config/emailCodes.ts).
+const callable = <I, O>(name: string) => (EMAIL_CODES_URL ? httpsCallableFromURL<I, O>(functions, `${EMAIL_CODES_URL}/${name}`) : httpsCallable<I, O>(functions, name));
+const sendFn = callable<{ purpose: CodePurpose; email?: string }, SendResult>('sendCode');
+const verifyFn = callable<{ purpose: CodePurpose; code: string; email?: string; newPassword?: string }, VerifyResult>('verifyCode');
 
 export async function sendCode(purpose: CodePurpose, email?: string): Promise<SendResult> {
   return (await sendFn({ purpose, email })).data;

@@ -22,6 +22,7 @@ import { useTicketAlerts } from '../src/hooks/useTicketAlerts';
 import { redirectTarget } from '../src/lib/redirect';
 import { useUserRole } from '../src/hooks/useUserRole';
 import { useAdminTrusted } from '../src/lib/adminTrust';
+import { EMAIL_CODES_ON } from '../src/config/emailCodes';
 import '../src/lib/netinfoSetup';
 import '../src/lib/pwa';
 
@@ -42,7 +43,7 @@ function RedirectGate() {
   // Admin 2-step: admins enter an emailed code before using the app.
   const { isAdmin, loading: roleLoading } = useUserRole();
   const adminTrusted = useAdminTrusted(user?.uid);
-  const adminCodeNeeded = !user ? false : roleLoading ? null : !isAdmin ? false : adminTrusted === null ? null : !adminTrusted;
+  const adminCodeNeeded = !EMAIL_CODES_ON || !user ? false : roleLoading ? null : !isAdmin ? false : adminTrusted === null ? null : !adminTrusted;
 
   // The route as a string (useSegments() returns a new array every render),
   // and the redirect already on its way, so the same one is never sent

@@ -1,6 +1,8 @@
 import {
   createUserWithEmailAndPassword,
   deleteUser,
+  sendEmailVerification,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
 } from 'firebase/auth';
@@ -11,6 +13,7 @@ import { deleteUserProfile } from './userService';
 import { signOutOfGoogle } from './googleAuth';
 import { sendCode, verifyCode } from './otpService';
 import { clearAdminTrust } from '../lib/adminTrust';
+import { EMAIL_CODES_ON } from '../config/emailCodes';
 
 interface RegisterUserInput {
   name: string;
@@ -43,8 +46,10 @@ export async function registerUser(input: RegisterUserInput) {
   // Step 3: write that profile to Firestore at users/{uid}.
   await setDoc(doc(db, 'users', uid), profile);
 
-  // Step 4: the "Confirm your email" screen comes next and emails a
-  // 6-digit code (see verify-email.tsx).
+  // Step 4: confirm the email. With the code server, the "Confirm your
+  // email" screen emails a 6-digit code; without it, Firebase emails a
+  // link now (not awaited, so a slow email service never blocks sign-up).
+  if (!EMAIL_CODES_ON) sendEmailVerification(userCredential.user).catch(() => {});
   return uid;
 }
 
@@ -61,6 +66,24 @@ export async function logoutUser() {
   if (uid) await clearAdminTrust(uid);
   await signOut(auth);
   await signOutOfGoogle();
+}
+
+// Forgot password without the code server: Firebase emails a reset link.
+// "No account with that email" is treated like success, so the screen
+// never reveals who is signed up.
+export async function resetPasswordLink(email: string) {
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (e: any) {
+    if (String(e?.code ?? '').includes('user-not-found')) return;
+    throw e;
+  }
+}
+
+// Sends (again) Firebase's "confirm your email" link.
+export async function resendVerification() {
+  if (!auth.currentUser) throw new Error('Not logged in');
+  await sendEmailVerification(auth.currentUser);
 }
 
 // Forgot password, step 1: email a 6-digit code. The server answers the

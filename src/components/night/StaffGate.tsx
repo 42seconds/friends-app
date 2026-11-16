@@ -6,6 +6,7 @@ import { PrimaryButton } from './Buttons';
 import { useUserRole } from '../../hooks/useUserRole';
 import { useAuth } from '../../context/AuthContext';
 import { useAdminTrusted } from '../../lib/adminTrust';
+import { EMAIL_CODES_ON } from '../../config/emailCodes';
 import { night } from '../../theme/night';
 
 // Staff mode is admin-only. Second layer behind hiding the entry point.
@@ -14,7 +15,7 @@ export default function StaffGate({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const trusted = useAdminTrusted(user?.uid);
   const router = useRouter();
-  if (loading || (isAdmin && trusted === null)) return <View style={{ flex: 1, backgroundColor: night.ink, justifyContent: 'center' }}><ActivityIndicator color={night.paper} /></View>;
+  if (loading || (EMAIL_CODES_ON && isAdmin && trusted === null)) return <View style={{ flex: 1, backgroundColor: night.ink, justifyContent: 'center' }}><ActivityIndicator color={night.paper} /></View>;
   if (!isAdmin) {
     return (
       <View style={{ flex: 1, backgroundColor: night.ink, justifyContent: 'center', padding: 24, gap: 16 }}>
@@ -24,7 +25,7 @@ export default function StaffGate({ children }: { children: ReactNode }) {
     );
   }
   // Admin 2-step not done on this device (or it ran out).
-  if (!trusted) {
+  if (EMAIL_CODES_ON && !trusted) {
     return (
       <View style={{ flex: 1, backgroundColor: night.ink, justifyContent: 'center', padding: 24, gap: 16 }}>
         <T size={16} color={night.paper} center>Staff mode needs your 2-step verification code.</T>

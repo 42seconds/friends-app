@@ -1,10 +1,12 @@
-import { Share } from 'react-native';
+import { Alert, Share } from 'react-native';
 import { useRouter } from 'expo-router';
 import { H1, Screen, TopBar, SectionLabel, ListGroup, ListRow, ToggleRow, Pill } from '../../src/components/night';
 import { useProfile } from '../../src/hooks/useProfile';
 import { useBookings } from '../../src/hooks/useBookings';
 import { prefsStore } from '../../src/store';
 import { night } from '../../src/theme/night';
+import { resetPasswordLink, authErrorMessage } from '../../src/services/authService';
+import { EMAIL_CODES_ON } from '../../src/config/emailCodes';
 
 export default function PrivacyScreen() {
   const router = useRouter();
@@ -12,10 +14,20 @@ export default function PrivacyScreen() {
   const { tickets } = useBookings();
   const prefs = prefsStore.useStore();
 
-  // Same as "Forgot password?": a 6-digit code by email, then the new one.
-  const changePassword = () => {
+  // Same as "Forgot password?": a 6-digit code by email (with the code
+  // server), or Firebase's reset link.
+  const changePassword = async () => {
     if (!user?.email) return;
-    router.push({ pathname: '/(auth)/forgot', params: { email: user.email, send: '1' } });
+    if (EMAIL_CODES_ON) {
+      router.push({ pathname: '/(auth)/forgot', params: { email: user.email, send: '1' } });
+      return;
+    }
+    try {
+      await resetPasswordLink(user.email);
+      Alert.alert('Check your inbox', `We sent a link to ${user.email} to set a new password.`);
+    } catch (e) {
+      Alert.alert('Something went wrong', authErrorMessage(e));
+    }
   };
 
   // A copy of everything we hold, shared as JSON (proof images left out for size).
@@ -34,7 +46,7 @@ export default function PrivacyScreen() {
       <H1 size={52}>Privacy &amp;{'\n'}security</H1>
       <SectionLabel>SECURITY</SectionLabel>
       <ListGroup>
-        <ListRow icon="key-outline" title="Change password" subtitle="We'll email you a 6-digit code" chevron onPress={changePassword} />
+        <ListRow icon="key-outline" title="Change password" subtitle={EMAIL_CODES_ON ? "We'll email you a 6-digit code" : "We'll email you a secure link"} chevron onPress={changePassword} />
       </ListGroup>
       <SectionLabel>PRIVACY</SectionLabel>
       <ListGroup>
