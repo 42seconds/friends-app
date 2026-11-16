@@ -51,9 +51,9 @@
       },
       "emailCodes": "emailjs",
       "emailjs": {
-        "serviceId": "",
-        "templateId": "",
-        "publicKey": ""
+        "serviceId": "service_x9c6fco",
+        "templateId": "template_te5yipn",
+        "publicKey": "M8uK86lu81XNrXr6i"
       }
     },
     "owner": "wamboxs-team"

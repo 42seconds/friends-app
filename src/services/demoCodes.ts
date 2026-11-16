@@ -22,6 +22,11 @@ const SUBJECTS: Record<Purpose, string> = {
   'verify-email': 'Your &FRIENDS code to confirm your email',
   'admin-login': 'Your &FRIENDS staff login code',
 };
+// The email's header (docs/emailjs-code-template.html), in the app's colours.
+const LOOK: Record<Purpose, { heading: string; bg: string; fg: string }> = {
+  'verify-email': { heading: 'Confirm your email', bg: '#FF4F1A', fg: '#15130F' },
+  'admin-login': { heading: 'Staff login code', bg: '#15130F', fg: '#F3F0E8' },
+};
 const LINES: Record<Purpose, string> = {
   'verify-email': 'Enter this code in the &friends app to confirm your email.',
   'admin-login': 'Someone (hopefully you) logged in to a staff account. Enter this code in the &friends app to finish logging in.',
@@ -59,6 +64,9 @@ async function emailCode(to: string, purpose: Purpose, code: string) {
         passcode: code,
         time: new Date(Date.now() + CODE_TTL_MS).toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' }),
         company_name: '&FRIENDS',
+        heading: LOOK[purpose].heading,
+        header_bg: LOOK[purpose].bg,
+        header_fg: LOOK[purpose].fg,
       },
     }),
   }).catch(() => null);

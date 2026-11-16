@@ -7,7 +7,7 @@
 | Setting | Confirm email | Forgot password | Admin 2-step | Needs |
 |---|---|---|---|---|
 | `"off"` | Firebase link | Firebase link | off | nothing |
-| **`"emailjs"`** (current) | 6-digit code | Firebase link | 6-digit code | free EmailJS account |
+| **`"emailjs"`** (current, switched on) | 6-digit code | Firebase link | 6-digit code | free EmailJS account |
 | `"firebase"` | 6-digit code | 6-digit code | 6-digit code | Firebase Blaze plan |
 
 `"emailjs"` is **demo mode**: the code is made, emailed (through EmailJS's
@@ -22,20 +22,14 @@ below are filled in, the app behaves as `"off"`.
 1. Sign up at **emailjs.com** (free).
 2. **Email Services → Add New Service → Gmail**, connect the Gmail account
    the codes should come from. Copy the **Service ID**.
-3. **Email Templates → Create New Template**:
+3. **Email Templates → Create New Template** (the "One-Time Password"
+   starter is fine), then:
+   - **Content → Edit Content → Code Editor**: replace everything with
+     [`docs/emailjs-code-template.html`](emailjs-code-template.html). It's
+     the &FRIENDS email design (orange header for "Confirm your email",
+     dark for the staff login code).
    - **Subject:** `{{subject}}`
-   - **Content:**
-     ```
-     {{message}}
-
-     Your code: {{code}}
-
-     It works for 10 minutes. If you didn't ask for this, you can ignore
-     this email; your account is safe.
-
-     &FRIENDS, Braamfontein
-     ```
-   - On the right, **To Email:** `{{to_email}}`, **From Name:** `&FRIENDS`.
+   - On the right: **To Email** `{{email}}`, **From Name** `&FRIENDS`.
    - Save, and copy the **Template ID**.
 4. **Account → General**: copy the **Public Key**.
 5. **Account → Security**: tick **"Allow EmailJS API for non-browser
