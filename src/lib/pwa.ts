@@ -37,7 +37,24 @@ if (isWeb) {
   if (!__DEV__ && 'serviceWorker' in navigator) {
     const folder = appFolder();
     if (folder) {
-      const register = () => navigator.serviceWorker.register(`${folder}sw.js`, { scope: folder }).catch((e) => console.warn('Offline support unavailable:', e?.message));
+      const register = () =>
+        navigator.serviceWorker
+          .register(`${folder}sw.js`, { scope: folder })
+          .then((reg) => {
+            // Look for a newer version whenever the app comes back to the
+            // front (phones keep web apps open for days).
+            document.addEventListener('visibilitychange', () => document.visibilityState === 'visible' && reg.update().catch(() => {}));
+          })
+          .catch((e) => console.warn('Offline support unavailable:', e?.message));
+      // A newer version has taken over: reload once into it, so nobody is
+      // left running an old copy. (Not on the very first install.)
+      const hadController = !!navigator.serviceWorker.controller;
+      let reloaded = false;
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!hadController || reloaded) return;
+        reloaded = true;
+        window.location.reload();
+      });
       if (document.readyState === 'complete') register();
       else window.addEventListener('load', register, { once: true });
     }

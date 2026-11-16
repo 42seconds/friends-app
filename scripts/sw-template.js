@@ -19,7 +19,7 @@ const SHELL = `andfriends-shell-${VERSION}`;
 const RUNTIME = 'andfriends-runtime';
 const IMAGES = 'andfriends-images';
 const MAX_IMAGES = 150;
-const NAV_TIMEOUT_MS = 3500;
+const NAV_TIMEOUT_MS = 8000; // slow mobile data: wait for the newest version before using the saved one
 
 const scope = self.registration.scope; // e.g. https://x.github.io/friends-app/
 const abs = (p) => new URL(p, scope).href;
