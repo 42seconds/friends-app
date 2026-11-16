@@ -1,5 +1,6 @@
+import { useCallback, useState } from 'react';
 import { Alert, Share } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { H1, Screen, TopBar, SectionLabel, ListGroup, ListRow, ToggleRow, Pill } from '../../src/components/night';
 import { useProfile } from '../../src/hooks/useProfile';
 import { useBookings } from '../../src/hooks/useBookings';
@@ -7,12 +8,29 @@ import { prefsStore } from '../../src/store';
 import { night } from '../../src/theme/night';
 import { resetPasswordLink, authErrorMessage } from '../../src/services/authService';
 import { RESET_BY_CODE } from '../../src/config/emailCodes';
+import { disableQuickLogin, quickLoginEmail, quickLoginKind, QuickKind } from '../../src/lib/quickLogin';
 
 export default function PrivacyScreen() {
   const router = useRouter();
   const { profile, user } = useProfile();
   const { tickets } = useBookings();
   const prefs = prefsStore.useStore();
+
+  // Quick sign-in (fingerprint / face / phone PIN) on this phone.
+  const [quick, setQuick] = useState<{ kind: QuickKind; on: boolean } | null>(null);
+  useFocusEffect(
+    useCallback(() => {
+      Promise.all([quickLoginKind(), quickLoginEmail()]).then(([kind, saved]) => setQuick(kind.available ? { kind, on: !!saved && saved === user?.email } : null));
+    }, [user?.email])
+  );
+  const toggleQuick = async (v: boolean) => {
+    if (v) {
+      router.push('/settings/quick-login');
+      return;
+    }
+    await disableQuickLogin();
+    setQuick((q) => (q ? { ...q, on: false } : q));
+  };
 
   // Same as "Forgot password?": a 6-digit code by email (with the code
   // server), or Firebase's reset link.
@@ -47,6 +65,7 @@ export default function PrivacyScreen() {
       <SectionLabel>SECURITY</SectionLabel>
       <ListGroup>
         <ListRow icon="key-outline" title="Change password" subtitle={RESET_BY_CODE ? "We'll email you a 6-digit code" : "We'll email you a secure link"} chevron onPress={changePassword} />
+        {quick && <ToggleRow title={`Sign in with ${quick.kind.label}`} subtitle="Skip the password on this phone" value={quick.on} onChange={toggleQuick} />}
       </ListGroup>
       <SectionLabel>PRIVACY</SectionLabel>
       <ListGroup>

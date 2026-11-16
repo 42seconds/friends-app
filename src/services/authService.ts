@@ -14,6 +14,7 @@ import { signOutOfGoogle } from './googleAuth';
 import { sendCode, verifyCode } from './otpService';
 import { clearAdminTrust } from '../lib/adminTrust';
 import { EMAIL_CODES_MODE, EMAIL_CODES_ON } from '../config/emailCodes';
+import { disableQuickLogin } from '../lib/quickLogin';
 
 interface RegisterUserInput {
   name: string;
@@ -107,6 +108,7 @@ export async function deleteAccount(reason?: string) {
   if (!user) return;
   await deleteUserProfile(user.uid, reason);
   await deleteUser(user);
+  await disableQuickLogin();
 }
 
 // Emails the logged-in person a 6-digit code to confirm their email.
