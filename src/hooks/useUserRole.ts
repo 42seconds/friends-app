@@ -19,6 +19,7 @@ export function useUserRole() {
       return;
     }
 
+    setLoading(true);
     getUserProfile(user.uid)
       .then((profile) => setRole(profile?.role ?? 'resident'))
       // Offline or refused: treat as a regular member until it loads.

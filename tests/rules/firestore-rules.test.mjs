@@ -19,6 +19,7 @@ await env.withSecurityRulesDisabled(async (c) => {
   await setDoc(doc(db, 'promoCodes/COMP-OLD'), { type: 'comp', percentOff: 100, active: true, uses: 0, expiresAtMs: 1000 });
   await setDoc(doc(db, 'promoCodes/COMP-E2'), { type: 'comp', percentOff: 100, active: true, uses: 0, eventId: 'e2' });
   await setDoc(doc(db, 'config/app'), { minVersion: '1.0.0' });
+  await setDoc(doc(db, 'otpCodes/verify-email:jane'), { uid: 'jane', hash: 'x', salt: 'y', attempts: 0 });
 });
 const anon = env.unauthenticatedContext().firestore();
 const jane = env.authenticatedContext('jane').firestore();
@@ -104,6 +105,11 @@ await t('admin creates a code', assertSucceeds(setDoc(doc(admin, 'promoCodes/SAV
 await t('admin lists codes', assertSucceeds(getDocs(collection(admin, 'promoCodes'))));
 await t('anon reads config', assertSucceeds(getDoc(doc(anon, 'config/app'))));
 await t('cannot write config', assertFails(setDoc(doc(jane, 'config/app'), { minVersion: '9' })));
+// one-time codes: server only
+await t('cannot read own code record', assertFails(getDoc(doc(jane, 'otpCodes/verify-email:jane'))));
+await t('cannot reset own attempt count', assertFails(updateDoc(doc(jane, 'otpCodes/verify-email:jane'), { attempts: 0 })));
+await t('cannot write a code record', assertFails(setDoc(doc(jane, 'otpCodes/admin-login:jane'), { hash: 'mine' })));
+await t('admin cannot read code records', assertFails(getDocs(collection(admin, 'otpCodes'))));
 // delete account
 await t('delete own profile', assertSucceeds(deleteDoc(doc(jane, 'users/jane'))));
 console.log(`\n${pass} passed, ${fail} failed`);

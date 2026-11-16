@@ -13,9 +13,12 @@ export interface RedirectState {
   browsing: boolean;
   hasSeenOnboarding: boolean;
   hasSeenGuide: boolean;
+  // Admin 2-step: true = an admin who still has to enter the emailed
+  // code on this device, false = not needed / done, null = still checking.
+  adminCodeNeeded?: boolean | null;
 }
 
-export function redirectTarget({ segments, loggedIn, browsing, hasSeenOnboarding, hasSeenGuide }: RedirectState): string | null {
+export function redirectTarget({ segments, loggedIn, browsing, hasSeenOnboarding, hasSeenGuide, adminCodeNeeded = false }: RedirectState): string | null {
   const group = segments[0];
   const path = segments.join('/');
   const inOnboarding = group === '(onboarding)';
@@ -24,12 +27,17 @@ export function redirectTarget({ segments, loggedIn, browsing, hasSeenOnboarding
   // The start screen ("/") only shows the splash: always move on from it.
   // Without this, someone already logged in stayed on the "&" forever
   // when reopening the app.
-  if (!group) return loggedIn ? (hasSeenGuide ? '/(tabs)/home' : '/guide') : browsing ? '/(tabs)/home' : hasSeenOnboarding ? '/(auth)/login' : '/(onboarding)/welcome';
+  if (!group) return loggedIn ? (adminCodeNeeded === true ? '/admin-verify' : hasSeenGuide ? '/(tabs)/home' : '/guide') : browsing ? '/(tabs)/home' : hasSeenOnboarding ? '/(auth)/login' : '/(onboarding)/welcome';
   if (PUBLIC.has(path)) return null;
+  // Admins finish 2-step verification before anything else; once done,
+  // they move on from the code screen.
+  if (loggedIn && adminCodeNeeded === true) return path === 'admin-verify' ? null : '/admin-verify';
+  if (path === 'admin-verify' && adminCodeNeeded === false) return loggedIn ? (hasSeenGuide ? '/(tabs)/home' : '/guide') : '/(auth)/login';
   // Onboarding is only for people who aren't logged in.
   if (!loggedIn && !hasSeenOnboarding && !inOnboarding && !inAuth && !browsing) return '/(onboarding)/welcome';
   if (!loggedIn && !inAuth && !inOnboarding && !(browsing && BROWSABLE.has(group))) return browsing ? '/(tabs)/home' : '/(auth)/login';
-  if (loggedIn && (inAuth || inOnboarding)) return hasSeenGuide ? '/(tabs)/home' : '/guide';
+  // Changing your password (Settings → Privacy) uses the forgot-password screen.
+  if (loggedIn && (inAuth || inOnboarding) && path !== '(auth)/forgot') return hasSeenGuide ? '/(tabs)/home' : '/guide';
   // First login on this phone: show "How &FRIENDS works" once. The
   // confirm-email and notifications steps after sign-up come first.
   if (loggedIn && !hasSeenGuide && path !== 'guide' && path !== 'notifications-optin' && path !== 'verify-email') return '/guide';

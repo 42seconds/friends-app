@@ -51,3 +51,6 @@ serviceAccount*.json
 # test reports
 junit.xml
 pages-dist/
+functions/.env.local
+functions/.secret.local
+functions/node_modules/

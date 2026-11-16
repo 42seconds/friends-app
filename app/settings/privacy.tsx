@@ -1,10 +1,9 @@
-import { Alert, Share } from 'react-native';
+import { Share } from 'react-native';
 import { useRouter } from 'expo-router';
 import { H1, Screen, TopBar, SectionLabel, ListGroup, ListRow, ToggleRow, Pill } from '../../src/components/night';
 import { useProfile } from '../../src/hooks/useProfile';
 import { useBookings } from '../../src/hooks/useBookings';
 import { prefsStore } from '../../src/store';
-import { resetPassword, authErrorMessage } from '../../src/services/authService';
 import { night } from '../../src/theme/night';
 
 export default function PrivacyScreen() {
@@ -13,14 +12,10 @@ export default function PrivacyScreen() {
   const { tickets } = useBookings();
   const prefs = prefsStore.useStore();
 
-  const changePassword = async () => {
+  // Same as "Forgot password?": a 6-digit code by email, then the new one.
+  const changePassword = () => {
     if (!user?.email) return;
-    try {
-      await resetPassword(user.email);
-      Alert.alert('Check your inbox', `We sent a link to ${user.email} to set a new password.`);
-    } catch (e) {
-      Alert.alert('Something went wrong', authErrorMessage(e));
-    }
+    router.push({ pathname: '/(auth)/forgot', params: { email: user.email, send: '1' } });
   };
 
   // A copy of everything we hold, shared as JSON (proof images left out for size).
@@ -39,7 +34,7 @@ export default function PrivacyScreen() {
       <H1 size={52}>Privacy &amp;{'\n'}security</H1>
       <SectionLabel>SECURITY</SectionLabel>
       <ListGroup>
-        <ListRow icon="key-outline" title="Change password" subtitle="We'll email you a secure link" chevron onPress={changePassword} />
+        <ListRow icon="key-outline" title="Change password" subtitle="We'll email you a 6-digit code" chevron onPress={changePassword} />
       </ListGroup>
       <SectionLabel>PRIVACY</SectionLabel>
       <ListGroup>

@@ -31,4 +31,31 @@ describe('where the app sends people', () => {
   it('keeps logged-out visitors out of private screens', () => {
     expect(go({ segments: ['(tabs)', 'tickets'], hasSeenOnboarding: true })).toBe('/(auth)/login');
   });
+
+  describe('admin 2-step verification', () => {
+    const admin = { loggedIn: true, hasSeenOnboarding: true, hasSeenGuide: true };
+    it('an admin who has not entered the code is sent to the code screen from anywhere', () => {
+      expect(go({ ...admin, adminCodeNeeded: true })).toBe('/admin-verify');
+      expect(go({ ...admin, segments: ['(tabs)', 'home'], adminCodeNeeded: true })).toBe('/admin-verify');
+      expect(go({ ...admin, segments: ['staff', 'approvals'], adminCodeNeeded: true })).toBe('/admin-verify');
+      expect(go({ ...admin, segments: ['(auth)', 'login'], adminCodeNeeded: true })).toBe('/admin-verify');
+    });
+    it('stays on the code screen until the code is entered', () => {
+      expect(go({ ...admin, segments: ['admin-verify'], adminCodeNeeded: true })).toBeNull();
+      expect(go({ ...admin, segments: ['admin-verify'], adminCodeNeeded: null })).toBeNull();
+    });
+    it('moves on once the code is entered', () => {
+      expect(go({ ...admin, segments: ['admin-verify'], adminCodeNeeded: false })).toBe('/(tabs)/home');
+      expect(go({ ...admin, segments: ['admin-verify'], hasSeenGuide: false, adminCodeNeeded: false })).toBe('/guide');
+    });
+    it('does not redirect while the role is still loading', () => {
+      expect(go({ ...admin, segments: ['(tabs)', 'home'], adminCodeNeeded: null })).toBeNull();
+    });
+    it('members never see it', () => {
+      expect(go({ ...admin, segments: ['(tabs)', 'home'], adminCodeNeeded: false })).toBeNull();
+    });
+  });
+  it('logged-in people can use the forgot-password screen to change their password', () => {
+    expect(go({ segments: ['(auth)', 'forgot'], loggedIn: true, hasSeenGuide: true })).toBeNull();
+  });
 });

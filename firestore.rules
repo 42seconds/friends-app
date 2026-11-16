@@ -149,5 +149,12 @@ service cloud.firestore {
       allow read: if true;
       allow write: if isAdmin();
     }
+
+    // ---- One-time codes ----------------------------------------------------
+    // Only the Cloud Functions (functions/index.js) read and write these;
+    // nobody can read a code or change its attempt count from the app.
+    match /otpCodes/{id} {
+      allow read, write: if false;
+    }
   }
 }

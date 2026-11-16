@@ -63,7 +63,7 @@ export default function ExploreScreen() {
           <Ionicons name="mail-unread-outline" size={22} color={night.ink} />
           <View style={{ flex: 1 }}>
             <T size={15} weight="700">Confirm your email</T>
-            <T size={13} color={night.body}>You need it to book tickets. Tap to resend the link.</T>
+            <T size={13} color={night.body}>You need it to book tickets. Tap to get a 6-digit code.</T>
           </View>
           <Ionicons name="chevron-forward" size={18} color={night.ink} />
         </Pressable>

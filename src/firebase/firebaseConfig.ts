@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getAuth, initializeAuth, getReactNativePersistence, connectAuthEmulator } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 
 const firebaseConfig = {
   apiKey: "AIzaSyAdjLSIIBZkInBm2Xc2cVpf47olh6G4WhQ",
@@ -30,4 +31,10 @@ export const storage = getStorage(app);
 if (process.env.EXPO_PUBLIC_FIREBASE_EMULATOR === '1') {
   connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
   connectFirestoreEmulator(db, '127.0.0.1', 8085);
+}
+
+// Cloud Functions (functions/index.js): one-time codes sent by email.
+export const functions = getFunctions(app, 'us-central1');
+if (process.env.EXPO_PUBLIC_FIREBASE_EMULATOR === '1') {
+  connectFunctionsEmulator(functions, '127.0.0.1', 5001);
 }

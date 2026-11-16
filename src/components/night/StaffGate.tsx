@@ -4,18 +4,31 @@ import { useRouter } from 'expo-router';
 import T from './T';
 import { PrimaryButton } from './Buttons';
 import { useUserRole } from '../../hooks/useUserRole';
+import { useAuth } from '../../context/AuthContext';
+import { useAdminTrusted } from '../../lib/adminTrust';
 import { night } from '../../theme/night';
 
 // Staff mode is admin-only. Second layer behind hiding the entry point.
 export default function StaffGate({ children }: { children: ReactNode }) {
   const { isAdmin, loading } = useUserRole();
+  const { user } = useAuth();
+  const trusted = useAdminTrusted(user?.uid);
   const router = useRouter();
-  if (loading) return <View style={{ flex: 1, backgroundColor: night.ink, justifyContent: 'center' }}><ActivityIndicator color={night.paper} /></View>;
+  if (loading || (isAdmin && trusted === null)) return <View style={{ flex: 1, backgroundColor: night.ink, justifyContent: 'center' }}><ActivityIndicator color={night.paper} /></View>;
   if (!isAdmin) {
     return (
       <View style={{ flex: 1, backgroundColor: night.ink, justifyContent: 'center', padding: 24, gap: 16 }}>
         <T size={16} color={night.paper} center>Staff mode is for &amp;FRIENDS staff accounts only.</T>
         <PrimaryButton tone="paper" label="Back to Explore" onPress={() => router.replace('/(tabs)/home')} />
+      </View>
+    );
+  }
+  // Admin 2-step not done on this device (or it ran out).
+  if (!trusted) {
+    return (
+      <View style={{ flex: 1, backgroundColor: night.ink, justifyContent: 'center', padding: 24, gap: 16 }}>
+        <T size={16} color={night.paper} center>Staff mode needs your 2-step verification code.</T>
+        <PrimaryButton tone="paper" label="Get my code" onPress={() => router.replace('/admin-verify')} />
       </View>
     );
   }

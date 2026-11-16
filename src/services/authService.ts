@@ -1,8 +1,6 @@
 import {
   createUserWithEmailAndPassword,
-  sendEmailVerification,
   deleteUser,
-  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
 } from 'firebase/auth';
@@ -11,6 +9,8 @@ import { auth, db } from '../firebase/firebaseConfig';
 import { UserProfile } from '../types';
 import { deleteUserProfile } from './userService';
 import { signOutOfGoogle } from './googleAuth';
+import { sendCode, verifyCode } from './otpService';
+import { clearAdminTrust } from '../lib/adminTrust';
 
 interface RegisterUserInput {
   name: string;
@@ -43,10 +43,8 @@ export async function registerUser(input: RegisterUserInput) {
   // Step 3: write that profile to Firestore at users/{uid}.
   await setDoc(doc(db, 'users', uid), profile);
 
-  // Step 4: email a link to confirm the address (not awaited for long, so
-  // a slow email service never blocks sign-up; it can be resent).
-  sendEmailVerification(userCredential.user).catch(() => {});
-
+  // Step 4: the "Confirm your email" screen comes next and emails a
+  // 6-digit code (see verify-email.tsx).
   return uid;
 }
 
@@ -58,20 +56,24 @@ export async function loginUser(email: string, password: string) {
 }
 
 export async function logoutUser() {
+  // The admin code step is asked again at the next login.
+  const uid = auth.currentUser?.uid;
+  if (uid) await clearAdminTrust(uid);
   await signOut(auth);
   await signOutOfGoogle();
 }
 
-// "No account with that email" is treated like success, so the screen never
-// reveals who is signed up (projects without Firebase's email enumeration
-// protection would otherwise say so).
+// Forgot password, step 1: email a 6-digit code. The server answers the
+// same whether or not there's an account, so the screen never reveals who
+// is signed up.
 export async function resetPassword(email: string) {
-  try {
-    await sendPasswordResetEmail(auth, email);
-  } catch (e: any) {
-    if (String(e?.code ?? '').includes('user-not-found')) return;
-    throw e;
-  }
+  return sendCode('reset-password', email.trim());
+}
+
+// Forgot password, step 2: the code from the email and the new password.
+// Logs the account out everywhere else.
+export async function confirmPasswordReset(email: string, code: string, newPassword: string) {
+  await verifyCode('reset-password', code, { email: email.trim(), newPassword });
 }
 
 // Firebase refuses to delete an account whose login is old
@@ -84,15 +86,21 @@ export async function deleteAccount(reason?: string) {
   await deleteUser(user);
 }
 
-// Sends (again) the "confirm your email" link to the logged-in user.
-export async function resendVerification() {
+// Emails the logged-in person a 6-digit code to confirm their email.
+export async function sendVerificationCode() {
   if (!auth.currentUser) throw new Error('Not logged in');
-  await sendEmailVerification(auth.currentUser);
+  return sendCode('verify-email');
 }
 
-// Asks Firebase whether the email has been confirmed since (the link is
-// opened in the browser, so the app has to check). Refreshes the login
-// token so the new status is used everywhere.
+// Checks the code; the server then marks the email as confirmed.
+export async function confirmEmailCode(code: string) {
+  await verifyCode('verify-email', code);
+  return checkEmailVerified();
+}
+
+// Asks Firebase whether the email is confirmed (it's changed on the
+// server, so the app has to reload it). Refreshes the login token so the
+// new status is used everywhere.
 export async function checkEmailVerified(): Promise<boolean> {
   const u = auth.currentUser;
   if (!u) return false;

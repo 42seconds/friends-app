@@ -35,6 +35,10 @@ jobs:
         run: npm run typecheck
       - name: Unit tests
         run: npm test -- --ci
+      - name: Cloud Functions unit tests
+        run: |
+          npm ci --prefix functions
+          npm test --prefix functions
 
   rules:
     name: Firestore rules tests
@@ -53,6 +57,10 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - name: Rules tests (local emulator, never the live database)
         run: npm run test:rules
+      - name: Email code tests (local emulators and a fake mail server)
+        run: |
+          npm ci --prefix functions
+          npm run test:otp
 
   android:
     name: Build Android APK
