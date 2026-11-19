@@ -97,6 +97,7 @@ export default function StaffHomeScreen() {
             </View>
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <Link icon="pricetag-outline" label="Access codes" onPress={() => router.push('/staff/codes')} />
+              <Link icon="qr-code-outline" label="App QR code" onPress={() => router.push('/settings/get-app')} />
             </View>
           </>
         )}

@@ -25,6 +25,7 @@ export default function SettingsScreen() {
       </ListGroup>
       <SectionLabel>SUPPORT</SectionLabel>
       <ListGroup>
+        <ListRow icon="qr-code-outline" title="Get the app" subtitle="QR code to install on any phone" chevron onPress={() => router.push('/settings/get-app')} />
         <ListRow icon="help-circle-outline" title="Help and FAQ" chevron onPress={() => router.push('/settings/help')} />
         <ListRow icon="information-circle-outline" title="About &FRIENDS" chevron onPress={() => router.push('/settings/about')} />
         <ListRow icon="document-text-outline" title="Terms and privacy" chevron onPress={() => router.push('/settings/legal')} />

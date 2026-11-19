@@ -5,7 +5,7 @@
 export const BROWSABLE = new Set(['(tabs)', 'event', 'search', 'filters', 'brand', 'venue', 'past', 'offline']);
 
 // Info pages anyone can read, logged in or not (linked from sign-up).
-export const PUBLIC = new Set(['settings/legal', 'settings/help', 'settings/about', 'settings/venue-info']);
+export const PUBLIC = new Set(['settings/legal', 'settings/help', 'settings/about', 'settings/venue-info', 'settings/get-app']);
 
 export interface RedirectState {
   segments: string[];

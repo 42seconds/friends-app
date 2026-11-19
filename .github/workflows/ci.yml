@@ -15,10 +15,12 @@ on:
     types: [opened, synchronize, reopened, labeled]
   workflow_dispatch:
 
-# A newer push to the same branch cancels the run that's still going.
+# On a pull request, a newer push cancels the run that's still going.
+# On master every run finishes, so each commit gets its own result (and
+# the web app is published for each one, in order).
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   checks:
@@ -144,14 +146,14 @@ jobs:
           path: friends-app-ios-simulator.zip
           retention-days: 30
 
-  # The web version, which is how iPhone users get the app (Safari →
-  # Share → Add to Home Screen). Every push to master that passes the
-  # checks is published to https://andfriends-c5552.web.app.
+  # Optional second home for the web app, on Firebase Hosting
+  # (https://andfriends-c5552.web.app). The live web app is on GitHub
+  # Pages (job below); this one only publishes once its key is added.
   # Needs the FIREBASE_SERVICE_ACCOUNT_ANDFRIENDS_C5552 repository secret
   # (see docs/iphone-web-app.md); without it the build still runs and the
   # publish step is skipped.
   web:
-    name: Publish web app (iPhone)
+    name: Build web app (Firebase Hosting, optional)
     needs: [checks, rules]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
@@ -188,7 +190,7 @@ jobs:
   # Published on every push to master that passes the checks. Free, and
   # needs no keys (it uses the repository's own GitHub token).
   pages:
-    name: Publish web app to GitHub Pages
+    name: Publish web app (GitHub Pages)
     needs: [checks, rules]
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
