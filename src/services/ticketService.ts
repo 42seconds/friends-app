@@ -1,15 +1,5 @@
 import { db } from '../firebase/firebaseConfig';
-import {
-  setDoc,
-  getDoc,
-  doc,
-  onSnapshot,
-  updateDoc,
-  collection,
-  query,
-  where,
-  deleteField,
-} from 'firebase/firestore';
+import { setDoc, getDoc, doc, onSnapshot, updateDoc, collection, query, where, deleteField, writeBatch, increment } from 'firebase/firestore';
 import { PurchasedTicket, TicketStatus, BookingItem } from '../types';
 import { HOLD_HOURS } from '../config/pricing';
 import { byDate } from '../lib/firestoreData';
@@ -62,10 +52,13 @@ export async function createTicket({ comp, ...input }: CreateTicketInput) {
   const ticketId = generateTicketId();
   const now = new Date();
 
-  // Comp tickets need a real comp code; the security rules check it.
-  await setDoc(doc(db, 'tickets', ticketId), {
+  // A booking with a code counts one use of it in the same write, so the
+  // database can refuse both together (code switched off, used up,
+  // expired, or for another event). Comp tickets need a real comp code.
+  const batch = writeBatch(db);
+  const code = (input.promoCode ?? '').trim().toUpperCase();
+  batch.set(doc(db, 'tickets', ticketId), {
     ...input,
-    promoCode: input.promoCode ?? '',
     total: input.totalPrice,
     status: comp ? 'confirmed' : 'pending_payment',
     proofOfPayment: comp ? 'comp' : '',
@@ -75,7 +68,10 @@ export async function createTicket({ comp, ...input }: CreateTicketInput) {
     ...(comp
       ? { validated: true, validatedAt: now.toISOString(), totalPrice: 0, total: 0 }
       : { holdExpiresAt: new Date(now.getTime() + HOLD_HOURS * 3600 * 1000).toISOString() }),
+    promoCode: code,
   });
+  if (code) batch.update(doc(db, 'promoCodes', code), { uses: increment(1), lastTicketId: ticketId });
+  await batch.commit();
 
   return ticketId;
 }

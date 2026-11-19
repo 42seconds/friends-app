@@ -2,7 +2,7 @@
 // emulator (never the live database): npm run test:rules
 import { initializeTestEnvironment, assertSucceeds, assertFails } from '@firebase/rules-unit-testing';
 import { readFileSync } from 'fs';
-import { doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection, query, where, getDocs, deleteField } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection, query, where, getDocs, deleteField, writeBatch, increment } from 'firebase/firestore';
 
 const env = await initializeTestEnvironment({ projectId: 'demo-friends', firestore: { rules: readFileSync(new URL('../../firestore.rules', import.meta.url), 'utf8'), host: '127.0.0.1', port: 8085 } });
 await env.withSecurityRulesDisabled(async (c) => {
@@ -17,6 +17,7 @@ await env.withSecurityRulesDisabled(async (c) => {
   await setDoc(doc(db, 'promoCodes/COMP-OFF'), { type: 'comp', percentOff: 100, active: false, uses: 0 });
   await setDoc(doc(db, 'promoCodes/COMP-FULL'), { type: 'comp', percentOff: 100, active: true, uses: 2, maxUses: 2 });
   await setDoc(doc(db, 'promoCodes/COMP-OLD'), { type: 'comp', percentOff: 100, active: true, uses: 0, expiresAtMs: 1000 });
+  await setDoc(doc(db, 'promoCodes/COMP-ONE'), { type: 'comp', percentOff: 100, active: true, uses: 0, maxUses: 1 });
   await setDoc(doc(db, 'promoCodes/COMP-E2'), { type: 'comp', percentOff: 100, active: true, uses: 0, eventId: 'e2' });
   await setDoc(doc(db, 'config/app'), { minVersion: '1.0.0' });
   await setDoc(doc(db, 'otpCodes/verify-email:jane'), { uid: 'jane', hash: 'x', salt: 'y', attempts: 0 });
@@ -87,18 +88,35 @@ await t('send rating', assertSucceeds(addDoc(collection(jane, 'ratings'), { even
 await t('bad rating blocked', assertFails(addDoc(collection(jane, 'ratings'), { stars: 9 })));
 await t('look up promo', assertSucceeds(getDoc(doc(jane, 'promoCodes/BRAAMFAM'))));
 await t('cannot list promos', assertFails(getDocs(collection(jane, 'promoCodes'))));
-// access codes: comp bookings and counting uses
+// access codes: a booking with a code must count one use in the same batch
 const comp = (code, extra = {}) => ({ userId: 'jane', eventId: 'e1', status: 'confirmed', totalPrice: 0, promoCode: code, ...extra });
-await t('free booking with a comp code', assertSucceeds(setDoc(doc(jane, 'tickets/TKT-COMP1'), comp('COMP-GOOD'))));
+// Books with a code the way the app does: the ticket and one use, together.
+function bookWith(db, id, data, uses = 1) {
+  const b = writeBatch(db);
+  b.set(doc(db, `tickets/${id}`), data);
+  if (data.promoCode) b.update(doc(db, `promoCodes/${data.promoCode}`), { uses: increment(uses), lastTicketId: id });
+  return b.commit();
+}
+await t('free booking with a comp code (counts one use)', assertSucceeds(bookWith(jane, 'TKT-COMP1', comp('COMP-GOOD'))));
+await t('no free booking without counting the use', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP1B'), comp('COMP-GOOD'))));
+await t('no free booking that counts two uses', assertFails(bookWith(jane, 'TKT-COMP1C', comp('COMP-GOOD'), 2)));
 await t('no free booking without a code', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP2'), comp(''))));
-await t('no free booking with a discount code', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP3'), comp('BRAAMFAM'))));
-await t('no free booking with an unknown code', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP4'), comp('COMP-FAKE'))));
-await t('no free booking with a switched-off code', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP5'), comp('COMP-OFF'))));
-await t('no free booking with a used-up code', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP6'), comp('COMP-FULL'))));
-await t('no free booking with an expired code', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP7'), comp('COMP-OLD'))));
-await t('no free booking for another event', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP8'), comp('COMP-E2'))));
-await t('comp code cannot confirm a paid booking', assertFails(setDoc(doc(jane, 'tickets/TKT-COMP9'), comp('COMP-GOOD', { totalPrice: 300 }))));
-await t('count one use of a code', assertSucceeds(updateDoc(doc(jane, 'promoCodes/COMP-GOOD'), { uses: 1 })));
+await t('no free booking with a discount code', assertFails(bookWith(jane, 'TKT-COMP3', comp('BRAAMFAM'))));
+await t('no free booking with an unknown code', assertFails(bookWith(jane, 'TKT-COMP4', comp('COMP-FAKE'))));
+await t('no free booking with a switched-off code', assertFails(bookWith(jane, 'TKT-COMP5', comp('COMP-OFF'))));
+await t('no free booking with a used-up code', assertFails(bookWith(jane, 'TKT-COMP6', comp('COMP-FULL'))));
+await t('no free booking with an expired code', assertFails(bookWith(jane, 'TKT-COMP7', comp('COMP-OLD'))));
+await t('no free booking for another event', assertFails(bookWith(jane, 'TKT-COMP8', comp('COMP-E2'))));
+await t('comp code cannot confirm a paid booking', assertFails(bookWith(jane, 'TKT-COMP9', comp('COMP-GOOD', { totalPrice: 300 }))));
+await t('paid booking with a discount code counts a use', assertSucceeds(bookWith(jane, 'TKT-DISC1', { userId: 'jane', eventId: 'e1', status: 'pending_payment', totalPrice: 300, promoCode: 'BRAAMFAM' })));
+await t('paid booking cannot use a used-up code', assertFails(bookWith(jane, 'TKT-DISC2', { userId: 'jane', eventId: 'e1', status: 'pending_payment', totalPrice: 0, promoCode: 'COMP-FULL' })));
+await t('paid booking without a code needs no count', assertSucceeds(setDoc(doc(jane, 'tickets/TKT-PLAIN'), { userId: 'jane', eventId: 'e1', status: 'pending_payment', totalPrice: 300 })));
+await t('cannot count a use without a booking', assertFails(updateDoc(doc(jane, 'promoCodes/COMP-GOOD'), { uses: 2, lastTicketId: 'TKT-NONE' })));
+await t('cannot count a use for an existing booking', assertFails(updateDoc(doc(jane, 'promoCodes/COMP-GOOD'), { uses: 2, lastTicketId: 'TKT-COMP1' })));
+await t("cannot use someone else's booking to count", assertFails(updateDoc(doc(newUser, 'promoCodes/COMP-GOOD'), { uses: 2, lastTicketId: 'TKT-COMP1' })));
+// The reported case: a 1-use free code used by the admin, then tried by a resident.
+await t('1-use free code: first booking works', assertSucceeds(bookWith(admin, 'TKT-ONE1', { ...comp('COMP-ONE'), userId: 'admin' })));
+await t('1-use free code: nobody can use it again', assertFails(bookWith(jane, 'TKT-ONE2', comp('COMP-ONE'))));
 await t('cannot skip use counts', assertFails(updateDoc(doc(jane, 'promoCodes/COMP-GOOD'), { uses: 5 })));
 await t('cannot switch a code back on', assertFails(updateDoc(doc(jane, 'promoCodes/COMP-OFF'), { active: true })));
 await t('admin creates a code', assertSucceeds(setDoc(doc(admin, 'promoCodes/SAVE20-ABCDEF'), { type: 'percent', percentOff: 20, active: true, uses: 0 })));

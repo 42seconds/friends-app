@@ -21,15 +21,29 @@ service cloud.firestore {
 
     // A comp (free ticket) code that exists, is switched on, isn't used up
     // or expired, and is for this event (or any event).
-    function validComp(code, eventId) {
+    // A code that can be used right now for this event (switched on, not
+    // used up, not expired, and for this event if it's tied to one).
+    function usableCode(code, eventId) {
       let path = /databases/$(database)/documents/promoCodes/$(code);
       let c = get(path).data;
       return code is string && code.size() > 0 && exists(path)
-        && c.get('type', 'percent') == 'comp'
         && c.get('active', true) == true
         && (!('maxUses' in c) || c.get('uses', 0) < c.maxUses)
         && (!('expiresAtMs' in c) || c.expiresAtMs > request.time.toMillis())
         && (!('eventId' in c) || c.eventId == eventId);
+    }
+
+    function validComp(code, eventId) {
+      return usableCode(code, eventId)
+        && get(/databases/$(database)/documents/promoCodes/$(code)).data.get('type', 'percent') == 'comp';
+    }
+
+    // A booking with a code must count one use of it in the same write
+    // (a batch), so a limited code can't be reused by skipping the count.
+    function countsCodeUse(code, ticketId) {
+      let path = /databases/$(database)/documents/promoCodes/$(code);
+      return getAfter(path).data.get('uses', 0) == get(path).data.get('uses', 0) + 1
+        && getAfter(path).data.get('lastTicketId', '') == ticketId;
     }
 
     function onlyChanges(fields) {
@@ -61,8 +75,17 @@ service cloud.firestore {
 
       // A booking starts as an unpaid hold owned by its creator, or as a
       // free confirmed booking when it uses a real, active comp code.
+      // Any code on a booking must be usable for that event and have one
+      // use counted in the same write.
       allow create: if signedIn()
         && request.resource.data.userId == request.auth.uid
+        && (
+          request.resource.data.get('promoCode', '') == ''
+          || (
+            usableCode(request.resource.data.promoCode, request.resource.data.eventId)
+            && countsCodeUse(request.resource.data.promoCode, ticketId)
+          )
+        )
         && (
           !('status' in request.resource.data)
           || request.resource.data.status == 'pending_payment'
@@ -127,10 +150,15 @@ service cloud.firestore {
     match /promoCodes/{code} {
       allow get: if signedIn();
       allow list, write: if isAdmin();
-      // Anyone booking with a code counts one use, nothing else.
+      // Counting one use, only together with a brand-new booking by the
+      // same person that uses this code (written in the same batch).
       allow update: if signedIn()
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uses'])
-        && request.resource.data.uses == resource.data.get('uses', 0) + 1;
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['uses', 'lastTicketId'])
+        && request.resource.data.uses == resource.data.get('uses', 0) + 1
+        && request.resource.data.lastTicketId is string
+        && !exists(/databases/$(database)/documents/tickets/$(request.resource.data.lastTicketId))
+        && getAfter(/databases/$(database)/documents/tickets/$(request.resource.data.lastTicketId)).data.userId == request.auth.uid
+        && getAfter(/databases/$(database)/documents/tickets/$(request.resource.data.lastTicketId)).data.get('promoCode', '') == code;
     }
 
     // ---- Gallery and site content (footer): public, admins edit ---------

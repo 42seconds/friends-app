@@ -15,6 +15,7 @@ import { sendCode, verifyCode } from './otpService';
 import { clearAdminTrust } from '../lib/adminTrust';
 import { EMAIL_CODES_MODE, EMAIL_CODES_ON } from '../config/emailCodes';
 import { disableQuickLogin } from '../lib/quickLogin';
+import { promoStore, NO_PROMO } from '../store';
 
 interface RegisterUserInput {
   name: string;
@@ -65,6 +66,8 @@ export async function logoutUser() {
   // The admin code step is asked again at the next login.
   const uid = auth.currentUser?.uid;
   if (uid) await clearAdminTrust(uid);
+  // An entered access code never carries over to the next person.
+  promoStore.set(NO_PROMO);
   await signOut(auth);
   await signOutOfGoogle();
 }

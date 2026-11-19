@@ -9,7 +9,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { useProfile } from '../../src/hooks/useProfile';
 import { createTicket, emailNewBooking } from '../../src/services/ticketService';
 import { promoStore, NO_PROMO } from '../../src/store';
-import { recordCodeUse } from '../../src/services/communityService';
+import { lookupPromo } from '../../src/services/communityService';
 import { cartFromParams, cartLines, linesSummary, quoteLines } from '../../src/lib/booking';
 import { rand } from '../../src/lib/pricing';
 import { shortDate } from '../../src/lib/dates';
@@ -30,18 +30,20 @@ export default function ReviewBookingScreen() {
   const [error, setError] = useState('');
   const guide = useFirstTicketGuide();
 
-  // A code only applies to the event it was entered for.
+  // A code only applies to the event it was entered for, and only for the
+  // account that entered it (never the next person on this phone).
+  const promoOk = !!promo.code && promo.eventId === params.eventId && !!user && promo.uid === user.uid;
   useEffect(() => {
-    if (promo.eventId && promo.eventId !== params.eventId) promoStore.set(NO_PROMO);
-  }, [params.eventId]);
+    if (promo.code && !promoOk) promoStore.set(NO_PROMO);
+  }, [params.eventId, user?.uid]);
 
   // Every ticket type in this booking that's still on sale.
   const lines = cartLines(event, cartFromParams(params));
   const qty = lines.reduce((n, l) => n + l.qty, 0);
   const summary = linesSummary(lines);
-  const percentOff = promo.eventId === params.eventId ? promo.percentOff : 0;
+  const percentOff = promoOk ? promo.percentOff : 0;
   // A comp (guest-list) code makes the tickets free: no EFT, QR straight away.
-  const comp = promo.eventId === params.eventId && promo.comp;
+  const comp = promoOk && promo.comp;
   const q = quoteLines(lines, percentOff);
   const name = profile?.name ?? user?.email ?? 'You';
 
@@ -55,6 +57,16 @@ export default function ReviewBookingScreen() {
     setError('');
     try {
       await requireOnline();
+      // Check the code again right now: it may have been used up, switched
+      // off or expired since it was entered.
+      if (promoOk) {
+        const again = await withTimeout(lookupPromo(promo.code, params.eventId), 15000);
+        if (again.error) {
+          promoStore.set(NO_PROMO);
+          setError(`Code ${promo.code} can't be used: ${again.error} We've removed it, so check the new total before you reserve.`);
+          return;
+        }
+      }
       const ticketId = await withTimeout(createTicket({
         userId: user.uid,
         userName: profile?.name ?? 'Unknown',
@@ -75,17 +87,26 @@ export default function ReviewBookingScreen() {
         serviceFee: q.serviceFee,
         vat: q.vat,
         discount: q.discount,
-        promoCode: percentOff ? promo.code : undefined,
+        promoCode: promoOk ? promo.code : undefined,
         totalPrice: comp ? 0 : q.total,
         comp,
       }));
       emailNewBooking(ticketId);
-      if (percentOff) recordCodeUse(promo.code);
       promoStore.set(NO_PROMO);
       router.replace(comp ? `/purchase/confirmed?ticketId=${ticketId}` : `/purchase/pay?ticketId=${ticketId}`);
     } catch (e) {
       console.error('Failed to create ticket:', e);
-      setError(isOfflineError(e) ? "You're offline. Reserving tickets needs an internet connection. Your selection is still here, so try again once you're connected." : "We couldn't reserve your tickets. Check your connection and try again.");
+      const denied = String((e as any)?.code ?? '').includes('permission-denied');
+      if (denied && promoOk) promoStore.set(NO_PROMO);
+      setError(
+        isOfflineError(e)
+          ? "You're offline. Reserving tickets needs an internet connection. Your selection is still here, so try again once you're connected."
+          : denied
+            ? promoOk
+              ? `Code ${promo.code} can't be used any more (it may be used up, switched off or expired). We've removed it, so check the new total.`
+              : "We couldn't reserve these tickets. Please log out and in again, then try once more."
+            : "Something went wrong reserving your tickets. Please try again."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -145,7 +166,7 @@ export default function ReviewBookingScreen() {
 
       <Pressable accessibilityRole="button" onPress={() => router.push(`/purchase/promo?eventId=${params.eventId}&total=${q.total}`)} style={{ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: night.card, borderWidth: 1.5, borderColor: night.line }}>
         <Ionicons name="pricetag-outline" size={20} color={night.ink} />
-        <T size={15} weight="600" style={{ flex: 1 }}>{percentOff ? `Code ${promo.code} applied` : 'Add promo or access code'}</T>
+        <T size={15} weight="600" style={{ flex: 1 }}>{promoOk ? `Code ${promo.code} applied` : 'Add promo or access code'}</T>
         <Ionicons name="chevron-forward" size={18} color={night.muted} />
       </Pressable>
 

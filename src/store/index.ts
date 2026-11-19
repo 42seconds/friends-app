@@ -76,8 +76,10 @@ export interface StaffSetup {
 export const staffStore = createPersistedStore<StaffSetup>('nightStaff', { eventId: null, door: 'Door A' });
 
 // Promo code applied on the Review booking screen (set by the promo sheet).
-export const promoStore = createPersistedStore<{ eventId: string | null; code: string; percentOff: number; comp: boolean }>(null, { eventId: null, code: '', percentOff: 0, comp: false });
-export const NO_PROMO = { eventId: null, code: '', percentOff: 0, comp: false };
+// The code entered on Review booking. It belongs to the account that
+// entered it (uid) and one event; it's cleared on logout and after booking.
+export const promoStore = createPersistedStore<{ eventId: string | null; code: string; percentOff: number; comp: boolean; uid: string | null }>(null, { eventId: null, code: '', percentOff: 0, comp: false, uid: null });
+export const NO_PROMO = { eventId: null, code: '', percentOff: 0, comp: false, uid: null };
 
 // Check-ins made while the scanner phone had no signal; replayed on sync.
 export interface QueuedScan {

@@ -9,6 +9,7 @@ import { promoStore } from '../../src/store';
 import { breakdown, rand } from '../../src/lib/pricing';
 import { night } from '../../src/theme/night';
 import { safeBack } from '../../src/lib/nav';
+import { auth } from '../../src/firebase/firebaseConfig';
 
 // Sheet: promo or access code. Looks the code up and previews the saving.
 export default function PromoSheet() {
@@ -16,7 +17,7 @@ export default function PromoSheet() {
   const router = useRouter();
   const current = promoStore.useStore();
   const [code, setCode] = useState(current.eventId === eventId ? current.code : '');
-  const [found, setFound] = useState<{ code: string; percentOff: number; comp: boolean; label?: string } | null>(current.eventId === eventId && current.code ? { code: current.code, percentOff: current.percentOff, comp: current.comp } : null);
+  const [found, setFound] = useState<{ code: string; percentOff: number; comp: boolean; label?: string } | null>(current.eventId === eventId && current.code && current.uid === auth.currentUser?.uid ? { code: current.code, percentOff: current.percentOff, comp: current.comp } : null);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState('');
 
@@ -47,7 +48,7 @@ export default function PromoSheet() {
           <PrimaryButton
             label="Use this code"
             onPress={() => {
-              promoStore.set({ eventId, code: found.code, percentOff: found.percentOff, comp: found.comp });
+              promoStore.set({ eventId, code: found.code, percentOff: found.percentOff, comp: found.comp, uid: auth.currentUser?.uid ?? null });
               safeBack(router);
             }}
           />
