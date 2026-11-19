@@ -19,8 +19,6 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
-    // A comp (free ticket) code that exists, is switched on, isn't used up
-    // or expired, and is for this event (or any event).
     // A code that can be used right now for this event (switched on, not
     // used up, not expired, and for this event if it's tied to one).
     function usableCode(code, eventId) {
@@ -33,6 +31,7 @@ service cloud.firestore {
         && (!('eventId' in c) || c.eventId == eventId);
     }
 
+    // A usable code that gives a free (comp) ticket.
     function validComp(code, eventId) {
       return usableCode(code, eventId)
         && get(/databases/$(database)/documents/promoCodes/$(code)).data.get('type', 'percent') == 'comp';
